@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SmartDoor – PSU Asingan Campus</title>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+<title>SmartRoom – PSU Asingan Campus</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
 :root {
   --navy:       #0b1640;
@@ -21,7 +21,7 @@
 /* ── RESET ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
-body { font-family: 'DM Sans', sans-serif; background: var(--navy); color: var(--white); overflow-x: hidden; }
+body { font-family: 'Poppins', Arial, Helvetica, sans-serif; background: var(--navy); color: var(--white); overflow-x: hidden; }
 
 /* ── NOISE TEXTURE ── */
 body::before {
@@ -63,7 +63,7 @@ nav.scrolled { background: rgba(11,22,64,0.97); box-shadow: 0 4px 32px rgba(0,0,
 .sidebar-logo:hover .logo-mark { transform: translateY(-2px) scale(1.07); box-shadow: 0 8px 24px rgba(245,197,24,0.6); }
 .logo-text { line-height: 1; }
 .logo-text .brand-psu { font-size: 0.58rem; font-weight: 700; letter-spacing: 0.2em; color: rgba(255,255,255,0.4); text-transform: uppercase; display: block; margin-bottom: 3px; }
-.logo-text .brand-main { font-family: 'Sora', sans-serif; font-size: 1.05rem; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
+.logo-text .brand-main { font-family: 'Poppins', Arial, Helvetica, sans-serif; font-size: 1.05rem; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
 .logo-text .brand-main span { color: var(--yellow); }
 
 /* NAV LINKS */
@@ -122,7 +122,7 @@ nav.scrolled { background: rgba(11,22,64,0.97); box-shadow: 0 4px 32px rgba(0,0,
 .hero-badge .pulse-dot { width: 7px; height: 7px; background: var(--gold); border-radius: 50%; box-shadow: 0 0 8px var(--gold); animation: pulse 2s infinite; }
 @keyframes pulse { 0%,100% { opacity:1; box-shadow: 0 0 8px var(--gold); } 50% { opacity:0.4; box-shadow: 0 0 4px var(--gold); } }
 
-.hero-title { font-family: 'Sora', sans-serif; font-size: clamp(2.8rem, 6vw, 4.8rem); font-weight: 900; line-height: 1.07; letter-spacing: -0.035em; margin-bottom: 26px; animation: fadeUp 0.6s 0.1s ease both; }
+.hero-title { font-family: 'Poppins', Arial, Helvetica, sans-serif; font-size: clamp(2.8rem, 6vw, 4.8rem); font-weight: 900; line-height: 1.07; letter-spacing: -0.035em; margin-bottom: 26px; animation: fadeUp 0.6s 0.1s ease both; }
 .hero-title .line-ghost { display: block; -webkit-text-stroke: 2px rgba(245,197,24,0.5); color: transparent; transition: all 0.4s; }
 .hero-title:hover .line-ghost { -webkit-text-stroke-color: rgba(245,197,24,0.8); }
 .hero-desc { font-size: 1.08rem; font-weight: 300; color: rgba(255,255,255,0.72); line-height: 1.78; max-width: 540px; margin-bottom: 42px; animation: fadeUp 0.6s 0.2s ease both; }
@@ -139,7 +139,7 @@ nav.scrolled { background: rgba(11,22,64,0.97); box-shadow: 0 4px 32px rgba(0,0,
   animation: fadeUp 0.7s 0.4s ease both;
 }
 .hero-float-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); border-radius: 20px 20px 0 0; }
-.hfc-title { font-family: 'Sora', sans-serif; font-size: 0.78rem; font-weight: 700; color: rgba(255,255,255,0.5); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.hfc-title { font-family: 'Poppins', Arial, Helvetica, sans-serif; font-size: 0.78rem; font-weight: 700; color: rgba(255,255,255,0.5); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
 .hfc-title::before { content: ''; width: 6px; height: 6px; background: var(--gold); border-radius: 50%; box-shadow: 0 0 8px var(--gold); animation: pulse 2s infinite; }
 .hfc-rooms { display: flex; flex-direction: column; gap: 10px; }
 .hfc-room { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: rgba(255,255,255,0.04); border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); }
@@ -148,7 +148,7 @@ nav.scrolled { background: rgba(11,22,64,0.97); box-shadow: 0 4px 32px rgba(0,0,
 .hfc-dot.off { background: rgba(255,255,255,0.2); }
 .hfc-dot.locked { background: #f87171; box-shadow: 0 0 8px rgba(248,113,113,0.5); }
 .hfc-room-text { flex: 1; }
-.hfc-room-name { font-family: 'Sora', sans-serif; font-size: 0.78rem; font-weight: 600; }
+.hfc-room-name { font-family: 'Poppins', Arial, Helvetica, sans-serif; font-size: 0.78rem; font-weight: 600; }
 .hfc-room-sub  { font-size: 0.67rem; color: rgba(255,255,255,0.4); margin-top: 1px; }
 .hfc-pill { font-size: 0.62rem; font-weight: 700; padding: 3px 9px; border-radius: 100px; letter-spacing: 0.04em; white-space: nowrap; }
 .pill-on   { background: rgba(34,197,94,0.12); color: #4ade80; }
@@ -158,9 +158,9 @@ nav.scrolled { background: rgba(11,22,64,0.97); box-shadow: 0 4px 32px rgba(0,0,
 @keyframes fadeUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
 
 /* BUTTONS */
-.btn-primary { display: inline-flex; align-items: center; gap: 9px; background: var(--gold); color: var(--navy); font-family: 'Sora', sans-serif; font-weight: 700; font-size: 0.95rem; padding: 15px 30px; border-radius: 12px; text-decoration: none; transition: all 0.3s cubic-bezier(0.16,1,0.3,1); box-shadow: 0 8px 30px rgba(245,197,24,0.3); position: relative; overflow: hidden; }
+.btn-primary { display: inline-flex; align-items: center; gap: 9px; background: var(--gold); color: var(--navy); font-family: 'Poppins', Arial, Helvetica, sans-serif; font-weight: 700; font-size: 0.95rem; padding: 15px 30px; border-radius: 12px; text-decoration: none; transition: all 0.3s cubic-bezier(0.16,1,0.3,1); box-shadow: 0 8px 30px rgba(245,197,24,0.3); position: relative; overflow: hidden; }
 .btn-primary:hover { background: var(--gold-pale); transform: translateY(-3px); box-shadow: 0 16px 40px rgba(245,197,24,0.42); }
-.btn-secondary { display: inline-flex; align-items: center; gap: 9px; background: rgba(255,255,255,0.05); color: var(--white); font-family: 'Sora', sans-serif; font-weight: 600; font-size: 0.95rem; padding: 15px 30px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,0.14); text-decoration: none; transition: all 0.3s cubic-bezier(0.16,1,0.3,1); backdrop-filter: blur(8px); }
+.btn-secondary { display: inline-flex; align-items: center; gap: 9px; background: rgba(255,255,255,0.05); color: var(--white); font-family: 'Poppins', Arial, Helvetica, sans-serif; font-weight: 600; font-size: 0.95rem; padding: 15px 30px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,0.14); text-decoration: none; transition: all 0.3s cubic-bezier(0.16,1,0.3,1); backdrop-filter: blur(8px); }
 .btn-secondary:hover { border-color: var(--gold); color: var(--gold); background: rgba(245,197,24,0.06); transform: translateY(-3px); box-shadow: 0 8px 30px rgba(245,197,24,0.15); }
 
 /* ════════════════════════════════════
@@ -170,7 +170,7 @@ nav.scrolled { background: rgba(11,22,64,0.97); box-shadow: 0 4px 32px rgba(0,0,
 .stat-item { text-align: center; padding: 8px 40px; transition: transform 0.3s; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .stat-item:hover { transform: translateY(-4px); }
 .stat-icon { width: 42px; height: 42px; border-radius: 12px; background: rgba(245,197,24,0.1); border: 1px solid rgba(245,197,24,0.2); display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
-.stat-num { font-family: 'Sora', sans-serif; font-size: 2.2rem; font-weight: 800; background: linear-gradient(135deg, var(--gold) 0%, var(--gold-pale) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; display: block; }
+.stat-num { font-family: 'Poppins', Arial, Helvetica, sans-serif; font-size: 2.2rem; font-weight: 800; background: linear-gradient(135deg, var(--gold) 0%, var(--gold-pale) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; display: block; }
 .stat-label { font-size: 0.76rem; color: rgba(255,255,255,0.45); font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; }
 .stat-divider { width: 1px; background: linear-gradient(to bottom, transparent, rgba(245,197,24,0.2), transparent); align-self: stretch; margin: 8px 0; }
 
@@ -180,7 +180,7 @@ nav.scrolled { background: rgba(11,22,64,0.97); box-shadow: 0 4px 32px rgba(0,0,
 section { position: relative; z-index: 2; }
 .section-label { display: inline-flex; align-items: center; gap: 10px; color: var(--gold); font-size: 0.74rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 14px; }
 .section-label::before { content: ''; width: 24px; height: 2px; background: linear-gradient(90deg, var(--gold), rgba(245,197,24,0.3)); border-radius: 2px; }
-.section-title { font-family: 'Sora', sans-serif; font-size: clamp(1.8rem, 3.5vw, 2.75rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.025em; margin-bottom: 14px; }
+.section-title { font-family: 'Poppins', Arial, Helvetica, sans-serif; font-size: clamp(1.8rem, 3.5vw, 2.75rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.025em; margin-bottom: 14px; }
 .section-desc { font-size: 1rem; color: rgba(255,255,255,0.52); line-height: 1.78; max-width: 500px; }
 
 /* ════════════════════════════════════
@@ -201,7 +201,7 @@ section { position: relative; z-index: 2; }
 .problem-card:hover::before { opacity: 1; }
 .problem-icon-wrap { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; background: rgba(245,197,24,0.1); border: 1px solid rgba(245,197,24,0.18); flex-shrink: 0; transition: all 0.3s; }
 .problem-card:hover .problem-icon-wrap { background: rgba(245,197,24,0.16); border-color: rgba(245,197,24,0.35); transform: scale(1.06); }
-.problem-text h3 { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 1.02rem; margin-bottom: 8px; }
+.problem-text h3 { font-family: 'Poppins', Arial, Helvetica, sans-serif; font-weight: 700; font-size: 1.02rem; margin-bottom: 8px; }
 .problem-text p { font-size: 0.86rem; color: rgba(255,255,255,0.52); line-height: 1.7; }
 
 /* ════════════════════════════════════
@@ -222,9 +222,9 @@ section { position: relative; z-index: 2; }
 .feature-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
 .feature-icon-box { width: 48px; height: 48px; border-radius: 13px; background: rgba(245,197,24,0.1); border: 1px solid rgba(245,197,24,0.18); display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
 .feature-card:hover .feature-icon-box { background: rgba(245,197,24,0.18); border-color: rgba(245,197,24,0.4); transform: scale(1.08) rotate(-4deg); }
-.feature-num { font-family: 'Sora', sans-serif; font-size: 2.8rem; font-weight: 900; color: rgba(245,197,24,0.07); line-height: 1; transition: color 0.3s; }
+.feature-num { font-family: 'Poppins', Arial, Helvetica, sans-serif; font-size: 2.8rem; font-weight: 900; color: rgba(245,197,24,0.07); line-height: 1; transition: color 0.3s; }
 .feature-card:hover .feature-num { color: rgba(245,197,24,0.13); }
-.feature-card h3 { font-family: 'Sora', sans-serif; font-size: 1.02rem; font-weight: 700; margin-bottom: 9px; color: var(--white); }
+.feature-card h3 { font-family: 'Poppins', Arial, Helvetica, sans-serif; font-size: 1.02rem; font-weight: 700; margin-bottom: 9px; color: var(--white); }
 .feature-card p { font-size: 0.85rem; color: rgba(255,255,255,0.5); line-height: 1.72; }
 .feature-tag { display: inline-flex; align-items: center; gap: 5px; margin-top: 18px; padding: 5px 12px; border-radius: 100px; background: rgba(245,197,24,0.08); border: 1px solid rgba(245,197,24,0.18); font-size: 0.67rem; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 0.08em; transition: all 0.3s; }
 .feature-card:hover .feature-tag { background: rgba(245,197,24,0.15); border-color: rgba(245,197,24,0.38); }
@@ -247,14 +247,14 @@ section { position: relative; z-index: 2; }
   box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 .step:hover .step-badge { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 40px rgba(245,197,24,0.4), 0 8px 28px rgba(0,0,0,0.3); transform: scale(1.08); }
-.step-badge-num { font-family: 'Sora', sans-serif; font-size: 0.68rem; font-weight: 700; color: rgba(245,197,24,0.6); letter-spacing: 0.1em; line-height: 1; transition: color 0.3s; }
+.step-badge-num { font-family: 'Poppins', Arial, Helvetica, sans-serif; font-size: 0.68rem; font-weight: 700; color: rgba(245,197,24,0.6); letter-spacing: 0.1em; line-height: 1; transition: color 0.3s; }
 .step:hover .step-badge-num { color: rgba(11,22,64,0.7); }
 .step-badge-icon { transition: all 0.3s; }
 .step:hover .step-badge-icon path,
 .step:hover .step-badge-icon rect,
 .step:hover .step-badge-icon circle { stroke: var(--navy) !important; }
 .step:hover .step-badge-icon .fill-gold { fill: var(--navy) !important; }
-.step h3 { font-family: 'Sora', sans-serif; font-size: 0.98rem; font-weight: 700; margin-bottom: 10px; }
+.step h3 { font-family: 'Poppins', Arial, Helvetica, sans-serif; font-size: 0.98rem; font-weight: 700; margin-bottom: 10px; }
 .step p { font-size: 0.81rem; color: rgba(255,255,255,0.48); line-height: 1.65; }
 
 /* ════════════════════════════════════
@@ -282,7 +282,7 @@ section { position: relative; z-index: 2; }
 }
 .access-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
 .access-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-.access-title { font-family: 'Sora', sans-serif; font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.access-title { font-family: 'Poppins', Arial, Helvetica, sans-serif; font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
 .access-live { display: flex; align-items: center; gap: 6px; font-size: 0.68rem; font-weight: 700; color: #4ade80; letter-spacing: 0.08em; }
 .access-live::before { content: ''; width: 6px; height: 6px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 8px rgba(74,222,128,0.7); animation: pulse 2s infinite; }
 .access-rooms { display: flex; flex-direction: column; gap: 9px; }
@@ -293,7 +293,7 @@ section { position: relative; z-index: 2; }
 .dot-off  { background: rgba(255,255,255,0.18); }
 .dot-lock { background: #f87171; box-shadow: 0 0 8px rgba(248,113,113,0.5); }
 .access-room-info { flex: 1; }
-.access-room-name { font-family: 'Sora', sans-serif; font-size: 0.82rem; font-weight: 600; }
+.access-room-name { font-family: 'Poppins', Arial, Helvetica, sans-serif; font-size: 0.82rem; font-weight: 600; }
 .access-room-sub  { font-size: 0.69rem; color: rgba(255,255,255,0.38); margin-top: 2px; }
 .access-room-status { font-size: 0.65rem; font-weight: 700; padding: 4px 10px; border-radius: 100px; letter-spacing: 0.04em; white-space: nowrap; }
 .s-live { background: rgba(34,197,94,0.12); color: #4ade80; }
@@ -313,16 +313,111 @@ section { position: relative; z-index: 2; }
 /* ════════════════════════════════════
    FOOTER
 ════════════════════════════════════ */
-footer {
-  background: rgba(5,10,30,0.99); border-top: 1px solid rgba(245,197,24,0.08);
-  padding: 44px 5vw 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;
+.footer-new {
+  background: rgba(5,10,30,0.99);
+  border-top: 1px solid rgba(245,197,24,0.1);
+  padding: 56px 5vw 0;
+  font-family: 'DM Sans', sans-serif;
+  color: rgba(255,255,255,0.55);
+  position: relative;
+  z-index: 2;
 }
-.footer-left { display: flex; align-items: center; gap: 16px; }
-.footer-logo-mark { width: 36px; height: 36px; background: var(--yellow); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
-.footer-brand { font-family: 'Sora', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--white); }
-.footer-brand span { color: var(--gold); }
-.footer-sub { font-size: 0.76rem; color: rgba(255,255,255,0.35); margin-top: 3px; }
-.footer-copy { font-size: 0.75rem; color: rgba(255,255,255,0.3); }
+.footer-top {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr) 1.4fr;
+  gap: 40px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid rgba(245,197,24,0.08);
+}
+.footer-col-heading {
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  color: #fff;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+.footer-col ul li a {
+  color: rgba(255,255,255,0.5);
+  font-size: 0.84rem;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-col ul li a:hover { color: var(--gold); }
+.footer-member-name {
+  color: rgba(255,255,255,0.5);
+  font-size: 0.84rem;
+  line-height: 1;
+}
+.footer-newsletter-title {
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.footer-newsletter-desc {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.42);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.footer-input-row { display: flex; gap: 8px; }
+.footer-email-input {
+  flex: 1;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(245,197,24,0.2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #fff;
+  font-size: 0.82rem;
+  outline: none;
+  font-family: 'DM Sans', sans-serif;
+  transition: border-color 0.2s;
+}
+.footer-email-input:focus { border-color: rgba(245,197,24,0.6); }
+.footer-subscribe-btn {
+  background: var(--gold);
+  color: var(--navy);
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.25s;
+  box-shadow: 0 4px 14px rgba(245,197,24,0.3);
+}
+.footer-subscribe-btn:hover { background: var(--gold-pale); transform: translateY(-2px); }
+.footer-socials { display: flex; gap: 10px; margin-top: 20px; align-items: center; }
+.footer-social-icon {
+  width: 34px; height: 34px; border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(245,197,24,0.12);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.25s; text-decoration: none;
+}
+.footer-social-icon:hover { background: rgba(245,197,24,0.14); border-color: rgba(245,197,24,0.4); }
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.footer-bottom-brand { display: flex; align-items: center; gap: 12px; }
+.footer-bottom-logo { width: 32px; height: 32px; background: var(--gold); border-radius: 9px; display: flex; align-items: center; justify-content: center; }
+.footer-bottom-name { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 0.95rem; color: #fff; }
+.footer-bottom-name span { color: var(--gold); }
+.footer-copy { font-size: 0.74rem; color: rgba(255,255,255,0.28); }
+.footer-legal { display: flex; gap: 20px; align-items: center; }
+.footer-legal a { font-size: 0.74rem; color: rgba(255,255,255,0.32); text-decoration: none; transition: color 0.2s; }
+.footer-legal a:hover { color: var(--gold); }
 
 /* ════════════════════════════════════
    RESPONSIVE
@@ -333,6 +428,7 @@ footer {
   .steps { grid-template-columns: 1fr 1fr; gap: 40px; }
   .steps::before { display: none; }
   .objectives-section { grid-template-columns: 1fr; }
+  .footer-top { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 700px) {
   nav { padding: 0 20px; }
@@ -344,6 +440,9 @@ footer {
   .stats-strip { gap: 0; }
   .stat-item { padding: 8px 20px; }
   .stat-divider { display: none; }
+  .footer-top { grid-template-columns: 1fr 1fr; gap: 28px; }
+  .footer-bottom { flex-direction: column; text-align: center; }
+  .footer-legal { flex-wrap: wrap; justify-content: center; }
 }
 </style>
 </head>
@@ -354,7 +453,7 @@ footer {
 
   <a href="#" class="sidebar-logo">
     <div class="logo-mark" style="padding:0; background:none; box-shadow:none;">
-      <img src="{{ asset('images/logo.png') }}" alt="SmartDoor Logo" style="width:42px; height:42px; display:block; border-radius:12px; background:var(--yellow);" />
+      <img src="{{ asset('images/logo.png') }}" alt="SmartRoom Logo" style="width:42px; height:42px; display:block; border-radius:12px; background:var(--yellow);" />
     </div>
     <div class="logo-text">
       <span class="brand-psu">PSU · Asingan</span>
@@ -400,7 +499,7 @@ footer {
       <span class="line-ghost">Seamless Access.</span>
     </h1>
     <p class="hero-desc">
-      SmartDoor is a web-based classroom scheduling system with RFID-controlled access — eliminating double bookings, unauthorized entry, and classroom confusion at PSU Asingan.
+      SmartRoom is a web-based classroom scheduling system with RFID-controlled access — eliminating double bookings, unauthorized entry, and classroom confusion at PSU Asingan.
     </p>
     <div class="hero-actions">
       <a href="#features" class="btn-primary">
@@ -485,12 +584,11 @@ footer {
 <section class="problem-section" id="problems">
   <div class="problem-inner">
     <div class="section-label reveal">The Problem</div>
-    <h2 class="section-title reveal">Why PSU Asingan Needs SmartDoor</h2>
+    <h2 class="section-title reveal">Why PSU Asingan Needs SmartRoom</h2>
     <p class="section-desc reveal">Traditional classroom management creates recurring problems that disrupt learning and administrative efficiency.</p>
     <div class="problem-grid">
 
       <div class="problem-card reveal reveal-delay-1">
-        <!-- icon removed -->
         <div class="problem-text">
           <h3>Scheduling Conflicts & Double Booking</h3>
           <p>Classroom schedules prepared in advance still result in conflicts due to human error, no real-time tracking, and lack of a centralized conflict-prevention system.</p>
@@ -498,7 +596,6 @@ footer {
       </div>
 
       <div class="problem-card reveal reveal-delay-2">
-        <!-- icon removed -->
         <div class="problem-text">
           <h3>Unauthorized Room Use</h3>
           <p>Without automated access control, classrooms can be entered by unauthorized individuals during or outside scheduled hours, compromising security.</p>
@@ -506,7 +603,6 @@ footer {
       </div>
 
       <div class="problem-card reveal reveal-delay-3">
-        <!-- icon removed -->
         <div class="problem-text">
           <h3>No Centralized Monitoring</h3>
           <p>Faculty and administrators have no unified view of room availability, reservations, and access logs — leading to inefficient decision-making.</p>
@@ -514,7 +610,6 @@ footer {
       </div>
 
       <div class="problem-card reveal reveal-delay-4">
-        <!-- icon removed -->
         <div class="problem-text">
           <h3>Delays & Classroom Inefficiency</h3>
           <p>Confusion from conflicting schedules leads to class delays, wasted classroom time, and reduced overall productivity for students and instructors alike.</p>
@@ -536,7 +631,6 @@ footer {
 
     <div class="feature-card reveal reveal-delay-1">
       <div class="feature-card-top">
-        <!-- icon removed -->
         <span class="feature-num">01</span>
       </div>
       <h3>Admin Dashboard</h3>
@@ -549,7 +643,6 @@ footer {
 
     <div class="feature-card reveal reveal-delay-2">
       <div class="feature-card-top">
-        <!-- icon removed -->
         <span class="feature-num">02</span>
       </div>
       <h3>RFID Smart Door Access</h3>
@@ -562,7 +655,6 @@ footer {
 
     <div class="feature-card reveal reveal-delay-3">
       <div class="feature-card-top">
-        <!-- icon removed -->
         <span class="feature-num">03</span>
       </div>
       <h3>Room Reservation System</h3>
@@ -575,7 +667,6 @@ footer {
 
     <div class="feature-card reveal reveal-delay-1">
       <div class="feature-card-top">
-        <!-- icon removed -->
         <span class="feature-num">04</span>
       </div>
       <h3>Occupancy Indicator Light</h3>
@@ -588,7 +679,6 @@ footer {
 
     <div class="feature-card reveal reveal-delay-2">
       <div class="feature-card-top">
-        <!-- icon removed -->
         <span class="feature-num">05</span>
       </div>
       <h3>Centralized Access Logs</h3>
@@ -601,7 +691,6 @@ footer {
 
     <div class="feature-card reveal reveal-delay-3">
       <div class="feature-card-top">
-        <!-- icon removed -->
         <span class="feature-num">06</span>
       </div>
       <h3>RFID Card Registration</h3>
@@ -620,7 +709,7 @@ footer {
   <div class="how-header">
     <div class="section-label reveal">How It Works</div>
     <h2 class="section-title reveal">Simple. Automated. Secure.</h2>
-    <p class="section-desc reveal">From schedule setup to physical door access — SmartDoor handles it end to end.</p>
+    <p class="section-desc reveal">From schedule setup to physical door access — SmartRoom handles it end to end.</p>
   </div>
   <div class="steps">
 
@@ -664,27 +753,23 @@ footer {
   <div class="objectives-section">
     <div>
       <div class="section-label reveal">Objectives</div>
-      <h2 class="section-title reveal">What SmartDoor Sets Out to Achieve</h2>
+      <h2 class="section-title reveal">What SmartRoom Sets Out to Achieve</h2>
       <p class="section-desc reveal">Each goal directly addresses the core inefficiencies in PSU's current classroom management workflow.</p>
       <div class="obj-list">
 
         <div class="obj-item reveal reveal-delay-1">
-          <!-- icon removed -->
           <p>Monitor and manage classroom schedules via an admin dashboard with real-time availability, conflict/double-booking prevention, and centralized records.</p>
         </div>
 
         <div class="obj-item reveal reveal-delay-2">
-          <!-- icon removed -->
           <p>Enable authorized faculty members to make classroom reservations for available rooms directly through the system.</p>
         </div>
 
         <div class="obj-item reveal reveal-delay-3">
-          <!-- icon removed -->
           <p>Implement RFID-based time-sensitive door unlocking so only the scheduled instructor can access the room during their assigned period.</p>
         </div>
 
         <div class="obj-item reveal reveal-delay-4">
-          <!-- icon removed -->
           <p>Deploy occupancy indicator lights (ON = occupied, OFF = vacant) to give immediate visual feedback on room status in the hallway.</p>
         </div>
 
@@ -744,7 +829,7 @@ footer {
 <section class="cta-section">
   <div class="section-label reveal" style="justify-content:center;">Get Started</div>
   <h2 class="section-title reveal">Ready to Modernize Your Campus?</h2>
-  <p class="section-desc reveal" style="margin:0 auto 44px;">SmartDoor brings intelligent scheduling and secure RFID access control to Pangasinan State University — Asingan Campus.</p>
+  <p class="section-desc reveal" style="margin:0 auto 44px;">SmartRoom brings intelligent scheduling and secure RFID access control to Pangasinan State University — Asingan Campus.</p>
   <div class="cta-actions reveal reveal-delay-1">
     <a href="#" class="btn-primary" style="font-size:1rem;padding:16px 34px;">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 2h3a1 1 0 011 1v10a1 1 0 01-1 1h-3M7 11l3-3-3-3M10 8H2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -758,17 +843,106 @@ footer {
 </section>
 
 <!-- ════════════ FOOTER ════════════ -->
-<footer>
-  <div class="footer-left">
-    <div class="footer-logo-mark">
-      <svg width="18" height="18" viewBox="0 0 22 22" fill="none"><rect x="2" y="1" width="18" height="20" rx="2" fill="#0b1640"/><rect x="3.5" y="2.5" width="11" height="17" rx="1.2" fill="#1a2f80"/><rect x="14.5" y="2.5" width="4" height="17" rx="0.8" fill="#0d1e52"/><circle cx="13.2" cy="11" r="1.3" fill="#f5c518"/><line x1="2" y1="21" x2="20" y2="21" stroke="#f5c518" stroke-width="1.2" stroke-linecap="round"/></svg>
+<footer class="footer-new">
+
+  <!-- TOP GRID: 4 link columns + newsletter -->
+  <div class="footer-top">
+
+    <!-- Col 1: System -->
+    <div class="footer-col">
+      <div class="footer-col-heading">System</div>
+      <ul>
+        <li><a href="#">Dashboard</a></li>
+        <li><a href="#">Room Scheduler</a></li>
+        <li><a href="#">RFID Management</a></li>
+        <li><a href="#">Access Logs</a></li>
+        <li><a href="#">Reservations</a></li>
+      </ul>
     </div>
-    <div>
-      <div class="footer-brand">Smart<span>Door</span></div>
-      <div class="footer-sub">Pangasinan State University – Asingan Campus</div>
+
+    <!-- Col 2: About -->
+    <div class="footer-col">
+      <div class="footer-col-heading">About</div>
+      <ul>
+        <li><a href="#">Overview</a></li>
+        <li><a href="#">PSU Asingan Campus</a></li>
+        <li><a href="#problems">The Problem</a></li>
+        <li><a href="#objectives">Objectives</a></li>
+        <li><a href="#how">How It Works</a></li>
+      </ul>
+    </div>
+
+    <!-- Col 3: Support -->
+    <div class="footer-col">
+      <div class="footer-col-heading">Support</div>
+      <ul>
+        <li><a href="#">FAQ</a></li>
+        <li><a href="#">Contact Admin</a></li>
+        <li><a href="#">User Guide</a></li>
+        <li><a href="#">Report an Issue</a></li>
+      </ul>
+    </div>
+
+    <!-- Col 4: Developers / Members -->
+    <div class="footer-col">
+      <div class="footer-col-heading">Developers</div>
+      <div style="display:flex;flex-direction:column;gap:9px;">
+        <!-- ✏️ Replace with your actual member names -->
+        <span class="footer-member-name">John Kenneth Bagotsay</span>
+        <span class="footer-member-name">Francis Natahalie Flores De Leon</span>
+        <span class="footer-member-name">John Mar S. Domingo</span>
+        <span class="footer-member-name">John Loyd B. Valencia</span>
+        <span class="footer-member-name">Ronalyn Peralta</span>
+        <span class="footer-member-name">Michael B. Veedor Jr.</span>
+      </div>
+    </div>
+
+    <!-- Col 5: Newsletter + Socials -->
+    <div class="footer-col">
+      <div class="footer-newsletter-title">Stay in the Loop</div>
+      <p class="footer-newsletter-desc">Get updates on SmartRoom announcements and system upgrades.</p>
+      <div class="footer-input-row">
+        <input type="email" class="footer-email-input" placeholder="Your email address" />
+        <button class="footer-subscribe-btn">Subscribe</button>
+      </div>
+      <div class="footer-socials">
+        <!-- Facebook -->
+        <a href="#" class="footer-social-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" stroke="#f5c518" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <!-- Twitter/X -->
+        <a href="#" class="footer-social-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z" stroke="#f5c518" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <!-- Instagram -->
+        <a href="#" class="footer-social-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="#f5c518" stroke-width="1.8"/><circle cx="12" cy="12" r="4" stroke="#f5c518" stroke-width="1.8"/><circle cx="17.5" cy="6.5" r="1" fill="#f5c518"/></svg>
+        </a>
+        <!-- LinkedIn -->
+        <a href="#" class="footer-social-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z" stroke="#f5c518" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="4" r="2" stroke="#f5c518" stroke-width="1.8"/></svg>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM BAR -->
+  <div class="footer-bottom">
+    <div class="footer-bottom-brand">
+      <div class="footer-bottom-logo" style="background:none;padding:0;">
+        <img src="{{ asset('images/PSU.png') }}" alt="PSU Logo" style="width:32px; height:32px; display:block; border-radius:50%; background:#fff; object-fit:cover; box-shadow:0 2px 8px rgba(0,0,0,0.08);" />
+      </div>
+      <span class="footer-bottom-name" style="color:#fff; font-weight:400;">Pangasinan State University</span>
+    </div>
+    <div class="footer-copy">© 2025 SmartRoom · Pangasinan State University – Asingan Campus · All rights reserved.</div>
+    <div class="footer-legal">
+      <a href="#">Terms of Service</a>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Accessibility</a>
     </div>
   </div>
-  <div class="footer-copy">© 2025 SmartDoor. All rights reserved.</div>
+
 </footer>
 
 <script>

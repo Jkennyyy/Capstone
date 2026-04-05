@@ -28,22 +28,20 @@
             padding: 0;
         }
 
-        html {
-            scroll-behavior: smooth;
-        }
+        html { scroll-behavior: smooth; }
 
         body {
             font-family: 'DM Sans', sans-serif;
             background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
             color: var(--white);
-            overflow: hidden;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
         }
 
-        /* ── NOISE TEXTURE OVERLAY ── */
+        /* Noise texture */
         body::before {
             content: '';
             position: fixed;
@@ -54,103 +52,200 @@
             opacity: 0.35;
         }
 
-        .login-container {
+        /* Ambient glow blobs */
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .blob-1 {
+            width: 400px; height: 400px;
+            background: var(--gold);
+            top: -100px; left: -100px;
+        }
+        .blob-2 {
+            width: 300px; height: 300px;
+            background: var(--navy-light);
+            bottom: -80px; right: -60px;
+        }
+
+        /* ── CARD ── */
+        .login-card {
             position: relative;
             z-index: 10;
+            display: flex;
             width: 90%;
-            max-width: 420px;
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            max-width: 860px;
+            min-height: 520px;
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(245,197,24,0.1);
+            animation: slideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(60px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(50px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        .login-card {
-            background: rgba(255,255,255,0.07);
-            backdrop-filter: blur(40px) saturate(1.5);
-            border: 1px solid rgba(245,197,24,0.15);
-            border-radius: 24px;
-            padding: 48px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.1);
-        }
-
-        .login-header {
-            margin-bottom: 32px;
-            text-align: center;
-        }
-
-        .brand-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            margin: 0 auto 16px;
-            text-decoration: none;
-        }
-
-        .brand-icon {
-            width: 42px;
-            height: 42px;
-            display: block;
-            object-fit: contain;
-            object-position: center;
+        /* ── LEFT PANEL ── */
+        .left-panel {
+            position: relative;
+            width: 42%;
             flex-shrink: 0;
-            box-shadow: 0 4px 15px rgba(245,197,24,0.25);
+            background: linear-gradient(160deg, var(--navy-light) 0%, var(--navy) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 36px;
+            overflow: hidden;
         }
 
-        .brand-name {
-            font-family: 'Space Grotesk', 'Sora', sans-serif;
-            font-size: 1.5rem;
+        /* Wavy right edge */
+        .left-panel::after {
+            content: '';
+            position: absolute;
+            top: 0; right: -1px;
+            width: 60px;
+            height: 100%;
+            background: var(--white);
+            clip-path: ellipse(60px 55% at 100% 50%);
+            opacity: 0.07;
+        }
+
+        /* decorative circles */
+        .panel-circle {
+            position: absolute;
+            border-radius: 50%;
+            border: 1.5px solid rgba(245,197,24,0.15);
+        }
+        .panel-circle-1 { width: 280px; height: 280px; top: -80px; left: -80px; }
+        .panel-circle-2 { width: 180px; height: 180px; bottom: -40px; right: -60px; border-color: rgba(245,197,24,0.1); }
+        .panel-circle-3 {
+            width: 110px; height: 110px;
+            bottom: 80px; left: 30px;
+            border-color: rgba(245,197,24,0.08);
+        }
+
+        .panel-welcome {
+            font-family: 'Sora', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 300;
+            color: var(--muted);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        .panel-icon-wrap {
+            width: 88px;
+            height: 88px;
+            background: rgba(245,197,24,0.12);
+            border: 1.5px solid rgba(245,197,24,0.3);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(245,197,24,0.15);
+        }
+
+        .panel-icon-wrap svg {
+            width: 44px;
+            height: 44px;
+        }
+
+        .panel-brand {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.75rem;
             font-weight: 700;
             color: var(--white);
             letter-spacing: -0.02em;
+            margin-bottom: 20px;
         }
 
-        .brand-name .door-accent {
-            color: var(--gold);
+        .panel-brand .accent { color: var(--gold); }
+
+        .panel-tagline {
+            font-size: 0.88rem;
+            color: var(--muted);
+            text-align: center;
+            line-height: 1.65;
+            max-width: 220px;
         }
 
-        .login-title {
-            font-family: 'Space Grotesk', 'Sora', sans-serif;
-            font-size: 2rem;
+        /* dots decoration */
+        .panel-dots {
+            position: absolute;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+        }
+        .panel-dots span {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: rgba(245,197,24,0.3);
+        }
+        .panel-dots span:first-child { background: var(--gold); }
+
+        /* ── RIGHT PANEL ── */
+        .right-panel {
+            flex: 1;
+            background: rgba(255,255,255,0.055);
+            backdrop-filter: blur(40px) saturate(1.4);
+            padding: 52px 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-left: 1px solid rgba(245,197,24,0.08);
+        }
+
+        .form-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.75rem;
             font-weight: 700;
-            margin-bottom: 8px;
             letter-spacing: -0.02em;
             background: linear-gradient(90deg, var(--white) 0%, var(--gold-pale) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            margin-bottom: 6px;
         }
 
-        .login-subtitle {
-            font-size: 0.95rem;
+        .form-subtitle {
+            font-size: 0.9rem;
             color: var(--muted);
-            font-weight: 400;
+            margin-bottom: 32px;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
+            position: relative;
         }
 
         label {
             display: block;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
+            margin-bottom: 7px;
+            font-size: 0.85rem;
             font-weight: 500;
-            color: var(--white);
-            letter-spacing: 0.3px;
+            color: rgba(255,255,255,0.8);
+            letter-spacing: 0.2px;
         }
 
-        input {
+        .input-wrap {
+            position: relative;
+        }
+
+        input[type="email"],
+        input[type="password"] {
             width: 100%;
-            padding: 12px 16px;
+            padding: 12px 42px 12px 16px;
             background: rgba(255,255,255,0.06);
             border: 1px solid rgba(245,197,24,0.12);
             border-radius: 12px;
@@ -161,22 +256,34 @@
             outline: none;
         }
 
-        input::placeholder {
-            color: rgba(255,255,255,0.35);
-        }
+        input::placeholder { color: rgba(255,255,255,0.3); }
 
         input:focus {
             background: rgba(255,255,255,0.1);
-            border-color: rgba(245,197,24,0.35);
-            box-shadow: 0 0 0 3px rgba(245,197,24,0.1);
+            border-color: rgba(245,197,24,0.4);
+            box-shadow: 0 0 0 3px rgba(245,197,24,0.08);
         }
+
+        /* checkmark icon on right of input */
+        .input-icon {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(245,197,24,0.4);
+            font-size: 14px;
+            pointer-events: none;
+            transition: color 0.25s;
+        }
+
+        input:focus ~ .input-icon { color: var(--gold); }
 
         .remember-forgot {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 24px;
-            font-size: 0.85rem;
+            font-size: 0.83rem;
         }
 
         .remember-me {
@@ -184,12 +291,11 @@
             align-items: center;
             gap: 8px;
             cursor: pointer;
-            user-select: none;
+            color: var(--muted);
         }
 
         input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
+            width: 16px; height: 16px;
             cursor: pointer;
             accent-color: var(--gold);
         }
@@ -200,108 +306,134 @@
             font-weight: 500;
         }
 
+        .forgot-password:hover { text-decoration: underline; }
+
+        /* Buttons row */
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
         .login-button {
-            width: 100%;
-            padding: 14px 20px;
-            background: linear-gradient(90deg, var(--gold) 0%, var(--gold-pale) 100%);
+            flex: 1;
+            padding: 13px 20px;
+            background: var(--gold);
             border: none;
             border-radius: 12px;
             color: var(--navy);
-            font-family: 'Space Grotesk', 'Sora', sans-serif;
-            font-size: 0.95rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.92rem;
             font-weight: 700;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
             cursor: pointer;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 15px rgba(245,197,24,0.25);
+            box-shadow: none;
+            transition: none;
         }
 
-        .login-button:active {
-            transform: translateY(0);
+        .login-button:hover {
+            /* No hover effect */
         }
 
-        .signup-link {
-            text-align: center;
-            font-size: 0.9rem;
+        .signup-button {
+            flex: 1;
+            padding: 13px 20px;
+            background: var(--navy-light);
+            border: none;
+            border-radius: 12px;
+            color: var(--white);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: none;
+        }
+
+        .signup-button:hover {
+            /* No hover effect */
+        }
+
+        .terms {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 0.82rem;
             color: var(--muted);
+            margin-bottom: 0;
         }
 
-        .signup-link a {
+        .terms input[type="checkbox"] { margin-top: 2px; }
+
+        .terms a {
             color: var(--gold);
             text-decoration: none;
-            font-weight: 600;
         }
 
         .error-message {
             color: var(--error);
-            font-size: 0.85rem;
-            margin-top: 6px;
+            font-size: 0.82rem;
+            margin-top: 5px;
             display: none;
         }
 
         input.error {
             border-color: var(--error);
-            background: rgba(255, 107, 107, 0.05);
         }
 
-        .divider {
-            text-align: center;
-            margin: 24px 0;
-            font-size: 0.85rem;
-            color: var(--muted);
-        }
-
-        .divider::before,
-        .divider::after {
-            content: '';
-            display: inline-block;
-            width: 50px;
-            height: 1px;
-            background: rgba(245,197,24,0.15);
-            margin: 0 12px;
-            vertical-align: middle;
-        }
-
-        @media (max-width: 480px) {
-            .login-card {
-                padding: 32px 24px;
-                border-radius: 20px;
-            }
-
-            .login-title {
-                font-size: 1.5rem;
-            }
-
-            .remember-forgot {
-                flex-direction: column;
-                gap: 12px;
-                align-items: flex-start;
-            }
+        /* responsive */
+        @media (max-width: 640px) {
+            .login-card { flex-direction: column; max-width: 420px; }
+            .left-panel { width: 100%; min-height: 200px; padding: 36px 28px; }
+            .left-panel::after { display: none; }
+            .right-panel { padding: 36px 28px; }
+            .btn-row { flex-direction: column; }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-card">
-            <div class="login-header">
-                <a href="{{ url('/') }}" class="brand-link">
-                    <img src="{{ asset('images/logo.png') }}" alt="SmartRoom Logo" class="brand-icon">
-                    <span class="brand-name">Smart<span class="door-accent">Door</span></span>
-                </a>
-                <h1 class="login-title">Welcome Back</h1>
-                <p class="login-subtitle">Sign in to your SmartRoom account</p>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <div class="login-card">
+        <!-- LEFT PANEL -->
+        <div class="left-panel">
+            <div class="panel-circle panel-circle-1"></div>
+            <div class="panel-circle panel-circle-2"></div>
+            <div class="panel-circle panel-circle-3"></div>
+
+            <p class="panel-welcome">Welcome to</p>
+
+            <div style="width:72px; height:72px; margin:0 auto 18px; display:flex; align-items:center; justify-content:center;">
+                <img src="{{ asset('images/logo.png') }}" alt="SmartRoom Logo" style="width:72px; height:72px; border-radius:16px; background:#fff; object-fit:cover; box-shadow:0 2px 8px rgba(0,0,0,0.08);" />
             </div>
+
+            <div class="panel-brand">Smart<span class="accent">Room</span></div>
+
+            <p class="panel-tagline">Your intelligent space management platform for seamless access and control.</p>
+
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="right-panel">
+            <h1 class="form-title">Sign In</h1>
+            <p class="form-subtitle">Access your SmartRoom account</p>
 
             <form id="loginForm">
                 <div class="form-group">
                     <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                    <div class="input-wrap">
+                        <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                        <span class="input-icon">✓</span>
+                    </div>
                     <div class="error-message" id="emailError"></div>
                 </div>
 
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" placeholder="•••••••••" required>
+                    <div class="input-wrap">
+                        <input type="password" id="password" name="password" placeholder="•••••••••" required>
+                        <span class="input-icon">✓</span>
+                    </div>
                     <div class="error-message" id="passwordError"></div>
                 </div>
 
@@ -313,10 +445,14 @@
                     <a href="#" class="forgot-password">Forgot password?</a>
                 </div>
 
-                <button type="submit" class="login-button">Sign In</button>
+                <div class="btn-row">
+                    <button type="submit" class="login-button">Sign In</button>
+                    <button type="button" class="signup-button" onclick="window.location.href='/signup'">Create Account</button>
+                </div>
 
-                <div class="signup-link">
-                    Don't have an account? <a href="/signup">Create one</a>
+                <div class="terms">
+                    <input type="checkbox" id="terms" name="terms">
+                    <label for="terms">By signing in, I agree with the <a href="#">Terms &amp; Conditions</a></label>
                 </div>
             </form>
         </div>
@@ -329,17 +465,13 @@
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-
-            // Clear previous errors
-            document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+            document.querySelectorAll('.error-message').forEach(el => { el.textContent = ''; el.style.display = 'none'; });
             document.querySelectorAll('input').forEach(el => el.classList.remove('error'));
 
             const email = emailInput.value.trim();
             const password = passwordInput.value;
-
             let hasError = false;
 
-            // Validation
             if (!email) {
                 showError('emailError', 'Email is required');
                 emailInput.classList.add('error');
@@ -359,12 +491,9 @@
             if (hasError) return;
 
             try {
-                // Replace with actual API endpoint
                 const response = await fetch('/api/login', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
 
@@ -386,27 +515,8 @@
         }
 
         function isValidEmail(email) {
-            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return regex.test(email);
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         }
-
-        // Add focus effects
-        [emailInput, passwordInput].forEach(input => {
-            input.addEventListener('focus', () => {
-                document.querySelectorAll('input').forEach(el => {
-                    if (el !== input) {
-                        el.style.background = 'rgba(255,255,255,0.04)';
-                    }
-                });
-                input.style.background = 'rgba(255,255,255,0.1)';
-            });
-
-            input.addEventListener('blur', () => {
-                document.querySelectorAll('input').forEach(el => {
-                    el.style.background = 'rgba(255,255,255,0.06)';
-                });
-            });
-        });
     </script>
 </body>
 </html>

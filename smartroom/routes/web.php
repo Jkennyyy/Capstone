@@ -20,13 +20,27 @@ Route::get('/login', function () {
 Route::get('/signup', function () {
     return view('auth.signup');
 });
+Route::get('/faculty_dashboard', function () {
+    return view('frontend.faculty.faculty_dashboard');
+});
+Route::get('/rooms', function () {
+    return view('frontend.faculty.rooms');
+});
+
+Route::get('/faculty-schedule', function () {
+    return view('frontend.faculty.schedule');
+})->name('faculty.schedule');
+
+Route::get('/faculty_schedule', function () {
+    return view('frontend.faculty.schedule');
+});
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    return view('frontend.admin.dashboard');
 });
 
 Route::get('/ai-recommendations', function () {
-    return view('frontend.admin.ai-recommendations');
+    return view('frontend.faculty.ai-recommendations');
 });
 
 Route::get('/classrooms', [ClassroomController::class, 'index'])->name('classrooms.index');
@@ -35,5 +49,14 @@ Route::get('/classrooms/{id}', [ClassroomController::class, 'show'])->name('clas
 Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule.index');
 Route::get('/schedule/{id}', [ScheduleController::class, 'show'])->name('schedule.show');
 
+
 Route::get('/smartlocking', [SmartLockingController::class, 'index'])->name('smartlocking.index');
 Route::get('/smartlocking/{id}', [SmartLockingController::class, 'show'])->name('smartlocking.show');
+
+// Admin SmartLocking route for tab navigation
+Route::get('/admin/smartlocking', [SmartLockingController::class, 'index'])->name('admin.smartlocking');
+
+// Access Logs screen
+Route::get('/admin/accessLogs', function () {
+    return view('frontend.admin.accessLogs');
+})->name('accessLogs');

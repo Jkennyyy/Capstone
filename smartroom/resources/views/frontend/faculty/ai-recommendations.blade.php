@@ -112,7 +112,12 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
   display: flex; align-items: center; gap: 10px; padding: 10px 12px;
   border-radius: var(--radius-sm); background: rgba(255,255,255,0.05); margin-bottom: 8px;
 }
-.user-widget img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(245,197,24,0.4); }
+.user-avatar {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  background: var(--navy-mid); border: 2px solid rgba(245,197,24,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.78rem; font-weight: 700; color: var(--yellow);
+}
 .user-widget-info { flex: 1; min-width: 0; }
 .user-widget-name { font-size: 0.83rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .user-widget-role { font-size: 0.73rem; color: rgba(255,255,255,0.4); }
@@ -385,7 +390,6 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
   display: flex; align-items: flex-start; gap: 14px;
 }
 .insight-icon { width: 40px; height: 40px; border-radius: 11px; background: #16a34a; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #fff; flex-shrink: 0; }
-.insight-body {}
 .insight-title { font-size: 0.88rem; font-weight: 700; color: #14532d; margin-bottom: 4px; }
 .insight-text  { font-size: 0.8rem; color: #15803d; line-height: 1.65; }
 .insight-action { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; font-size: 0.78rem; font-weight: 700; color: #16a34a; background: rgba(22,163,74,0.1); border: 1px solid rgba(22,163,74,0.25); padding: 5px 12px; border-radius: 7px; cursor: pointer; transition: all 0.18s; border: none; font-family: 'Inter', sans-serif; }
@@ -401,38 +405,46 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
 </head>
 <body>
 
-<!-- ════════════════════════════════════════════
-     SIDEBAR — EXACT COPY FROM CLASSROOMS
-════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════
+  SIDEBAR — DO NOT CHANGE
+═══════════════════════════════════════════ -->
 <div class="sidebar">
-  <a href="#" class="sidebar-logo">
+  <a href="<?= htmlspecialchars(url('/faculty_dashboard')) ?>" class="sidebar-logo">
     <div class="logo-mark"><i class="fas fa-door-open"></i></div>
     <div class="logo-text">
-      <span class="brand-psu" style="font-size:0.6rem;font-weight:700;letter-spacing:0.18em;color:rgba(255,255,255,0.45);display:block;margin-bottom:3px;text-transform:uppercase;">PSU</span>
-      <span class="brand-main">Smart<span>Room</span></span>
+      <span class="brand-psu">PSU</span>
+      <span class="brand-main">Smart<span>Door</span></span>
     </div>
   </a>
 
   <span class="nav-section-label">Main Menu</span>
   <ul class="sidebar-nav">
     <li>
-      <a href="{{ url('/dashboard') }}">
-        <span class="nav-icon"><i class="fas fa-chart-line"></i></span>Dashboard
+      <a href="{{ url('/faculty_dashboard') }}"
+         class="{{ Request::is('faculty_dashboard') ? 'active' : '' }}">
+        <span class="nav-icon"><i class="fas fa-chart-line"></i></span>
+        Dashboard
       </a>
     </li>
     <li>
-      <a href="{{ url('/classrooms') }}">
-        <span class="nav-icon"><i class="fas fa-school"></i></span>Classrooms
+      <a href="{{ url('/rooms') }}"
+         class="{{ Request::is('rooms*') ? 'active' : '' }}">
+        <span class="nav-icon"><i class="fas fa-door-open"></i></span>
+        Room
       </a>
     </li>
     <li>
-      <a href="{{ url('/schedule') }}">
-        <span class="nav-icon"><i class="fas fa-calendar-days"></i></span>Schedule
+      <a href="{{ url('/faculty-schedule') }}"
+         class="{{ Request::is('faculty-schedule') ? 'active' : '' }}">
+        <span class="nav-icon"><i class="fas fa-clock"></i></span>
+        Schedule
       </a>
     </li>
     <li>
-      <a href="{{ url('/smartlocking') }}">
-        <span class="nav-icon"><i class="fas fa-lock"></i></span>SmartLocking
+      <a href="{{ url('/profile') }}"
+         class="{{ Request::is('profile*') ? 'active' : '' }}">
+        <span class="nav-icon"><i class="fas fa-user"></i></span>
+        Profile
       </a>
     </li>
   </ul>
@@ -440,29 +452,33 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
   <span class="nav-section-label">Tools</span>
   <ul class="sidebar-nav">
     <li>
-      <a href="{{ url('/ai-recommendations') }}" class="active">
-        <span class="nav-icon"><i class="fas fa-robot"></i></span>AI Recommendations
+      <a href="{{ url('/ai-recommendations') }}"
+         class="{{ Request::is('ai-recommendations') ? 'active' : '' }}">
+        <span class="nav-icon"><i class="fas fa-robot"></i></span>
+        AI Recommendations
       </a>
     </li>
     <li>
-      <a href="#">
-        <span class="nav-icon"><i class="fas fa-chart-bar"></i></span>Reports
+      <a href="#" class="{{ Request::is('reports*') ? 'active' : '' }}">
+        <span class="nav-icon"><i class="fas fa-chart-bar"></i></span>
+        Reports
       </a>
     </li>
   </ul>
 
   <div class="sidebar-footer">
     <div class="user-widget">
-      <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Prof. Elena Santos">
+      <div class="user-avatar">ES</div>
       <div class="user-widget-info">
         <div class="user-widget-name">Prof. Elena Santos</div>
         <div class="user-widget-role">Faculty of IT</div>
       </div>
     </div>
-    <form method="POST" action="{{ url('/logout') }}">
-      @csrf
+    <form method="POST" action="<?= htmlspecialchars(url('/logout')) ?>">
+      <?php csrf_field(); ?>
       <button type="submit" class="sidebar-logout-btn">
-        <i class="fas fa-arrow-right-from-bracket"></i> Sign Out
+        <i class="fas fa-arrow-right-from-bracket"></i>
+        Sign Out
       </button>
     </form>
   </div>

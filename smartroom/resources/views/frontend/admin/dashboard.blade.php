@@ -519,28 +519,12 @@ body {
     </li>
   </ul>
 
-  <span class="nav-section-label">Tools</span>
-  <ul class="sidebar-nav">
-    <li>
-      <a href="{{ url('/ai-recommendations') }}" class="{{ Request::is('ai-recommendations') ? 'active' : '' }}">
-        <span class="nav-icon"><i class="fas fa-robot"></i></span>
-        AI Recommendations
-      </a>
-    </li>
-    <li>
-      <a href="#" class="{{ Request::is('reports*') ? 'active' : '' }}">
-        <span class="nav-icon"><i class="fas fa-chart-bar"></i></span>
-        Reports
-      </a>
-    </li>
-  </ul>
-
   <div class="sidebar-footer">
     <div class="user-widget">
       <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Prof. Elena Santos">
       <div class="user-widget-info">
         <div class="user-widget-name">Prof. Elena Santos</div>
-        <div class="user-widget-role">Faculty of IT</div>
+        <div class="user-widget-role">Admin</div>
       </div>
     </div>
     <form method="POST" action="{{ url('/logout') }}">
@@ -558,23 +542,10 @@ body {
 
   {{-- TOPBAR --}}
   <div class="topbar">
-    <div class="topbar-search">
-      <i class="fas fa-search"></i>
-      <input type="text" placeholder="Search for classrooms, faculty, or subjects...">
-    </div>
-
-    <div class="topbar-right">
-      <button class="notif-btn" title="Notifications">
-        <i class="fas fa-bell"></i>
-        <span class="notif-badge"></span>
-      </button>
-      <div class="topbar-profile">
-        <div class="topbar-profile-info">
-          <div class="topbar-profile-name">Prof. Elena Santos</div>
-          <div class="topbar-profile-role">Faculty of IT</div>
-        </div>
-        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Prof. Elena Santos">
-      </div>
+    <div style="font-size:1rem;font-weight:700;color:var(--text);letter-spacing:-0.01em;">Admin Portal</div>
+    <div style="font-size:0.84rem;color:var(--text-secondary);display:flex;align-items:center;gap:7px;">
+      <i class="fas fa-clock" style="font-size:0.78rem;color:var(--text-light);"></i>
+      <span>{{ \Carbon\Carbon::now()->format('l, F j, Y') }}</span>
     </div>
   </div>
 
