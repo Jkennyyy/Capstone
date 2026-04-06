@@ -240,13 +240,87 @@ body {
   border-radius: 50%; border: 1.5px solid var(--white);
 }
 
-.topbar-profile { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.topbar-profile { position: relative; display: flex; align-items: center; gap: 12px; cursor: pointer; }
 .topbar-profile-info { text-align: right; }
 .topbar-profile-name { font-size: 0.88rem; font-weight: 700; color: var(--text); line-height: 1.2; }
 .topbar-profile-role { font-size: 0.78rem; color: var(--text-3); }
 .topbar-profile img {
   width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
   border: 2px solid var(--border); box-shadow: var(--shadow-xs);
+}
+
+/* Profile dropdown */
+.profile-dropdown {
+  position: absolute;
+  top: 115%;
+  right: 0;
+  min-width: 230px;
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  padding: 10px 12px 8px;
+  display: none;
+  z-index: 2000;
+}
+.profile-dropdown.is-open { display: block; }
+.profile-dropdown-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.profile-dropdown-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  color: var(--text-3);
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+.profile-dropdown-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.profile-dropdown-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  font-weight: 700;
+  padding: 2px 0 3px;
+}
+.profile-dropdown-value {
+  font-size: 0.82rem;
+  color: var(--text-2);
+}
+.profile-signout-btn {
+  width: 100%;
+  margin-top: 4px;
+  border: none;
+  outline: none;
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--red-bg);
+  color: var(--red);
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease, transform 0.08s ease;
+}
+.profile-signout-btn i { font-size: 0.86rem; }
+.profile-signout-btn:hover {
+  background: #fee2e2;
+  transform: translateY(-1px);
 }
 
 /* ── CONTENT AREA ────────────────────────────────── */
@@ -557,7 +631,7 @@ body {
       <a href="{{ url('/rooms') }}"
          class="{{ Request::is('rooms*') ? 'active' : '' }}">
         <span class="nav-icon"><i class="fas fa-door-open"></i></span>
-        Room
+        Rooms
       </a>
     </li>
     <li>
@@ -565,13 +639,6 @@ body {
          class="{{ Request::is('faculty-schedule') ? 'active' : '' }}">
         <span class="nav-icon"><i class="fas fa-clock"></i></span>
         Schedule
-      </a>
-    </li>
-    <li>
-      <a href="{{ url('/profile') }}"
-         class="{{ Request::is('profile*') ? 'active' : '' }}">
-        <span class="nav-icon"><i class="fas fa-user"></i></span>
-        Profile
       </a>
     </li>
   </ul>
@@ -586,7 +653,7 @@ body {
       </a>
     </li>
     <li>
-      <a href="#" class="{{ Request::is('reports*') ? 'active' : '' }}">
+      <a href="{{ url('/reports') }}" class="{{ Request::is('reports*') ? 'active' : '' }}">
         <span class="nav-icon"><i class="fas fa-chart-bar"></i></span>
         Reports
       </a>
@@ -633,6 +700,29 @@ body {
           <div class="topbar-profile-role">Faculty of IT</div>
         </div>
         <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Prof. Elena Santos">
+        <div class="profile-dropdown">
+          <div class="profile-dropdown-item">
+            <span class="profile-dropdown-icon"><i class="fas fa-envelope"></i></span>
+            <div class="profile-dropdown-text">
+              <span class="profile-dropdown-label">Email</span>
+              <span class="profile-dropdown-value">elena.santos@university.edu</span>
+            </div>
+          </div>
+          <div class="profile-dropdown-item">
+            <span class="profile-dropdown-icon"><i class="fas fa-briefcase"></i></span>
+            <div class="profile-dropdown-text">
+              <span class="profile-dropdown-label">University Position</span>
+              <span class="profile-dropdown-value">Faculty of IT</span>
+            </div>
+          </div>
+          <form method="POST" action="<?= htmlspecialchars(url('/logout')) ?>">
+            <?php csrf_field(); ?>
+            <button type="submit" class="profile-signout-btn">
+              <i class="fas fa-arrow-right-from-bracket"></i>
+              Sign Out
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   </div>
@@ -830,6 +920,31 @@ body {
     </div><!-- /bottom-grid -->
   </div><!-- /content -->
 </div><!-- /main -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  function closeAllProfileDropdowns() {
+    document.querySelectorAll('.profile-dropdown').forEach(function (el) {
+      el.classList.remove('is-open');
+    });
+  }
+
+  document.querySelectorAll('.topbar-profile').forEach(function (profile) {
+    var dropdown = profile.querySelector('.profile-dropdown');
+    if (!dropdown) return;
+
+    profile.addEventListener('click', function (event) {
+      event.stopPropagation();
+      var isOpen = dropdown.classList.contains('is-open');
+      closeAllProfileDropdowns();
+      if (!isOpen) {
+        dropdown.classList.add('is-open');
+      }
+    });
+  });
+
+  document.addEventListener('click', closeAllProfileDropdowns);
+});
+</script>
 
 </body>
 </html>

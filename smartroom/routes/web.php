@@ -43,6 +43,10 @@ Route::get('/ai-recommendations', function () {
     return view('frontend.faculty.ai-recommendations');
 });
 
+Route::get('/reports', function () {
+    return view('frontend.faculty.reports');
+})->name('faculty.reports');
+
 Route::get('/classrooms', [ClassroomController::class, 'index'])->name('classrooms.index');
 Route::get('/classrooms/{id}', [ClassroomController::class, 'show'])->name('classrooms.show');
 
@@ -60,3 +64,13 @@ Route::get('/admin/smartlocking', [SmartLockingController::class, 'index'])->nam
 Route::get('/admin/accessLogs', function () {
     return view('frontend.admin.accessLogs');
 })->name('accessLogs');
+
+// Admin Reports
+Route::get('/admin/reports', function () {
+    return view('frontend.admin.reports');
+})->name('admin.reports');
+
+// Admin User Management
+Route::get('/admin/users', function () {
+    return view('frontend.admin.user_management');
+})->name('admin.users');

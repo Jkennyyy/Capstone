@@ -92,13 +92,13 @@ nav.scrolled { background: rgba(11,22,64,0.97); box-shadow: 0 4px 32px rgba(0,0,
 ════════════════════════════════════ */
 .hero { position: relative; min-height: 100vh; display: flex; align-items: center; padding: 120px 5vw 80px; overflow: hidden; }
 .hero-bg { position: absolute; inset: 0; z-index: 0; }
-.hero-bg img { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; display: block; filter: brightness(0.35) contrast(1.1) saturate(0.4); animation: slowZoom 28s ease-in-out infinite alternate; }
+.hero-bg img { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; display: block; filter: brightness(0.55) contrast(1.05) saturate(0.85); animation: slowZoom 28s ease-in-out infinite alternate; }
 @keyframes slowZoom { 0% { transform: scale(1); } 100% { transform: scale(1.08); } }
 .hero-bg::after {
   content: ''; position: absolute; inset: 0;
   background:
-    linear-gradient(to right, rgba(11,22,64,0.97) 0%, rgba(11,22,64,0.88) 20%, rgba(11,22,64,0.55) 45%, rgba(17,32,96,0.2) 100%),
-    linear-gradient(to bottom, rgba(11,22,64,0.7) 0%, transparent 18%, transparent 55%, rgba(11,22,64,0.85) 82%, rgba(11,22,64,1) 100%);
+    linear-gradient(to right, rgba(11,22,64,0.92) 0%, rgba(11,22,64,0.8) 22%, rgba(11,22,64,0.48) 48%, rgba(17,32,96,0.12) 100%),
+    linear-gradient(to bottom, rgba(11,22,64,0.55) 0%, transparent 18%, transparent 55%, rgba(11,22,64,0.72) 82%, rgba(11,22,64,0.9) 100%);
   pointer-events: none; z-index: 1;
 }
 .hero::after { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(245,197,24,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(245,197,24,0.025) 1px, transparent 1px); background-size: 60px 60px; mask-image: radial-gradient(ellipse 75% 75% at 50% 50%, black 0%, transparent 75%); pointer-events: none; z-index: 1; }

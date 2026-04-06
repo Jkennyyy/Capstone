@@ -414,6 +414,12 @@ body {
       </a>
     </li>
     <li>
+      <a href="{{ url('/admin/users') }}">
+        <span class="nav-icon"><i class="fas fa-users-cog"></i></span>
+        User Management
+      </a>
+    </li>
+    <li>
       <a href="{{ url('/smartlocking') }}">
         <span class="nav-icon"><i class="fas fa-lock"></i></span>
         SmartLocking
@@ -446,7 +452,6 @@ body {
 
   <!-- TOPBAR -->
   <div class="topbar">
-    <div style="font-size:1rem;font-weight:700;color:var(--text);letter-spacing:-0.01em;">Admin Portal</div>
     <div style="font-size:0.84rem;color:var(--text-secondary);display:flex;align-items:center;gap:7px;">
       <i class="fas fa-clock" style="font-size:0.78rem;color:var(--text-light);"></i>
       <span>{{ \Carbon\Carbon::now()->format('l, F j, Y') }}</span>

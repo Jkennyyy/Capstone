@@ -459,6 +459,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
     <li><a href="{{ url('/dashboard') }}"><span class="nav-icon"><i class="fas fa-chart-line"></i></span>Dashboard</a></li>
     <li><a href="{{ url('/classrooms') }}"><span class="nav-icon"><i class="fas fa-school"></i></span>Classrooms</a></li>
     <li><a href="{{ url('/schedule') }}"><span class="nav-icon"><i class="fas fa-calendar-days"></i></span>Schedule</a></li>
+    <li><a href="{{ url('/admin/users') }}"><span class="nav-icon"><i class="fas fa-users-cog"></i></span>User Management</a></li>
     <li><a href="{{ url('/smartlocking') }}"><span class="nav-icon"><i class="fas fa-lock"></i></span>SmartLocking</a></li>
   </ul>
 
@@ -477,7 +478,6 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
 <!-- MAIN -->
 <div class="main">
   <div class="topbar">
-    <div style="font-size:1rem;font-weight:700;color:var(--text);letter-spacing:-0.01em;">Admin Portal</div>
     <div style="font-size:0.84rem;color:var(--text-secondary);display:flex;align-items:center;gap:7px;">
       <i class="fas fa-clock" style="font-size:0.78rem;color:var(--text-light);"></i>
       <span>{{ \Carbon\Carbon::now()->format('l, F j, Y') }}</span>
