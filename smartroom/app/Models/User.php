@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -21,6 +23,12 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'must_change_password',
+        'role',
+        'department',
+        'phone',
+        'supabase_user_id',
+        'last_seen_at',
     ];
 
     /**
@@ -43,6 +51,35 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'must_change_password' => 'boolean',
+            'last_seen_at' => 'datetime',
         ];
+    }
+
+    public function courses(): HasMany
+    {
+        return $this->hasMany(Course::class, 'instructor_user_id');
+    }
+
+    public function accessCards(): HasMany
+    {
+        return $this->hasMany(AccessCard::class);
+    }
+
+    public function accessLogs(): HasMany
+    {
+        return $this->hasMany(AccessLog::class);
+    }
+
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(Reservation::class);
+    }
+
+    public function authorizedClassrooms(): BelongsToMany
+    {
+        return $this->belongsToMany(Classroom::class, 'classroom_user_access')
+            ->withPivot('access_level')
+            ->withTimestamps();
     }
 }

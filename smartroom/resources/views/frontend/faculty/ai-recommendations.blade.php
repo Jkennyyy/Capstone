@@ -1,3 +1,10 @@
+<?php
+$facultyName = request()->user()?->name ?? 'Faculty';
+$facultyDept = request()->user()?->department ?? 'Faculty';
+$facultyEmail = request()->user()?->email ?? '';
+$facultyInitials = collect(explode(' ', $facultyName))->filter()->take(2)->map(fn ($part) => strtoupper(substr($part, 0, 1)))->implode('');
+$facultyInitials = $facultyInitials !== '' ? $facultyInitials : 'U';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -159,6 +166,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
 .topbar-profile-name { font-size: 0.88rem; font-weight: 700; color: var(--text); line-height: 1.2; }
 .topbar-profile-role { font-size: 0.76rem; color: var(--text-secondary); }
 .topbar-profile img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); }
+.topbar-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; color: var(--navy-mid); background: #e0e7ff; }
 
 /* Profile dropdown */
 .profile-dropdown {
@@ -476,6 +484,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
 @media (max-width:1200px) { .main-grid { grid-template-columns: 1fr; } .quick-stats { grid-template-columns: repeat(2,1fr); } .content { padding: 24px 20px 40px; } .topbar { padding: 0 20px; } }
 @media (max-width:768px)  { :root { --sidebar-w: 0px; } .sidebar { display: none; } .quick-stats { grid-template-columns: 1fr 1fr; gap: 10px; } .topbar-search { width: 200px; } }
 </style>
+@include('partials.pro-motion')
 </head>
 <body>
 
@@ -535,10 +544,10 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
 
   <div class="sidebar-footer">
     <div class="user-widget">
-      <div class="user-avatar">ES</div>
+      <div class="user-avatar"><?= htmlspecialchars($facultyInitials) ?></div>
       <div class="user-widget-info">
-        <div class="user-widget-name">Prof. Elena Santos</div>
-        <div class="user-widget-role">Faculty of IT</div>
+        <div class="user-widget-name"><?= htmlspecialchars($facultyName) ?></div>
+        <div class="user-widget-role"><?= htmlspecialchars($facultyDept) ?></div>
       </div>
     </div>
     <form method="POST" action="{{ url('/logout') }}">
@@ -566,23 +575,23 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
       <button class="notif-btn"><i class="fas fa-bell"></i><span class="notif-badge"></span></button>
       <div class="topbar-profile">
         <div class="topbar-profile-info">
-          <div class="topbar-profile-name">Prof. Elena Santos</div>
-          <div class="topbar-profile-role">Faculty of IT</div>
+          <div class="topbar-profile-name"><?= htmlspecialchars($facultyName) ?></div>
+          <div class="topbar-profile-role"><?= htmlspecialchars($facultyDept) ?></div>
         </div>
-        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Prof. Elena Santos">
+        <div class="topbar-avatar"><?= htmlspecialchars($facultyInitials) ?></div>
         <div class="profile-dropdown">
           <div class="profile-dropdown-item">
             <span class="profile-dropdown-icon"><i class="fas fa-envelope"></i></span>
             <div class="profile-dropdown-text">
               <span class="profile-dropdown-label">Email</span>
-              <span class="profile-dropdown-value">elena.santos@university.edu</span>
+              <span class="profile-dropdown-value"><?= htmlspecialchars($facultyEmail) ?></span>
             </div>
           </div>
           <div class="profile-dropdown-item">
             <span class="profile-dropdown-icon"><i class="fas fa-briefcase"></i></span>
             <div class="profile-dropdown-text">
               <span class="profile-dropdown-label">University Position</span>
-              <span class="profile-dropdown-value">Faculty of IT</span>
+              <span class="profile-dropdown-value"><?= htmlspecialchars($facultyDept) ?></span>
             </div>
           </div>
           <form method="POST" action="{{ url('/logout') }}">
@@ -666,7 +675,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
             <div class="rec-rank rank-1">205</div>
             <div class="rec-info">
               <div class="rec-name">
-                Room 205
+                Room 16
                 <span class="rec-best-tag">BEST MATCH</span>
               </div>
               <div class="rec-meta">
@@ -694,7 +703,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
           <div class="rec-card">
             <div class="rec-rank rank-2">105</div>
             <div class="rec-info">
-              <div class="rec-name">Lab 105</div>
+              <div class="rec-name">Room 17</div>
               <div class="rec-meta">
                 <span class="rec-meta-item"><i class="fas fa-location-dot"></i> 4 min walk</span>
                 <span class="rec-meta-item"><i class="fas fa-users"></i> 30 seats</span>
@@ -720,7 +729,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
           <div class="rec-card">
             <div class="rec-rank rank-3">101</div>
             <div class="rec-info">
-              <div class="rec-name">Room 101</div>
+              <div class="rec-name">Room 15</div>
               <div class="rec-meta">
                 <span class="rec-meta-item"><i class="fas fa-location-dot"></i> 1 min walk</span>
                 <span class="rec-meta-item"><i class="fas fa-users"></i> 40 seats</span>
@@ -783,7 +792,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
               <div class="alert-icon-box ai-danger"><i class="fas fa-calendar-times"></i></div>
               <div class="alert-body">
                 <div class="alert-title">Double Booking Alert</div>
-                <div class="alert-desc">Room 101 has two overlapping schedules on Wednesday at 10:00 AM.</div>
+                <div class="alert-desc">Room 15 has two overlapping schedules on Wednesday at 10:00 AM.</div>
                 <div class="alert-btns">
                   <button class="btn-resolve"><i class="fas fa-wrench" style="font-size:0.7rem;"></i> Resolve Now</button>
                   <button class="btn-ignore">Ignore</button>
@@ -795,7 +804,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
               <div class="alert-icon-box ai-info"><i class="fas fa-clock"></i></div>
               <div class="alert-body">
                 <div class="alert-title">Unused Reservation</div>
-                <div class="alert-desc">Lab 105 was reserved but remains empty for 30+ minutes.</div>
+                <div class="alert-desc">Room 17 was reserved but remains empty for 30+ minutes.</div>
                 <div class="alert-btns">
                   <button class="btn-view"><i class="fas fa-eye" style="font-size:0.7rem;"></i> View Room</button>
                   <button class="btn-ignore">Dismiss</button>

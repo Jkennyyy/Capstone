@@ -205,6 +205,20 @@ body {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
   animation: fadeSlideUp 0.4s both 0.1s;
 }
+.manage-box {
+  background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-card); overflow: hidden; animation: fadeSlideUp 0.4s both 0.13s;
+}
+.manage-head {
+  padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;
+}
+.manage-title { font-size: 0.92rem; font-weight: 700; color: var(--text); }
+.manage-table { width: 100%; border-collapse: collapse; }
+.manage-table th, .manage-table td { padding: 10px 14px; font-size: 0.8rem; text-align: left; border-bottom: 1px solid var(--border); }
+.manage-table th { color: var(--text-secondary); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.manage-table tr:last-child td { border-bottom: none; }
+.manage-link { color: #1d4ed8; font-weight: 700; text-decoration: none; }
+.manage-link:hover { text-decoration: underline; }
 .stat-mini {
   background: var(--white); border-radius: var(--radius); border: 1.5px solid var(--border);
   padding: 18px 20px; box-shadow: var(--shadow-card);
@@ -216,7 +230,6 @@ body {
   width: 42px; height: 42px; border-radius: 11px;
   display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
 }
-.stat-mini-body {}
 .stat-mini-val { font-size: 1.6rem; font-weight: 800; color: var(--text); letter-spacing: -0.03em; line-height: 1; }
 .stat-mini-label { font-size: 0.78rem; color: var(--text-secondary); font-weight: 500; margin-top: 3px; }
 .icon-yellow { background: var(--yellow-bg); color: #b45309; }
@@ -378,6 +391,7 @@ body {
 @media (max-width: 1200px) { .stats-strip { grid-template-columns: repeat(2,1fr); } .content { padding: 24px 20px 40px; } .topbar { padding: 0 20px; } }
 @media (max-width: 768px) { :root { --sidebar-w: 0px; } .sidebar { display: none; } .topbar-search { width: 200px; } .stats-strip { grid-template-columns: 1fr 1fr; gap: 12px; } .room-grid { grid-template-columns: 1fr; } }
 </style>
+@include('frontend.admin.partials.minimal-ui-overrides')
 </head>
 <body>
 
@@ -396,19 +410,13 @@ body {
   <span class="nav-section-label">Main Menu</span>
   <ul class="sidebar-nav">
     <li>
-      <a href="{{ url('/dashboard') }}">
-        <span class="nav-icon"><i class="fas fa-chart-line"></i></span>
-        Dashboard
-      </a>
-    </li>
-    <li>
-      <a href="{{ url('/classrooms') }}" class="active">
+      <a href="{{ route('admin.classrooms') }}" class="active">
         <span class="nav-icon"><i class="fas fa-school"></i></span>
-        Classrooms
+        Room Management
       </a>
     </li>
     <li>
-      <a href="{{ url('/schedule') }}">
+      <a href="{{ url('/admin/schedule') }}">
         <span class="nav-icon"><i class="fas fa-calendar-days"></i></span>
         Schedule
       </a>
@@ -467,7 +475,7 @@ body {
         <h1>Classroom Directory</h1>
         <p>Real-time availability and status of all campus rooms.</p>
       </div>
-      <button style="display:flex;align-items:center;gap:8px;padding:10px 20px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-size:0.88rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 2px 8px rgba(11,22,64,0.18);transition:all 0.2s;" onmouseover="this.style.background='#1a2f80'" onmouseout="this.style.background='var(--navy)'">
+      <button id="addRoomBtn" style="display:flex;align-items:center;gap:8px;padding:10px 20px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-size:0.88rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 2px 8px rgba(11,22,64,0.18);transition:all 0.2s;" onmouseover="this.style.background='#1a2f80'" onmouseout="this.style.background='var(--navy)'">
         <i class="fas fa-plus" style="font-size:0.8rem;"></i>
         Add Room
       </button>
@@ -505,6 +513,39 @@ body {
       </div>
     </div>
 
+    <div class="manage-box">
+      <div class="manage-head">
+        <div class="manage-title">Room Management</div>
+        <div style="font-size:0.78rem;color:var(--text-secondary);">Open a room to set unavailable issue details</div>
+      </div>
+      <table class="manage-table">
+        <thead>
+          <tr>
+            <th>Room</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Issue</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @forelse($classrooms as $classroom)
+            <tr>
+              <td>{{ $classroom->name }}</td>
+              <td>{{ $classroom->building }}{{ $classroom->floor ? ' · '.$classroom->floor : '' }}</td>
+              <td>{{ ucfirst($classroom->status) }}</td>
+              <td>{{ $classroom->unavailable_reason ?? '-' }}</td>
+              <td><a class="manage-link" href="{{ route('admin.classrooms.show', $classroom->id) }}">Manage</a></td>
+            </tr>
+          @empty
+            <tr>
+              <td colspan="5" style="color:var(--text-secondary);">No rooms yet. Click "Add Room" to create one.</td>
+            </tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
+
     <!-- Filter Bar -->
     <div class="filter-bar">
       <div class="filter-left">
@@ -531,7 +572,7 @@ body {
     <div class="room-grid">
 
       <!-- OCCUPIED ROOM -->
-      <div class="room-card status-occupied">
+      <div class="room-card status-occupied" data-room-id="1">
         <div class="card-top">
           <div>
             <div class="card-room-name">Room 101 – CIT Laboratory</div>
@@ -560,7 +601,7 @@ body {
             Updated just now
           </div>
           <div class="card-actions">
-            <button class="card-action-btn" title="View Details"><i class="fas fa-eye"></i></button>
+            <button class="card-action-btn js-view-room" title="View Details" data-room-id="1"><i class="fas fa-eye"></i></button>
             <button class="card-action-btn" title="QR Code">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx="0.5"/><rect x="19" y="14" width="2" height="2" rx="0.5"/><rect x="14" y="19" width="2" height="2" rx="0.5"/><rect x="18" y="18" width="3" height="3" rx="0.5"/></svg>
             </button>
@@ -569,7 +610,7 @@ body {
       </div>
 
       <!-- AVAILABLE ROOM -->
-      <div class="room-card status-available">
+      <div class="room-card status-available" data-room-id="2">
         <div class="card-top">
           <div>
             <div class="card-room-name">Room 102 – Lecture Hall A</div>
@@ -598,7 +639,7 @@ body {
             2 mins ago
           </div>
           <div class="card-actions">
-            <button class="card-action-btn" title="View Details"><i class="fas fa-eye"></i></button>
+            <button class="card-action-btn js-view-room" title="View Details" data-room-id="2"><i class="fas fa-eye"></i></button>
             <button class="card-action-btn" title="QR Code">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx="0.5"/><rect x="19" y="14" width="2" height="2" rx="0.5"/><rect x="14" y="19" width="2" height="2" rx="0.5"/><rect x="18" y="18" width="3" height="3" rx="0.5"/></svg>
             </button>
@@ -607,7 +648,7 @@ body {
       </div>
 
       <!-- OCCUPIED ROOM 2 -->
-      <div class="room-card status-occupied">
+      <div class="room-card status-occupied" data-room-id="3">
         <div class="card-top">
           <div>
             <div class="card-room-name">Room 201 – Lecture Hall B</div>
@@ -636,7 +677,7 @@ body {
             Updated just now
           </div>
           <div class="card-actions">
-            <button class="card-action-btn" title="View Details"><i class="fas fa-eye"></i></button>
+            <button class="card-action-btn js-view-room" title="View Details" data-room-id="3"><i class="fas fa-eye"></i></button>
             <button class="card-action-btn" title="QR Code">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx="0.5"/><rect x="19" y="14" width="2" height="2" rx="0.5"/><rect x="14" y="19" width="2" height="2" rx="0.5"/><rect x="18" y="18" width="3" height="3" rx="0.5"/></svg>
             </button>
@@ -645,7 +686,7 @@ body {
       </div>
 
       <!-- RESERVED ROOM -->
-      <div class="room-card status-reserved">
+      <div class="room-card status-reserved" data-room-id="4">
         <div class="card-top">
           <div>
             <div class="card-room-name">Room 203 – Science Lab</div>
@@ -674,7 +715,7 @@ body {
             5 mins ago
           </div>
           <div class="card-actions">
-            <button class="card-action-btn" title="View Details"><i class="fas fa-eye"></i></button>
+            <button class="card-action-btn js-view-room" title="View Details" data-room-id="4"><i class="fas fa-eye"></i></button>
             <button class="card-action-btn" title="QR Code">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx="0.5"/><rect x="19" y="14" width="2" height="2" rx="0.5"/><rect x="14" y="19" width="2" height="2" rx="0.5"/><rect x="18" y="18" width="3" height="3" rx="0.5"/></svg>
             </button>
@@ -683,7 +724,7 @@ body {
       </div>
 
       <!-- AVAILABLE ROOM 2 -->
-      <div class="room-card status-available">
+      <div class="room-card status-available" data-room-id="5">
         <div class="card-top">
           <div>
             <div class="card-room-name">Room 301 – Computer Lab</div>
@@ -712,7 +753,7 @@ body {
             1 min ago
           </div>
           <div class="card-actions">
-            <button class="card-action-btn" title="View Details"><i class="fas fa-eye"></i></button>
+            <button class="card-action-btn js-view-room" title="View Details" data-room-id="5"><i class="fas fa-eye"></i></button>
             <button class="card-action-btn" title="QR Code">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx="0.5"/><rect x="19" y="14" width="2" height="2" rx="0.5"/><rect x="14" y="19" width="2" height="2" rx="0.5"/><rect x="18" y="18" width="3" height="3" rx="0.5"/></svg>
             </button>
@@ -721,7 +762,7 @@ body {
       </div>
 
       <!-- MAINTENANCE ROOM -->
-      <div class="room-card status-maintenance">
+      <div class="room-card status-maintenance" data-room-id="6">
         <div class="card-top">
           <div>
             <div class="card-room-name">Room 302 – AVR Hall</div>
@@ -750,7 +791,7 @@ body {
             1 hour ago
           </div>
           <div class="card-actions">
-            <button class="card-action-btn" title="View Details"><i class="fas fa-eye"></i></button>
+            <button class="card-action-btn js-view-room" title="View Details" data-room-id="6"><i class="fas fa-eye"></i></button>
             <button class="card-action-btn" title="QR Code">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx="0.5"/><rect x="19" y="14" width="2" height="2" rx="0.5"/><rect x="14" y="19" width="2" height="2" rx="0.5"/><rect x="18" y="18" width="3" height="3" rx="0.5"/></svg>
             </button>
@@ -762,6 +803,234 @@ body {
 
   </div><!-- /content -->
 </div><!-- /main -->
+
+    <div class="room-modal-overlay" id="addRoomModal" aria-hidden="true">
+      <div class="room-modal" role="dialog" aria-modal="true" aria-labelledby="addRoomModalTitle">
+        <div class="room-modal-head">
+          <div>
+            <div class="room-modal-title" id="addRoomModalTitle">Add Room</div>
+            <div class="room-modal-sub">Create a new classroom in the system.</div>
+          </div>
+          <button type="button" class="room-modal-close" id="addRoomModalCloseBtn" aria-label="Close add room dialog">
+            <i class="fas fa-xmark"></i>
+          </button>
+        </div>
+
+        <form id="addRoomForm" class="room-modal-body">
+          <label class="room-field">
+            <span class="room-label">Room Name</span>
+            <input id="roomName" class="room-input" type="text" placeholder="e.g., Room 401" required>
+          </label>
+
+          <label class="room-field">
+            <span class="room-label">Building</span>
+            <input id="roomBuilding" class="room-input" type="text" placeholder="e.g., Main Building" required>
+          </label>
+
+          <div class="room-grid-2">
+            <label class="room-field">
+              <span class="room-label">Floor</span>
+              <input id="roomFloor" class="room-input" type="text" placeholder="e.g., 1st Floor">
+            </label>
+            <label class="room-field">
+              <span class="room-label">Capacity</span>
+              <input id="roomCapacity" class="room-input" type="number" min="0" placeholder="40" required>
+            </label>
+          </div>
+
+          <label class="room-field">
+            <span class="room-label">Status</span>
+            <select id="roomStatus" class="room-input" required>
+              <option value="available" selected>Available</option>
+              <option value="occupied">Occupied</option>
+              <option value="reserved">Reserved</option>
+              <option value="maintenance">Maintenance</option>
+              <option value="unavailable">Unavailable</option>
+            </select>
+          </label>
+
+          <label class="room-field" id="issueReasonWrap" style="display:none;">
+            <span class="room-label">Issue Note</span>
+            <textarea id="roomIssueReason" class="room-input room-textarea" placeholder="e.g., AC repair ongoing"></textarea>
+          </label>
+
+          <div class="room-modal-actions">
+            <button type="button" class="room-btn room-btn-cancel" id="addRoomModalCancelBtn">Cancel</button>
+            <button type="submit" class="room-btn room-btn-submit" id="addRoomSubmitBtn">Save Room</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  <style>
+    .room-modal-overlay{position:fixed;inset:0;background:rgba(11,22,64,.42);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;padding:16px;z-index:2100}
+    .room-modal-overlay.is-open{display:flex}
+    .room-modal{width:min(520px,100%);background:var(--white);border:1.5px solid var(--border);border-radius:14px;box-shadow:0 22px 50px rgba(11,22,64,.26);overflow:hidden}
+    .room-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:16px 18px;border-bottom:1px solid var(--border);background:#fafbff}
+    .room-modal-title{font-size:1rem;font-weight:800;color:var(--text)}
+    .room-modal-sub{font-size:.78rem;color:var(--text-secondary);margin-top:2px}
+    .room-modal-close{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .room-modal-close:hover{background:var(--bg);color:var(--text)}
+    .room-modal-body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:12px}
+    .room-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .room-field{display:flex;flex-direction:column;gap:6px}
+    .room-label{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)}
+    .room-input{width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:#fff;font-family:'Inter',sans-serif;font-size:.86rem;color:var(--text);outline:none}
+    .room-input:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(59,130,246,.08)}
+    .room-textarea{min-height:74px;resize:vertical}
+    .room-modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
+    .room-btn{padding:9px 14px;border-radius:10px;font-size:.82rem;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;border:1px solid transparent}
+    .room-btn-cancel{background:#fff;color:var(--text-secondary);border-color:var(--border)}
+    .room-btn-cancel:hover{background:var(--bg);color:var(--text)}
+    .room-btn-submit{background:var(--navy);color:#fff}
+    .room-btn-submit:hover{background:#0a1235}
+    @media (max-width: 560px){.room-grid-2{grid-template-columns:1fr}}
+  .toast-wrap{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:8px;z-index:2200;pointer-events:none}
+  .toast{min-width:240px;max-width:360px;padding:10px 12px;border-radius:10px;border:1px solid #e5e7eb;box-shadow:0 10px 28px rgba(11,22,64,.2);font-size:.8rem;font-weight:600;opacity:0;transform:translateY(10px);transition:opacity .2s,transform .2s;background:#fff;color:#1f2937}
+  .toast.is-visible{opacity:1;transform:translateY(0)}
+  .toast.toast-success{background:#ecfdf5;border-color:#86efac;color:#166534}
+  .toast.toast-error{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+  .toast.toast-info{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
+  </style>
+  <div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+  const addRoomModal = document.getElementById('addRoomModal');
+  const addRoomForm = document.getElementById('addRoomForm');
+  const roomStatus = document.getElementById('roomStatus');
+  const issueReasonWrap = document.getElementById('issueReasonWrap');
+  const roomIssueReason = document.getElementById('roomIssueReason');
+  const addRoomSubmitBtn = document.getElementById('addRoomSubmitBtn');
+  const toastWrap = document.getElementById('toastWrap');
+
+  function showToast(message, type = 'info') {
+    if (!toastWrap || !message) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    toastWrap.appendChild(toast);
+
+    requestAnimationFrame(() => toast.classList.add('is-visible'));
+
+    setTimeout(() => {
+      toast.classList.remove('is-visible');
+      setTimeout(() => toast.remove(), 220);
+    }, 2600);
+  }
+
+  function toggleIssueReasonField() {
+    const selected = String(roomStatus?.value || 'available').toLowerCase();
+    const needsReason = selected === 'maintenance' || selected === 'unavailable';
+    issueReasonWrap.style.display = needsReason ? '' : 'none';
+    roomIssueReason.required = needsReason;
+    if (!needsReason) {
+      roomIssueReason.value = '';
+    }
+  }
+
+  function openAddRoomModal() {
+    if (!addRoomModal || !addRoomForm) return;
+    addRoomForm.reset();
+    toggleIssueReasonField();
+    addRoomModal.classList.add('is-open');
+    addRoomModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('roomName')?.focus();
+  }
+
+  function closeAddRoomModal() {
+    if (!addRoomModal) return;
+    addRoomModal.classList.remove('is-open');
+    addRoomModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('addRoomBtn')?.addEventListener('click', openAddRoomModal);
+  document.getElementById('addRoomModalCloseBtn')?.addEventListener('click', closeAddRoomModal);
+  document.getElementById('addRoomModalCancelBtn')?.addEventListener('click', closeAddRoomModal);
+  roomStatus?.addEventListener('change', toggleIssueReasonField);
+
+  addRoomModal?.addEventListener('click', (event) => {
+    if (event.target === addRoomModal) {
+      closeAddRoomModal();
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && addRoomModal?.classList.contains('is-open')) {
+      closeAddRoomModal();
+    }
+  });
+
+  addRoomForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const name = String(document.getElementById('roomName')?.value || '').trim();
+    const building = String(document.getElementById('roomBuilding')?.value || '').trim();
+    const floor = String(document.getElementById('roomFloor')?.value || '').trim();
+    const capacity = Number.parseInt(String(document.getElementById('roomCapacity')?.value || '0'), 10);
+    const status = String(roomStatus?.value || 'available').toLowerCase();
+    const unavailableReason = String(roomIssueReason?.value || '').trim();
+
+    if (!name || !building) {
+      showToast('Room name and building are required.', 'error');
+      return;
+    }
+
+    if (Number.isNaN(capacity) || capacity < 0) {
+      showToast('Capacity must be a valid non-negative number.', 'error');
+      return;
+    }
+
+    if ((status === 'maintenance' || status === 'unavailable') && !unavailableReason) {
+      showToast('Issue note is required for unavailable rooms.', 'error');
+      return;
+    }
+
+    addRoomSubmitBtn.disabled = true;
+
+    try {
+      const response = await fetch("{{ route('admin.classrooms.store') }}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': "{{ csrf_token() }}",
+        },
+        body: JSON.stringify({
+          name,
+          building,
+          floor: floor || null,
+          capacity,
+          status,
+          unavailable_reason: unavailableReason || null,
+          current_occupancy: 0,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({}));
+        showToast(errorBody?.message || 'Failed to create room. Please check your inputs.', 'error');
+        return;
+      }
+
+      closeAddRoomModal();
+      window.location.reload();
+    } finally {
+      addRoomSubmitBtn.disabled = false;
+    }
+  });
+
+document.querySelectorAll('.js-view-room').forEach((button) => {
+  button.addEventListener('click', (event) => {
+    event.preventDefault();
+    const roomId = button.getAttribute('data-room-id');
+    if (!roomId) return;
+    window.location.href = `/admin/classrooms/${roomId}`;
+  });
+});
+</script>
 
 </body>
 </html>

@@ -315,6 +315,21 @@
             margin-bottom: 20px;
         }
 
+        .isolate-link {
+            margin-top: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: #1d4ed8;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .isolate-link:hover {
+            text-decoration: underline;
+        }
+
         .login-button {
             flex: 1;
             padding: 13px 20px;
@@ -331,9 +346,6 @@
             transition: none;
         }
 
-        .login-button:hover {
-            /* No hover effect */
-        }
 
         .signup-button {
             flex: 1;
@@ -349,9 +361,6 @@
             transition: none;
         }
 
-        .signup-button:hover {
-            /* No hover effect */
-        }
 
         .terms {
             display: flex;
@@ -374,6 +383,10 @@
             font-size: 0.82rem;
             margin-top: 5px;
             display: none;
+        }
+
+        .error-message.is-visible {
+            display: block;
         }
 
         input.error {
@@ -418,14 +431,23 @@
             <h1 class="form-title">Sign In</h1>
             <p class="form-subtitle">Access your SmartRoom account</p>
 
-            <form id="loginForm">
+            @if (session('status'))
+                <div style="margin-bottom:12px;padding:10px 12px;border:1px solid #bbf7d0;background:#f0fdf4;color:#166534;border-radius:8px;font-size:0.82rem;">
+                    {{ session('status') }}
+                </div>
+            @endif
+
+            <form id="loginForm" method="POST" action="{{ route('auth.login.submit') }}">
+                @csrf
                 <div class="form-group">
                     <label for="email">Email Address</label>
                     <div class="input-wrap">
-                        <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                        <input type="email" id="email" name="email" placeholder="you@example.com" value="{{ old('email') }}" required>
                         <span class="input-icon">✓</span>
                     </div>
-                    <div class="error-message" id="emailError"></div>
+                    <div class="error-message {{ $errors->has('email') ? 'is-visible' : '' }}" id="emailError">
+                        {{ $errors->first('email') }}
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -434,7 +456,9 @@
                         <input type="password" id="password" name="password" placeholder="•••••••••" required>
                         <span class="input-icon">✓</span>
                     </div>
-                    <div class="error-message" id="passwordError"></div>
+                    <div class="error-message {{ $errors->has('password') ? 'is-visible' : '' }}" id="passwordError">
+                        {{ $errors->first('password') }}
+                    </div>
                 </div>
 
                 <div class="remember-forgot">
@@ -442,13 +466,17 @@
                         <input type="checkbox" name="remember">
                         <span>Remember me</span>
                     </label>
-                    <a href="#" class="forgot-password">Forgot password?</a>
+                    <a href="{{ route('password.request') }}" class="forgot-password">Forgot password?</a>
                 </div>
 
                 <div class="btn-row">
                     <button type="submit" class="login-button">Sign In</button>
-                    <button type="button" class="signup-button" onclick="window.location.href='/signup'">Create Account</button>
+                    <button type="button" id="signupButton" class="signup-button" data-signup-url="{{ route('auth.signup') }}">Create Account</button>
                 </div>
+
+                <a id="isolatedTabLink" class="isolate-link" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">
+                    Open isolated tab for another account
+                </a>
 
                 <div class="terms">
                     <input type="checkbox" id="terms" name="terms">
@@ -462,11 +490,39 @@
         const loginForm = document.getElementById('loginForm');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
+        const signupButton = document.getElementById('signupButton');
+        const isolatedTabLink = document.getElementById('isolatedTabLink');
 
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+        if (signupButton) {
+            signupButton.addEventListener('click', () => {
+                const signupUrl = signupButton.getAttribute('data-signup-url');
+                if (signupUrl) {
+                    window.location.href = signupUrl;
+                }
+            });
+        }
+
+        if (isolatedTabLink) {
+            const host = window.location.hostname;
+            let alternateHost = '';
+
+            if (host === '127.0.0.1') {
+                alternateHost = 'localhost';
+            } else if (host === 'localhost') {
+                alternateHost = '127.0.0.1';
+            }
+
+            if (alternateHost !== '') {
+                const isolatedUrl = `${window.location.protocol}//${alternateHost}:${window.location.port || '8000'}${window.location.pathname}`;
+                isolatedTabLink.href = isolatedUrl;
+                isolatedTabLink.style.display = 'inline-flex';
+            }
+        }
+
+        if (loginForm && emailInput && passwordInput) {
+            loginForm.addEventListener('submit', (e) => {
             document.querySelectorAll('.error-message').forEach(el => { el.textContent = ''; el.style.display = 'none'; });
-            document.querySelectorAll('input').forEach(el => el.classList.remove('error'));
+            [emailInput, passwordInput].forEach(el => el.classList.remove('error'));
 
             const email = emailInput.value.trim();
             const password = passwordInput.value;
@@ -488,25 +544,11 @@
                 hasError = true;
             }
 
-            if (hasError) return;
-
-            try {
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-
-                if (response.ok) {
-                    window.location.href = '/dashboard';
-                } else {
-                    const data = await response.json();
-                    showError('emailError', data.message || 'Login failed');
+                if (hasError) {
+                    e.preventDefault();
                 }
-            } catch (error) {
-                showError('emailError', 'An error occurred. Please try again.');
-            }
-        });
+            });
+        }
 
         function showError(elementId, message) {
             const errorEl = document.getElementById(elementId);

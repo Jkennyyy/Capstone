@@ -440,6 +440,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
 @media (max-width: 1100px) { .bottom-row { grid-template-columns: 1fr; } .stat-row { grid-template-columns: repeat(2,1fr); } }
 @media (max-width: 768px) { :root { --sidebar-w: 0px; } .sidebar { display:none; } .content { padding: 20px 16px 40px; } .topbar { padding: 0 16px; } }
 </style>
+@include('frontend.admin.partials.minimal-ui-overrides')
 </head>
 <body>
 
@@ -456,9 +457,8 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
 
   <span class="nav-section-label">Main Menu</span>
   <ul class="sidebar-nav">
-    <li><a href="{{ url('/dashboard') }}"><span class="nav-icon"><i class="fas fa-chart-line"></i></span>Dashboard</a></li>
-    <li><a href="{{ url('/classrooms') }}"><span class="nav-icon"><i class="fas fa-school"></i></span>Classrooms</a></li>
-    <li><a href="{{ url('/schedule') }}"><span class="nav-icon"><i class="fas fa-calendar-days"></i></span>Schedule</a></li>
+    <li><a href="{{ route('admin.classrooms') }}"><span class="nav-icon"><i class="fas fa-school"></i></span>Room Management</a></li>
+    <li><a href="{{ url('/admin/schedule') }}"><span class="nav-icon"><i class="fas fa-calendar-days"></i></span>Schedule</a></li>
     <li><a href="{{ url('/admin/users') }}"><span class="nav-icon"><i class="fas fa-users-cog"></i></span>User Management</a></li>
     <li><a href="{{ url('/smartlocking') }}"><span class="nav-icon"><i class="fas fa-lock"></i></span>SmartLocking</a></li>
   </ul>
@@ -471,18 +471,15 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
         <div class="user-widget-role">Admin</div>
       </div>
     </div>
-    <button class="sidebar-logout-btn"><i class="fas fa-arrow-right-from-bracket"></i> Sign Out</button>
+    <form method="POST" action="{{ route('auth.logout') }}">
+      @csrf
+      <button type="submit" class="sidebar-logout-btn"><i class="fas fa-arrow-right-from-bracket"></i> Sign Out</button>
+    </form>
   </div>
 </div>
 
 <!-- MAIN -->
 <div class="main">
-  <div class="topbar">
-    <div style="font-size:0.84rem;color:var(--text-secondary);display:flex;align-items:center;gap:7px;">
-      <i class="fas fa-clock" style="font-size:0.78rem;color:var(--text-light);"></i>
-      <span>{{ \Carbon\Carbon::now()->format('l, F j, Y') }}</span>
-    </div>
-  </div>
 
   <div class="content">
 
@@ -515,28 +512,28 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
           <div><div class="stat-tile-label">Total Access Today</div></div>
           <div class="stat-tile-icon-wrap"><i class="fas fa-right-to-bracket"></i></div>
         </div>
-        <div class="stat-tile-val">47</div>
+        <div class="stat-tile-val">{{ $stats['total_today'] ?? 0 }}</div>
       </div>
       <div class="stat-tile tile-green">
         <div class="stat-tile-top">
           <div><div class="stat-tile-label">Access Granted</div></div>
           <div class="stat-tile-icon-wrap"><i class="fas fa-circle-check"></i></div>
         </div>
-        <div class="stat-tile-val">43</div>
+        <div class="stat-tile-val">{{ $stats['granted_today'] ?? 0 }}</div>
       </div>
       <div class="stat-tile tile-red">
         <div class="stat-tile-top">
           <div><div class="stat-tile-label">Access Denied</div></div>
           <div class="stat-tile-icon-wrap"><i class="fas fa-circle-xmark"></i></div>
         </div>
-        <div class="stat-tile-val">4</div>
+        <div class="stat-tile-val">{{ $stats['denied_today'] ?? 0 }}</div>
       </div>
       <div class="stat-tile tile-orange">
         <div class="stat-tile-top">
           <div><div class="stat-tile-label">Avg. Duration (min)</div></div>
           <div class="stat-tile-icon-wrap"><i class="fas fa-clock"></i></div>
         </div>
-        <div class="stat-tile-val">82</div>
+        <div class="stat-tile-val">{{ $stats['avg_duration'] ?? 0 }}</div>
       </div>
     </div>
 
@@ -570,7 +567,12 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
           <i class="fas fa-search"></i>
           <input type="text" placeholder="Search logs..." id="logSearch" oninput="filterLogs()">
         </div>
-        <button class="btn-export"><i class="fas fa-file-arrow-down"></i> Export CSV</button>
+        <select id="exportFormat" class="filter-select" title="Choose file type" aria-label="Choose file type" onchange="syncExportButtonLabel()">
+          <option value="csv" selected>CSV (.csv)</option>
+          <option value="pdf">PDF (.pdf)</option>
+          <option value="pptx" <?= empty($can_export_pptx) ? 'disabled' : '' ?>>PPTX (.pptx)<?= empty($can_export_pptx) ? ' - Unavailable' : '' ?></option>
+        </select>
+        <button class="btn-export" id="exportBtn" onclick="exportLogs()"><i class="fas fa-file-arrow-down"></i> Export CSV</button>
       </div>
     </div>
 
@@ -579,7 +581,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
       <div class="table-card-header">
         <div class="table-card-header-left">
           <h2>Access Event Log</h2>
-          <p>Showing 12 of 47 events today</p>
+          <p>Showing {{ count($logs ?? []) }} of {{ $stats['total_today'] ?? count($logs ?? []) }} events today</p>
         </div>
         <div class="live-badge"><div class="live-dot"></div> LIVE</div>
       </div>
@@ -603,7 +605,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
         </tbody>
       </table>
       <div class="table-footer">
-        <div class="table-footer-info">Showing <span>1–12</span> of <span>47</span> events</div>
+        <div class="table-footer-info">Showing <span>1-{{ count($logs ?? []) }}</span> of <span>{{ count($logs ?? []) }}</span> events</div>
         <div class="pagination">
           <button class="page-btn" disabled><i class="fas fa-chevron-left"></i></button>
           <button class="page-btn active">1</button>
@@ -636,46 +638,29 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
       <!-- Room Activity -->
       <div class="room-activity-card">
         <h3>Room Activity</h3>
-        <div class="room-act-item">
-          <div>
-            <div class="room-act-name">CS Lab 301</div>
-            <div class="room-act-bar-wrap"><div class="room-act-bar" style="width:82%;background:#3b5bdb;"></div></div>
+        @forelse(($roomActivity ?? []) as $room)
+          <div class="room-act-item">
+            <div>
+              <div class="room-act-name">{{ $room['room'] }}</div>
+              <div class="room-act-bar-wrap"><div class="room-act-bar" style="background:#3b5bdb;" data-width="{{ $room['width'] }}"></div></div>
+            </div>
+            <div style="text-align:right;">
+              <div class="room-act-count">{{ $room['events'] }}</div>
+              <div class="room-act-label">events</div>
+            </div>
           </div>
-          <div style="text-align:right;">
-            <div class="room-act-count">18</div>
-            <div class="room-act-label">events</div>
+        @empty
+          <div class="room-act-item">
+            <div>
+              <div class="room-act-name">No room activity yet</div>
+              <div class="room-act-bar-wrap"><div class="room-act-bar" style="width:0%;background:#3b5bdb;"></div></div>
+            </div>
+            <div style="text-align:right;">
+              <div class="room-act-count">0</div>
+              <div class="room-act-label">events</div>
+            </div>
           </div>
-        </div>
-        <div class="room-act-item">
-          <div>
-            <div class="room-act-name">Engineering Lab 401</div>
-            <div class="room-act-bar-wrap"><div class="room-act-bar" style="width:55%;background:#40c057;"></div></div>
-          </div>
-          <div style="text-align:right;">
-            <div class="room-act-count">12</div>
-            <div class="room-act-label">events</div>
-          </div>
-        </div>
-        <div class="room-act-item">
-          <div>
-            <div class="room-act-name">Business Room 203</div>
-            <div class="room-act-bar-wrap"><div class="room-act-bar" style="width:40%;background:#f59e0b;"></div></div>
-          </div>
-          <div style="text-align:right;">
-            <div class="room-act-count">10</div>
-            <div class="room-act-label">events</div>
-          </div>
-        </div>
-        <div class="room-act-item">
-          <div>
-            <div class="room-act-name">Math Room 105</div>
-            <div class="room-act-bar-wrap"><div class="room-act-bar" style="width:32%;background:#9775fa;"></div></div>
-          </div>
-          <div style="text-align:right;">
-            <div class="room-act-count">7</div>
-            <div class="room-act-label">events</div>
-          </div>
-        </div>
+        @endforelse
       </div>
     </div>
 
@@ -695,21 +680,61 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
   </div>
 </div>
 
+<script type="application/json" id="accessLogsJson">{!! json_encode($logs ?? []) !!}</script>
+<script type="application/json" id="hoursJson">{!! json_encode($hours ?? []) !!}</script>
+<script type="application/json" id="grantedJson">{!! json_encode($grantedSeries ?? []) !!}</script>
+<script type="application/json" id="deniedJson">{!! json_encode($deniedSeries ?? []) !!}</script>
 <script>
-const logs = [
-  { id:1,  name:'Prof. Maria Santos', dept:'Computer Science', avatar:'https://randomuser.me/api/portraits/women/68.jpg', room:'CS Lab 301',          rfid:'RFID-A1B2C304E5F6', timeIn:'07:58', timeOut:'10:05', dur:127, method:'RFID', status:'granted' },
-  { id:2,  name:'Dr. Roberto Cruz',   dept:'Engineering',       avatar:'https://randomuser.me/api/portraits/men/32.jpg',   room:'Engineering Lab 401', rfid:'RFID-B2C304E5F6A1', timeIn:'08:55', timeOut:'11:03', dur:128, method:'RFID', status:'granted' },
-  { id:3,  name:'Prof. Ana Reyes',    dept:'Business Admin',    avatar:'https://randomuser.me/api/portraits/women/12.jpg', room:'Business Room 203',   rfid:'RFID-C304E5F6A1B2', timeIn:'09:12', timeOut:'—',     dur:null, method:'RFID', status:'granted' },
-  { id:4,  name:'Dr. Carlos Mendoza', dept:'Mathematics',       avatar:'https://randomuser.me/api/portraits/men/54.jpg',   room:'Math Room 105',       rfid:'RFID-D4E5F6A1B2C3', timeIn:'07:45', timeOut:'—',     dur:null, method:'RFID', status:'denied'  },
-  { id:5,  name:'Prof. Maria Santos', dept:'Computer Science',  avatar:'https://randomuser.me/api/portraits/women/68.jpg', room:'CS Lab 301',          rfid:'RFID-A1B2C304E5F6', timeIn:'12:58', timeOut:'15:02', dur:124, method:'RFID', status:'granted' },
-  { id:6,  name:'Dr. Roberto Cruz',   dept:'Engineering',       avatar:'https://randomuser.me/api/portraits/men/32.jpg',   room:'Engineering Lab 401', rfid:'RFID-B2C304E5F6A1', timeIn:'13:50', timeOut:'16:05', dur:135, method:'RFID', status:'granted' },
-  { id:7,  name:'Prof. Ana Reyes',    dept:'Business Admin',    avatar:'https://randomuser.me/api/portraits/women/12.jpg', room:'Business Room 203',   rfid:'RFID-C304E5F6A1B2', timeIn:'13:55', timeOut:'16:10', dur:135, method:'RFID', status:'granted' },
-  { id:8,  name:'Prof. Maria Santos', dept:'Computer Science',  avatar:'https://randomuser.me/api/portraits/women/68.jpg', room:'CS Lab 301',          rfid:'RFID-A1B2C304E5F6', timeIn:'10:01', timeOut:'12:04', dur:123, method:'PIN',  status:'granted' },
-  { id:9,  name:'Dr. Carlos Mendoza', dept:'Mathematics',       avatar:'https://randomuser.me/api/portraits/men/54.jpg',   room:'Math Room 105',       rfid:'RFID-D4E5F6A1B2C3', timeIn:'08:02', timeOut:'10:10', dur:128, method:'RFID', status:'granted' },
-  { id:10, name:'Dr. Roberto Cruz',   dept:'Engineering',       avatar:'https://randomuser.me/api/portraits/men/32.jpg',   room:'Engineering Lab 401', rfid:'RFID-B2C304E5F6A1', timeIn:'06:30', timeOut:'—',     dur:null, method:'RFID', status:'denied'  },
-  { id:11, name:'Prof. Ana Reyes',    dept:'Business Admin',    avatar:'https://randomuser.me/api/portraits/women/12.jpg', room:'Business Room 203',   rfid:'RFID-C304E5F6A1B2', timeIn:'09:58', timeOut:'12:03', dur:125, method:'RFID', status:'timeout' },
-  { id:12, name:'Dr. Carlos Mendoza', dept:'Mathematics',       avatar:'https://randomuser.me/api/portraits/men/54.jpg',   room:'Math Room 105',       rfid:'RFID-D4E5F6A1B2C3', timeIn:'10:00', timeOut:'12:12', dur:132, method:'PIN',  status:'granted' },
-];
+const toastWrap = (() => {
+  let wrap = document.getElementById('toastWrap');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'toastWrap';
+    wrap.style.cssText = 'position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:8px;z-index:2200;pointer-events:none;';
+    document.body.appendChild(wrap);
+  }
+  return wrap;
+})();
+
+function showToast(message, type = 'info') {
+  if (!message) return;
+
+  let background = '#eff6ff';
+  let border = '#bfdbfe';
+  let color = '#1d4ed8';
+
+  if (type === 'error') {
+    background = '#fef2f2';
+    border = '#fecaca';
+    color = '#991b1b';
+  }
+
+  if (type === 'success') {
+    background = '#ecfdf5';
+    border = '#86efac';
+    color = '#166534';
+  }
+
+  const toast = document.createElement('div');
+  toast.textContent = message;
+  toast.style.cssText = `min-width:240px;max-width:360px;padding:10px 12px;border-radius:10px;border:1px solid ${border};box-shadow:0 10px 28px rgba(11,22,64,.2);font-size:.8rem;font-weight:600;opacity:0;transform:translateY(10px);transition:opacity .2s,transform .2s;background:${background};color:${color};`;
+  toastWrap.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+  });
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(10px)';
+    setTimeout(() => toast.remove(), 220);
+  }, 2600);
+}
+
+const logs = JSON.parse(document.getElementById('accessLogsJson')?.textContent || '[]');
+const canExportPptx = <?= !empty($can_export_pptx) ? 'true' : 'false' ?>;
+const exportBaseUrl = '<?= htmlspecialchars(url('/admin/accessLogs/export')) ?>';
 
 let filteredLogs = [...logs];
 
@@ -736,7 +761,9 @@ function renderTable(data) {
       <td style="color:var(--text-light);font-size:0.78rem;font-weight:600;">#${String(l.id).padStart(3,'0')}</td>
       <td>
         <div class="instr-cell">
-          <img class="instr-avatar" src="${l.avatar}" alt="${l.name}">
+          ${l.avatar
+            ? `<img class="instr-avatar" src="${l.avatar}" alt="${l.name}">`
+            : `<div class="instr-avatar" style="display:flex;align-items:center;justify-content:center;background:#e2e8f0;color:#475569;font-size:0.7rem;font-weight:700;">${(l.name || 'U').split(' ').filter(Boolean).slice(0,2).map((p)=>p[0]).join('').toUpperCase()}</div>`}
           <div>
             <div class="instr-name">${l.name}</div>
             <div class="instr-dept">${l.dept}</div>
@@ -745,8 +772,8 @@ function renderTable(data) {
       </td>
       <td><span class="room-chip"><i class="fas fa-door-open"></i> ${l.room}</span></td>
       <td><span class="rfid-mono">${l.rfid}</span></td>
-      <td><div class="time-val">${l.timeIn}</div><div class="date-val">Mar 29, 2025</div></td>
-      <td><div class="time-val">${l.timeOut}</div>${l.timeOut !== '—' ? '<div class="date-val">Mar 29, 2025</div>' : ''}</td>
+      <td><div class="time-val">${l.timeIn}</div><div class="date-val">${l.date || ''}</div></td>
+      <td><div class="time-val">${l.timeOut}</div>${l.timeOut !== '—' ? `<div class="date-val">${l.date || ''}</div>` : ''}</td>
       <td>${durBar(l.dur)}</td>
       <td>${methodBadge(l.method)}</td>
       <td>${statusBadge(l.status)}</td>
@@ -766,6 +793,27 @@ function filterLogs() {
   renderTable(filteredLogs);
 }
 
+function exportLogs() {
+  const formatSelect = document.getElementById('exportFormat');
+  const format = (formatSelect?.value || 'csv').toLowerCase();
+
+  if (format === 'pptx' && !canExportPptx) {
+    showToast('PPTX export is unavailable on this server. Please enable PHP zip extension.', 'error');
+    return;
+  }
+
+  window.location.href = `${exportBaseUrl}/${encodeURIComponent(format)}`;
+}
+
+function syncExportButtonLabel() {
+  const formatSelect = document.getElementById('exportFormat');
+  const exportBtn = document.getElementById('exportBtn');
+  if (!formatSelect || !exportBtn) return;
+
+  const selected = (formatSelect.value || 'csv').toUpperCase();
+  exportBtn.innerHTML = `<i class="fas fa-file-arrow-down"></i> Export ${selected}`;
+}
+
 function openModal(id) {
   const l = logs.find(x => x.id === id);
   if (!l) return;
@@ -782,8 +830,8 @@ function openModal(id) {
       <div class="detail-item"><div class="detail-item-label">Department</div><div class="detail-item-val">${l.dept}</div></div>
       <div class="detail-item"><div class="detail-item-label">RFID Tag</div><div class="detail-item-val" style="font-family:monospace;font-size:0.78rem;">${l.rfid}</div></div>
       <div class="detail-item"><div class="detail-item-label">Method</div><div class="detail-item-val">${l.method}</div></div>
-      <div class="detail-item"><div class="detail-item-label">Time In</div><div class="detail-item-val">${l.timeIn} — Mar 29, 2025</div></div>
-      <div class="detail-item"><div class="detail-item-label">Time Out</div><div class="detail-item-val">${l.timeOut === '—' ? 'Still Inside' : l.timeOut + ' — Mar 29, 2025'}</div></div>
+      <div class="detail-item"><div class="detail-item-label">Time In</div><div class="detail-item-val">${l.timeIn} — ${l.date || ''}</div></div>
+      <div class="detail-item"><div class="detail-item-label">Time Out</div><div class="detail-item-val">${l.timeOut === '—' ? 'Still Inside' : l.timeOut + ' — ' + (l.date || '')}</div></div>
       <div class="detail-item"><div class="detail-item-label">Duration</div><div class="detail-item-val">${l.dur ? l.dur + ' minutes' : '—'}</div></div>
       <div class="detail-item"><div class="detail-item-label">Status</div><div class="detail-item-val">${l.status.charAt(0).toUpperCase()+l.status.slice(1)}</div></div>
     </div>
@@ -794,9 +842,14 @@ function closeModal(e) { if (e.target === document.getElementById('modalOverlay'
 function closeModalBtn() { document.getElementById('modalOverlay').classList.remove('open'); }
 
 // Bar chart
-const hours = ['06','07','08','09','10','11','12','13','14','15','16','17'];
-const granted = [1,2,6,5,7,4,3,6,4,5,3,1];
-const denied  = [0,0,1,0,1,0,0,0,1,0,1,0];
+const hours = JSON.parse(document.getElementById('hoursJson')?.textContent || '[]');
+const granted = JSON.parse(document.getElementById('grantedJson')?.textContent || '[]');
+const denied = JSON.parse(document.getElementById('deniedJson')?.textContent || '[]');
+
+document.querySelectorAll('.room-act-bar[data-width]').forEach((bar) => {
+  const width = Number(bar.getAttribute('data-width') || 0);
+  bar.style.width = `${Math.max(0, Math.min(100, width))}%`;
+});
 const maxVal = Math.max(...granted.map((g,i) => g + denied[i]));
 
 const chart = document.getElementById('barChart');
@@ -819,10 +872,11 @@ hours.forEach((h, i) => {
 
 function goToRFID() {
   // In the full Laravel app this would be: window.location.href = '/smartlocking';
-  alert('Navigate to RFID Access Cards tab');
+  showToast('Navigate to RFID Access Cards tab', 'info');
 }
 
 renderTable(logs);
+syncExportButtonLabel();
 </script>
 </body>
 </html>

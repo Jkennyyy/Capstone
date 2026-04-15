@@ -452,12 +452,19 @@
             <h1 class="form-title">Create your account</h1>
             <p class="form-subtitle">Fill in your details to get started</p>
 
-            <form id="signupForm">
+            @if ($errors->any())
+                <div style="margin-bottom:12px;padding:10px 12px;border:1px solid #fecaca;background:#fff5f5;color:#991b1b;border-radius:8px;font-size:0.82rem;">
+                    {{ $errors->first() }}
+                </div>
+            @endif
+
+            <form id="signupForm" method="POST" action="{{ route('auth.signup.submit') }}">
+                @csrf
                 <div class="form-row">
                     <div class="form-group">
                         <label for="firstName">First Name</label>
                         <div class="input-wrap">
-                            <input type="text" id="firstName" name="firstName" placeholder="John" required>
+                            <input type="text" id="firstName" name="firstName" placeholder="John" value="{{ old('firstName') }}" required>
                             <span class="input-icon">✓</span>
                         </div>
                         <div class="error-message" id="firstNameError"></div>
@@ -465,7 +472,7 @@
                     <div class="form-group">
                         <label for="lastName">Last Name</label>
                         <div class="input-wrap">
-                            <input type="text" id="lastName" name="lastName" placeholder="Doe" required>
+                            <input type="text" id="lastName" name="lastName" placeholder="Doe" value="{{ old('lastName') }}" required>
                             <span class="input-icon">✓</span>
                         </div>
                         <div class="error-message" id="lastNameError"></div>
@@ -475,7 +482,7 @@
                 <div class="form-group">
                     <label for="email">E-mail Address</label>
                     <div class="input-wrap">
-                        <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                        <input type="email" id="email" name="email" placeholder="you@example.com" value="{{ old('email') }}" required>
                         <span class="input-icon">✓</span>
                     </div>
                     <div class="error-message" id="emailError"></div>
@@ -499,14 +506,14 @@
                 <div class="form-group">
                     <label for="confirmPassword">Confirm Password</label>
                     <div class="input-wrap">
-                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="•••••••••" required>
+                        <input type="password" id="confirmPassword" name="password_confirmation" placeholder="•••••••••" required>
                         <span class="input-icon">✓</span>
                     </div>
                     <div class="error-message" id="confirmPasswordError"></div>
                 </div>
 
                 <div class="terms-row">
-                    <input type="checkbox" id="terms" name="terms" required>
+                    <input type="checkbox" id="terms" name="terms" {{ old('terms') ? 'checked' : '' }} required>
                     <label for="terms" style="margin-bottom:0; font-weight:400; color:var(--muted);">
                         By signing up, I agree with the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
                     </label>
@@ -540,7 +547,7 @@
             el.classList.toggle('met', isMet);
         }
 
-        signupForm.addEventListener('submit', async (e) => {
+        signupForm.addEventListener('submit', (e) => {
             e.preventDefault();
 
             document.querySelectorAll('.error-message').forEach(el => { el.textContent = ''; el.style.display = 'none'; });
@@ -591,22 +598,7 @@
 
             if (hasError) return;
 
-            try {
-                const response = await fetch('/api/signup', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ firstName, lastName, email, password })
-                });
-
-                if (response.ok) {
-                    window.location.href = '/login?success=true';
-                } else {
-                    const data = await response.json();
-                    showError('emailError', data.message || 'Sign up failed');
-                }
-            } catch (error) {
-                showError('emailError', 'An error occurred. Please try again.');
-            }
+            signupForm.submit();
         });
 
         function showError(elementId, message) {

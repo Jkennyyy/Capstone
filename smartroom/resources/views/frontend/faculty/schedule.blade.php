@@ -1,43 +1,136 @@
 <?php
-$faculty_name     = "Prof. Elena Santos";
-$faculty_dept     = "Faculty of IT";
-$faculty_initials = "ES";
-$semester         = "1st Semester 2025–2026";
+$faculty_name     = $faculty_name ?? request()->user()?->name ?? 'Faculty';
+$faculty_dept     = $faculty_dept ?? request()->user()?->department ?? 'Faculty';
+$faculty_initials = $faculty_initials ?? strtoupper(substr((string) $faculty_name, 0, 1));
+$semester         = $semester ?? "1st Semester 2025–2026";
+
+$facultyCourses = $facultyCourses ?? [];
+$classrooms = $classrooms ?? [];
+$facultySchedules = $facultySchedules ?? [];
+
+$dayMeta = [
+  1 => ['day' => 'Monday', 'abbr' => 'Mon'],
+  2 => ['day' => 'Tuesday', 'abbr' => 'Tue'],
+  3 => ['day' => 'Wednesday', 'abbr' => 'Wed'],
+  4 => ['day' => 'Thursday', 'abbr' => 'Thu'],
+  5 => ['day' => 'Friday', 'abbr' => 'Fri'],
+];
+
+$palette = ['blue', 'purple', 'green', 'amber'];
+$byDay = [];
+foreach ($dayMeta as $isoDay => $meta) {
+  $byDay[$isoDay] = [
+    'day' => $meta['day'],
+    'abbr' => $meta['abbr'],
+    'total_minutes' => 0,
+    'classes' => [],
+  ];
+}
+
+foreach ($facultySchedules as $entry) {
+  $start = $entry->start_at;
+  $end = $entry->end_at;
+
+  if (! $start) {
+    continue;
+  }
+
+  $isoDay = (int) $start->dayOfWeekIso;
+  if (! isset($byDay[$isoDay])) {
+    continue;
+  }
+
+  $courseCode = (string) ($entry->course?->code ?? 'N/A');
+  $courseTitle = (string) ($entry->course?->title ?? 'Untitled Subject');
+  $roomName = (string) ($entry->classroom?->name ?? 'Room N/A');
+  $building = (string) ($entry->classroom?->building ?? '');
+  $location = trim($roomName.($building !== '' ? ', '.$building : ''));
+  $color = $palette[abs((int) crc32($courseCode)) % count($palette)];
+
+  $durationText = $start->format('g:i A');
+  if ($end) {
+    $durationText .= ' - '.$end->format('g:i A');
+    $byDay[$isoDay]['total_minutes'] += max(0, $start->diffInMinutes($end));
+  }
+
+  $byDay[$isoDay]['classes'][] = [
+    'code' => $courseCode,
+    'section' => '',
+    'sort_at' => $start->timestamp,
+    'time' => $start->format('g:i A'),
+    'subject' => $courseTitle,
+    'duration' => $durationText,
+    'location' => $location,
+    'students' => (int) ($entry->enrolled ?? 0),
+    'color' => $color,
+  ];
+}
+
+$schedule = [];
+foreach ($byDay as $dayData) {
+  usort($dayData['classes'], function (array $a, array $b): int {
+    return ($a['sort_at'] ?? 0) <=> ($b['sort_at'] ?? 0);
+  });
+
+  $hours = $dayData['total_minutes'] / 60;
+  $hoursLabel = $hours > 0
+    ? (fmod($hours, 1.0) === 0.0 ? (string) ((int) $hours) : number_format($hours, 1)).' hrs'
+    : '0 hrs';
+
+  $schedule[] = [
+    'day' => $dayData['day'],
+    'abbr' => $dayData['abbr'],
+    'total_hrs' => $hoursLabel,
+    'classes' => $dayData['classes'],
+  ];
+}
 
 $stats = [
-  ["value"=>"8",   "label"=>"Classes/Week",  "icon"=>"grid",   "color"=>"blue",   "trend"=>"This semester"],
-  ["value"=>"359", "label"=>"Total Students","icon"=>"users",  "color"=>"purple", "trend"=>"+12 vs last sem"],
-  ["value"=>"4",   "label"=>"Subjects",      "icon"=>"target", "color"=>"green",  "trend"=>"Full teaching load"],
-  ["value"=>"12",  "label"=>"Total Units",   "icon"=>"zap",    "color"=>"amber",  "trend"=>"Regular load"],
+  [
+    'value' => (string) count($facultySchedules),
+    'label' => 'Classes/Week',
+    'icon' => 'grid',
+    'color' => 'blue',
+    'trend' => 'From your schedules',
+  ],
+  [
+    'value' => (string) (int) collect($facultySchedules)->sum('enrolled'),
+    'label' => 'Total Students',
+    'icon' => 'users',
+    'color' => 'purple',
+    'trend' => 'Current records',
+  ],
+  [
+    'value' => (string) count($facultyCourses),
+    'label' => 'Subjects',
+    'icon' => 'target',
+    'color' => 'green',
+    'trend' => 'Assigned courses',
+  ],
+  [
+    'value' => (string) (count($facultyCourses) * 3),
+    'label' => 'Total Units',
+    'icon' => 'zap',
+    'color' => 'amber',
+    'trend' => 'Estimated load',
+  ],
 ];
 
-$schedule = [
-  ["day"=>"Monday",   "abbr"=>"Mon","total_hrs"=>"4 hrs","classes"=>[
-    ["code"=>"CS 301","section"=>"BSCS 3A","time"=>"8:00 AM", "subject"=>"Database Systems",   "duration"=>"8:00 AM – 10:00 AM","location"=>"IT-301, IT Building",      "students"=>45,"color"=>"blue"],
-    ["code"=>"CS 302","section"=>"BSCS 3B","time"=>"1:00 PM", "subject"=>"Software Engineering","duration"=>"1:00 PM – 3:00 PM", "location"=>"IT-205, IT Building",      "students"=>42,"color"=>"purple"],
-  ]],
-  ["day"=>"Tuesday",  "abbr"=>"Tue","total_hrs"=>"2 hrs","classes"=>[
-    ["code"=>"CS 301","section"=>"BSCS 3C","time"=>"10:00 AM","subject"=>"Database Systems",   "duration"=>"10:00 AM – 12:00 PM","location"=>"IT-301, IT Building",      "students"=>48,"color"=>"blue"],
-  ]],
-  ["day"=>"Wednesday","abbr"=>"Wed","total_hrs"=>"3 hrs","classes"=>[
-    ["code"=>"CS 205","section"=>"BSCS 2A","time"=>"8:00 AM", "subject"=>"Web Development",    "duration"=>"8:00 AM – 11:00 AM", "location"=>"MB-104, Main Building",    "students"=>50,"color"=>"green"],
-  ]],
-  ["day"=>"Thursday", "abbr"=>"Thu","total_hrs"=>"5 hrs","classes"=>[
-    ["code"=>"CS 302","section"=>"BSCS 3A","time"=>"1:00 PM", "subject"=>"Software Engineering","duration"=>"1:00 PM – 3:00 PM", "location"=>"IT-205, IT Building",      "students"=>45,"color"=>"purple"],
-    ["code"=>"CS 205","section"=>"BSCS 2B","time"=>"3:00 PM", "subject"=>"Web Development",    "duration"=>"3:00 PM – 6:00 PM", "location"=>"IT-401, IT Building",      "students"=>46,"color"=>"green"],
-  ]],
-  ["day"=>"Friday",   "abbr"=>"Fri","total_hrs"=>"5 hrs","classes"=>[
-    ["code"=>"CS 301","section"=>"BSCS 3A","time"=>"8:00 AM", "subject"=>"Database Systems",   "duration"=>"8:00 AM – 10:00 AM","location"=>"IT-301, IT Building",      "students"=>45,"color"=>"blue"],
-    ["code"=>"CS 401","section"=>"BSCS 4A","time"=>"1:00 PM", "subject"=>"Mobile Programming", "duration"=>"1:00 PM – 4:00 PM", "location"=>"SCI-201, Science Building","students"=>38,"color"=>"amber"],
-  ]],
-];
+$subjects = collect($facultyCourses)->map(function ($course, int $idx) use ($palette, $facultySchedules): array {
+  $courseSchedules = collect($facultySchedules)->filter(function ($schedule) use ($course): bool {
+    return (int) ($schedule->course_id ?? 0) === (int) $course->id;
+  });
 
-$subjects = [
-  ["code"=>"CS 301","name"=>"Database Systems",   "sections"=>2,"students"=>138,"classes"=>3,"units"=>3,"color"=>"blue"],
-  ["code"=>"CS 302","name"=>"Software Engineering","sections"=>2,"students"=>87, "classes"=>2,"units"=>3,"color"=>"purple"],
-  ["code"=>"CS 205","name"=>"Web Development",     "sections"=>2,"students"=>96, "classes"=>2,"units"=>3,"color"=>"green"],
-  ["code"=>"CS 401","name"=>"Mobile Programming",  "sections"=>1,"students"=>38, "classes"=>1,"units"=>3,"color"=>"amber"],
-];
+  return [
+    'code' => (string) ($course->code ?? 'N/A'),
+    'name' => (string) ($course->title ?? 'Untitled Subject'),
+    'sections' => max(1, $courseSchedules->count()),
+    'students' => (int) $courseSchedules->sum('enrolled'),
+    'classes' => $courseSchedules->count(),
+    'units' => 3,
+    'color' => $palette[$idx % count($palette)],
+  ];
+})->values()->all();
 
 $icons = [
   "grid"    =>'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>',
@@ -359,6 +452,39 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);display
 .vt-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;border:none;border-radius:7px;background:none;cursor:pointer;font-family:var(--font-body);font-size:.75rem;font-weight:700;color:var(--text3);transition:background .14s,color .14s;}
 .vt-btn.active{background:var(--white);color:var(--blue);box-shadow:0 1px 4px rgba(15,24,41,.08);}
 
+/* ── FACULTY ADD SCHEDULE ── */
+.flash-msg{padding:10px 12px;border-radius:10px;font-size:.82rem;font-weight:600;}
+.flash-ok{background:#ecfdf5;border:1px solid #86efac;color:#166534;}
+.flash-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;}
+.fac-add-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:0 1px 3px rgba(15,24,41,.04);animation:fadeUp .42s ease .16s both;}
+.fac-add-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;}
+.fac-add-title{font-family:var(--font-head);font-size:1rem;font-weight:800;color:var(--text);letter-spacing:-.01em;}
+.fac-add-note{font-size:.75rem;color:var(--text3);}
+.fac-add-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+.fac-fg{display:flex;flex-direction:column;gap:5px;}
+.fac-fg.full{grid-column:1/-1;}
+.fac-label{font-size:.72rem;font-weight:700;color:var(--text2);letter-spacing:.03em;text-transform:uppercase;}
+.fac-input,.fac-select{height:38px;border:1.5px solid var(--border);border-radius:9px;background:var(--bg);padding:0 11px;font-size:.84rem;color:var(--text);font-family:var(--font-body);outline:none;transition:border-color .15s,box-shadow .15s;}
+.fac-input:focus,.fac-select:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(59,130,246,.1);background:#fff;}
+.fac-actions{display:flex;align-items:center;gap:8px;grid-column:1/-1;margin-top:2px;}
+.fac-hint{font-size:.75rem;color:var(--text3);}
+.my-schedules{margin-top:12px;border-top:1px dashed var(--border);padding-top:12px;}
+.my-sch-title{font-size:.8rem;font-weight:800;color:var(--text2);margin-bottom:8px;letter-spacing:.02em;text-transform:uppercase;}
+.my-sch-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.my-sch-item{border:1px solid var(--border);background:#fbfdff;border-radius:10px;padding:9px 10px;}
+.my-sch-code{font-size:.73rem;font-weight:800;color:var(--blue-mid);font-family:var(--mono);}
+.my-sch-meta{margin-top:3px;font-size:.76rem;color:var(--text2);line-height:1.45;}
+.my-sch-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.my-sch-status{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:2px 7px;border-radius:999px;border:1px solid var(--border);background:#f8fafc;color:var(--text3);}
+.my-sch-status.is-cancelled{background:#fef2f2;border-color:#fecaca;color:#b91c1c;}
+.my-sch-status.is-completed{background:#ecfdf5;border-color:#86efac;color:#166534;}
+.my-sch-status.is-ongoing{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;}
+.my-sch-actions{margin-top:7px;display:flex;justify-content:flex-end;}
+.my-sch-cancel{border:1px solid #fecaca;background:#fff1f2;color:#be123c;border-radius:8px;padding:5px 9px;font-size:.72rem;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:all .15s;}
+.my-sch-cancel:hover{background:#ffe4e6;border-color:#fda4af;}
+.my-sch-cancel:disabled{opacity:.6;cursor:not-allowed;}
+.my-sch-empty{font-size:.8rem;color:var(--text3);}
+
 /* ── SCHEDULE SECTION ── */
 .sched-wrap{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;align-items:start;}
 .day-section{animation:fadeUp .45s ease var(--d,.2s) both;background:linear-gradient(180deg,#ffffff 0%,#fbfdff 100%);border:1.5px solid var(--border);border-radius:16px;padding:14px;box-shadow:0 4px 16px rgba(15,24,41,.05);transition:transform .18s,box-shadow .18s,border-color .18s;min-height:100%;}
@@ -424,9 +550,11 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);display
 /* ── RESPONSIVE ── */
 @media(max-width:1400px){.sched-wrap{grid-template-columns:repeat(3,minmax(0,1fr));}}
 @media(max-width:1200px){.stats-grid{grid-template-columns:repeat(2,1fr)}.subj-grid{grid-template-columns:repeat(2,1fr)}.sched-wrap{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:1100px){.fac-add-form{grid-template-columns:repeat(2,minmax(0,1fr))}.my-sch-list{grid-template-columns:1fr}}
 @media(max-width:960px){.sidebar{display:none}.main{margin-left:0}}
-@media(max-width:680px){.sched-wrap{grid-template-columns:1fr}.class-grid{grid-template-columns:1fr}.pg-header{flex-direction:column;align-items:flex-start;gap:12px}.content{padding:18px 14px 40px}}
+@media(max-width:680px){.sched-wrap{grid-template-columns:1fr}.class-grid{grid-template-columns:1fr}.pg-header{flex-direction:column;align-items:flex-start;gap:12px}.content{padding:18px 14px 40px}.fac-add-form{grid-template-columns:1fr}}
 </style>
+@include('partials.pro-motion')
 </head>
 <body>
 
@@ -491,7 +619,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);display
       </div>
     </div>
     <form method="POST" action="<?= htmlspecialchars(url('/logout')) ?>">
-      <?php csrf_field(); ?>
+      <?= csrf_field(); ?>
       <button type="submit" class="sidebar-logout-btn">
         <i class="fas fa-arrow-right-from-bracket"></i>
         Sign Out
@@ -531,7 +659,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);display
             <span class="profile-dropdown-value"><?=htmlspecialchars($faculty_dept)?></span>
           </div>
           <form method="POST" action="<?= htmlspecialchars(url('/logout')) ?>">
-            <?php csrf_field(); ?>
+            <?= csrf_field(); ?>
             <button type="submit" class="profile-signout-btn">
               <?= ic($icons,'logout',14) ?>
               Sign Out
@@ -543,6 +671,14 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);display
   </div>
 
   <div class="content">
+
+    @if (session('status'))
+      <div class="flash-msg flash-ok">{{ session('status') }}</div>
+    @endif
+
+    @if ($errors->any())
+      <div class="flash-msg flash-err">{{ $errors->first() }}</div>
+    @endif
 
     <!-- Page Header -->
     <div class="pg-header">
@@ -583,6 +719,99 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);display
       <div class="view-toggle">
         <button class="vt-btn active" id="gridBtn"><?=ic($icons,'grid',13)?> Grid</button>
         <button class="vt-btn" id="tlBtn"><?=ic($icons,'timeline',13)?> Timeline</button>
+      </div>
+    </div>
+
+    <div class="fac-add-card">
+      <div class="fac-add-head">
+        <div>
+          <div class="fac-add-title">Add Schedule For My Subject</div>
+          <div class="fac-add-note">You can only add schedules for subjects assigned to your account.</div>
+        </div>
+      </div>
+
+      @if (count($facultyCourses) === 0)
+        <div class="my-sch-empty">No subjects are assigned to your account yet. Please contact admin to assign your subjects first.</div>
+      @else
+        <form method="POST" action="{{ route('faculty.schedule.store') }}" class="fac-add-form">
+          @csrf
+          <div class="fac-fg full">
+            <label class="fac-label">Subject</label>
+            <select name="course_id" class="fac-select" required>
+              <option value="">Select your subject...</option>
+              @foreach ($facultyCourses as $course)
+                <option value="{{ $course->id }}" {{ (string) old('course_id') === (string) $course->id ? 'selected' : '' }}>
+                  {{ $course->code }} - {{ $course->title }}
+                </option>
+              @endforeach
+            </select>
+          </div>
+
+          <div class="fac-fg">
+            <label class="fac-label">Classroom</label>
+            <select name="classroom_id" class="fac-select" required>
+              <option value="">Select room...</option>
+              @foreach ($classrooms as $classroom)
+                <option value="{{ $classroom->id }}" {{ (string) old('classroom_id') === (string) $classroom->id ? 'selected' : '' }}>
+                  {{ $classroom->name }} ({{ $classroom->building }})
+                </option>
+              @endforeach
+            </select>
+          </div>
+
+          <div class="fac-fg">
+            <label class="fac-label">Start</label>
+            <input type="datetime-local" name="start_at" class="fac-input" value="{{ old('start_at') }}" required>
+          </div>
+
+          <div class="fac-fg">
+            <label class="fac-label">End</label>
+            <input type="datetime-local" name="end_at" class="fac-input" value="{{ old('end_at') }}" required>
+          </div>
+
+          <div class="fac-fg">
+            <label class="fac-label">Expected Enrolled</label>
+            <input type="number" min="0" name="enrolled" class="fac-input" value="{{ old('enrolled', 0) }}">
+          </div>
+
+          <div class="fac-actions">
+            <button class="btn btn-primary" type="submit"><?=ic($icons,'calendar',13)?> Add Schedule</button>
+            <span class="fac-hint">Only your own subject codes are accepted.</span>
+          </div>
+        </form>
+      @endif
+
+      <div class="my-schedules">
+        <div class="my-sch-title">My Added Schedules</div>
+        @if (count($facultySchedules) === 0)
+          <div class="my-sch-empty">No schedules added yet.</div>
+        @else
+          <div class="my-sch-list">
+            @foreach ($facultySchedules as $entry)
+              <div class="my-sch-item">
+                @php($statusClass = in_array($entry->status, ['cancelled', 'completed', 'ongoing'], true) ? 'is-'.$entry->status : '')
+                <div class="my-sch-row">
+                  <div class="my-sch-code">{{ $entry->course?->code ?? 'N/A' }}</div>
+                  <span class="my-sch-status {{ $statusClass }}">{{ $entry->status ?? 'scheduled' }}</span>
+                </div>
+                <div class="my-sch-meta">
+                  {{ $entry->course?->title ?? 'Untitled Subject' }}<br>
+                  {{ $entry->classroom?->name ?? 'Room N/A' }} ({{ $entry->classroom?->building ?? '-' }})<br>
+                  {{ optional($entry->start_at)->format('M d, Y h:i A') }} - {{ optional($entry->end_at)->format('h:i A') }}
+                </div>
+                <div class="my-sch-actions">
+                  <form method="POST" action="{{ route('faculty.schedule.cancel', $entry->id) }}" onsubmit="return confirm('Cancel this class schedule?');">
+                    @csrf
+                    @method('PATCH')
+                    <button type="submit" class="my-sch-cancel" {{ $entry->status === 'cancelled' || $entry->status === 'completed' ? 'disabled' : '' }}>
+                      Cancel Class
+                    </button>
+                  </form>
+                </div>
+              </div>
+            @endforeach
+          </div>
+        @endif
       </div>
     </div>
 

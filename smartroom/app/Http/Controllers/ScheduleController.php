@@ -2,165 +2,895 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Api\StoreScheduleRequest;
+use App\Http\Requests\Api\UpdateScheduleRequest;
+use App\Models\Classroom;
+use App\Models\Course;
+use App\Models\Schedule;
+use App\Models\User;
+use App\Services\RoomAvailabilityService;
+use App\Services\ScheduleImportService;
+use Carbon\Carbon;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
+use Illuminate\Validation\ValidationException;
 
 class ScheduleController extends Controller
 {
-    /**
-     * Display all schedules
-     */
-    public function index(Request $request)
+    public function facultyIndex(Request $request): View
+    {
+        $user = $request->user();
+
+        $facultyCourses = Course::query()
+            ->where('instructor_user_id', $user->id)
+            ->whereHas('instructor', function ($query): void {
+                $this->applyItDepartmentScope($query);
+            })
+            ->orderBy('code')
+            ->get();
+
+        $classrooms = Classroom::query()
+            ->orderBy('building')
+            ->orderBy('name')
+            ->get();
+
+        $facultySchedules = Schedule::query()
+            ->with(['classroom', 'course'])
+            ->whereHas('course', function ($query) use ($user): void {
+                $query->where('instructor_user_id', $user->id);
+            })
+            ->whereHas('course.instructor', function ($query): void {
+                $this->applyItDepartmentScope($query);
+            })
+            ->orderBy('start_at')
+            ->get();
+
+        return view('frontend.faculty.schedule', [
+            'facultyCourses' => $facultyCourses,
+            'classrooms' => $classrooms,
+            'facultySchedules' => $facultySchedules,
+            'faculty_name' => $user->name,
+            'faculty_dept' => $user->department ?? 'Faculty',
+        ]);
+    }
+
+    public function facultyStore(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'classroom_id' => ['required', 'integer', 'exists:classrooms,id'],
+            'course_id' => ['required', 'integer'],
+            'start_at' => ['required', 'date'],
+            'end_at' => ['required', 'date', 'after:start_at'],
+            'enrolled' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        $course = Course::query()
+            ->where('instructor_user_id', $user->id)
+            ->whereHas('instructor', function ($query): void {
+                $this->applyItDepartmentScope($query);
+            })
+            ->find($validated['course_id']);
+
+        if (! $course) {
+            return back()
+                ->withInput()
+                ->withErrors(['course_id' => 'You can only add schedules for your own subjects.']);
+        }
+
+        $validated['day_of_week'] = (int) Carbon::parse($validated['start_at'])->dayOfWeek;
+        $validated['status'] = 'scheduled';
+        $validated['enrolled'] = $validated['enrolled'] ?? 0;
+
+        Schedule::create($validated);
+
+        return redirect()->route('faculty.schedule')->with('status', 'Schedule added successfully.');
+    }
+
+    public function facultyCancel(Request $request, Schedule $schedule): RedirectResponse
+    {
+        $user = $request->user();
+
+        $ownedSchedule = Schedule::query()
+            ->whereKey($schedule->id)
+            ->whereHas('course', function ($query) use ($user): void {
+                $query->where('instructor_user_id', $user->id);
+            })
+            ->whereHas('course.instructor', function ($query): void {
+                $this->applyItDepartmentScope($query);
+            })
+            ->firstOrFail();
+
+        if ($ownedSchedule->status === 'cancelled') {
+            return redirect()->route('faculty.schedule')->with('status', 'Class is already cancelled.');
+        }
+
+        if ($ownedSchedule->status === 'completed') {
+            return redirect()->route('faculty.schedule')->withErrors([
+                'schedule' => 'Completed class can no longer be cancelled.',
+            ]);
+        }
+
+        $ownedSchedule->update(['status' => 'cancelled']);
+
+        return redirect()->route('faculty.schedule')->with('status', 'Class cancelled successfully.');
+    }
+
+    public function index(Request $request): View
     {
         $filter = $request->query('filter', 'all');
         $view = $request->query('view', 'week');
 
-        // Mock schedule data
-        $schedules = collect([
-            (object)[
-                'id' => 1,
-                'roomId' => 1,
-                'roomName' => 'Room 102',
-                'building' => 'Building A',
-                'course' => 'Mathematics 101',
-                'instructor' => 'Dr. John Smith',
-                'startTime' => '08:00 AM',
-                'endTime' => '09:30 AM',
-                'day' => 'Monday',
-                'capacity' => 40,
-                'enrolled' => 35,
-                'status' => 'scheduled',
-            ],
-            (object)[
-                'id' => 2,
-                'roomId' => 2,
-                'roomName' => 'Room 302',
-                'building' => 'Building A',
-                'course' => 'Computer Science 201',
-                'instructor' => 'Prof. Sarah Johnson',
-                'startTime' => '10:00 AM',
-                'endTime' => '11:30 AM',
-                'day' => 'Monday',
-                'capacity' => 30,
-                'enrolled' => 28,
-                'status' => 'ongoing',
-            ],
-            (object)[
-                'id' => 3,
-                'roomId' => 3,
-                'roomName' => 'Lab 105',
-                'building' => 'Building B',
-                'course' => 'Physics Lab',
-                'instructor' => 'Dr. Michael Chen',
-                'startTime' => '01:00 PM',
-                'endTime' => '02:30 PM',
-                'day' => 'Monday',
-                'capacity' => 25,
-                'enrolled' => 22,
-                'status' => 'scheduled',
-            ],
-            (object)[
-                'id' => 4,
-                'roomId' => 4,
-                'roomName' => 'Room 201',
-                'building' => 'Building A',
-                'course' => 'English Literature',
-                'instructor' => 'Prof. Emma Wilson',
-                'startTime' => '02:00 PM',
-                'endTime' => '03:30 PM',
-                'day' => 'Tuesday',
-                'capacity' => 35,
-                'enrolled' => 30,
-                'status' => 'scheduled',
-            ],
-            (object)[
-                'id' => 5,
-                'roomId' => 5,
-                'roomName' => 'Room 404',
-                'building' => 'Building C',
-                'course' => 'Chemistry Lecture',
-                'instructor' => 'Dr. Robert Williams',
-                'startTime' => '03:00 PM',
-                'endTime' => '04:30 PM',
-                'day' => 'Tuesday',
-                'capacity' => 40,
-                'enrolled' => 38,
-                'status' => 'scheduled',
-            ],
-            (object)[
-                'id' => 6,
-                'roomId' => 6,
-                'roomName' => 'Auditorium',
-                'building' => 'Building D',
-                'course' => 'Seminar: AI in Education',
-                'instructor' => 'Prof. Laura Martinez',
-                'startTime' => '04:00 PM',
-                'endTime' => '05:30 PM',
-                'day' => 'Wednesday',
-                'capacity' => 200,
-                'enrolled' => 150,
-                'status' => 'scheduled',
-            ],
-        ]);
-
-        // Filter schedules based on status
-        if ($filter !== 'all') {
-            $schedules = $schedules->filter(function ($schedule) use ($filter) {
-                return $schedule->status === $filter;
+        $query = Schedule::query()
+            ->with(['classroom', 'course.instructor'])
+            ->whereHas('course.instructor', function ($scope): void {
+                $this->applyItDepartmentScope($scope);
             });
+
+        if ($filter !== 'all') {
+            $query->where('status', $filter);
         }
+
+        $schedules = $query->orderBy('start_at')->get();
+        $classrooms = Classroom::query()->orderBy('building')->orderBy('name')->get();
+        $courses = Course::query()
+            ->with('instructor')
+            ->whereHas('instructor', function ($scope): void {
+                $this->applyItDepartmentScope($scope);
+            })
+            ->orderBy('code')
+            ->get();
+
+        $facultyUsers = User::query()
+            ->whereRaw("LOWER(COALESCE(role, '')) = ?", ['faculty'])
+            ->where(function ($scope): void {
+                $this->applyItDepartmentScope($scope);
+            })
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
 
         return view('frontend.admin.schedules', [
             'schedules' => $schedules,
+            'classrooms' => $classrooms,
+            'courses' => $courses,
+            'facultyUsers' => $facultyUsers,
             'filter' => $filter,
             'view' => $view,
         ]);
     }
 
-    /**
-     * Show schedule details for a specific class
-     */
-    public function show($id)
+    public function exportCsv(Request $request): StreamedResponse
     {
-        // Mock data for individual schedule
-        $schedule = [
-            'id' => $id,
-            'roomId' => $id,
-            'roomName' => 'Room ' . (100 + $id),
-            'building' => 'Building A',
-            'floor' => '1st Floor',
-            'course' => 'Sample Course ' . $id,
-            'instructor' => 'Dr. Instructor Name',
-            'instructorEmail' => 'instructor@university.edu',
-            'instructorPhone' => '+1 (555) 123-4567',
-            'startTime' => '09:00 AM',
-            'endTime' => '10:30 AM',
-            'day' => 'Monday',
-            'days' => ['Monday', 'Wednesday', 'Friday'],
-            'capacity' => 40,
-            'enrolled' => 35,
-            'status' => 'scheduled',
-            'description' => 'This is a scheduled class session with all necessary details and resources.',
-            'materials' => [
-                ['name' => 'Lecture slides', 'type' => 'PDF'],
-                ['name' => 'Assignment', 'type' => 'Document'],
-                ['name' => 'Reading materials', 'type' => 'Link'],
+        $filter = (string) $request->query('filter', 'all');
+
+        $query = Schedule::query()
+            ->with(['classroom', 'course.instructor'])
+            ->whereHas('course.instructor', function ($scope): void {
+                $this->applyItDepartmentScope($scope);
+            })
+            ->orderBy('start_at');
+
+        if ($filter !== 'all') {
+            $query->where('status', $filter);
+        }
+
+        $filename = 'smartroom-schedules-'.now()->format('Ymd-His').'.csv';
+
+        return response()->streamDownload(function () use ($query): void {
+            $handle = fopen('php://output', 'wb');
+
+            fputcsv($handle, [
+                'Schedule ID',
+                'Course Code',
+                'Course Title',
+                'Instructor',
+                'Classroom',
+                'Building',
+                'Start At',
+                'End At',
+                'Status',
+                'Enrolled',
+            ]);
+
+            $query->chunk(500, function ($schedules) use ($handle): void {
+                foreach ($schedules as $schedule) {
+                    fputcsv($handle, [
+                        $schedule->id,
+                        $schedule->course?->code ?? '',
+                        $schedule->course?->title ?? '',
+                        $schedule->course?->instructor?->name ?? '',
+                        $schedule->classroom?->name ?? '',
+                        $schedule->classroom?->building ?? '',
+                        $schedule->start_at?->format('Y-m-d H:i:s') ?? '',
+                        $schedule->end_at?->format('Y-m-d H:i:s') ?? '',
+                        $schedule->status ?? '',
+                        (int) ($schedule->enrolled ?? 0),
+                    ]);
+                }
+            });
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    public function importPreview(Request $request, ScheduleImportService $importService, RoomAvailabilityService $availabilityService): JsonResponse
+    {
+        $validated = $request->validate([
+            'file' => ['required', 'file', 'max:10240', 'mimes:csv,txt,xls,xlsx'],
+            'default_classroom_id' => ['nullable', 'integer', 'exists:classrooms,id'],
+        ]);
+
+        try {
+            $rows = $importService->parseUploadedFile($request->file('file'));
+        } catch (Throwable $exception) {
+            return response()->json([
+                'message' => 'Unable to parse the uploaded file. Use CSV, XLS, or XLSX format.',
+            ], 422);
+        }
+
+        $prepared = $this->prepareImportRows($rows, $validated, $availabilityService);
+
+        return response()->json([
+            'message' => 'Import preview generated.',
+            'data' => [
+                'rows' => $prepared['rows'],
+                'valid_count' => count($prepared['rows']) - count($prepared['errors']),
+                'error_count' => count($prepared['errors']),
+                'errors' => $prepared['errors'],
             ],
-            'attendees' => [
-                ['name' => 'John Doe', 'status' => 'enrolled'],
-                ['name' => 'Jane Smith', 'status' => 'enrolled'],
-                ['name' => 'Mike Johnson', 'status' => 'enrolled'],
-                ['name' => 'Sarah Williams', 'status' => 'enrolled'],
-                ['name' => 'Tom Brown', 'status' => 'enrolled'],
+        ]);
+    }
+
+    public function importStore(Request $request, ScheduleImportService $importService, RoomAvailabilityService $availabilityService): JsonResponse
+    {
+        $validated = $request->validate([
+            'file' => ['required', 'file', 'max:10240', 'mimes:csv,txt,xls,xlsx'],
+            'default_classroom_id' => ['nullable', 'integer', 'exists:classrooms,id'],
+        ]);
+
+        try {
+            $rows = $importService->parseUploadedFile($request->file('file'));
+        } catch (Throwable $exception) {
+            return response()->json([
+                'message' => 'Unable to parse the uploaded file. Use CSV, XLS, or XLSX format.',
+            ], 422);
+        }
+
+        $prepared = $this->prepareImportRows($rows, $validated, $availabilityService);
+        if (! empty($prepared['errors'])) {
+            return response()->json([
+                'message' => 'Import has validation errors. Fix rows before saving.',
+                'data' => [
+                    'rows' => $prepared['rows'],
+                    'valid_count' => count($prepared['rows']) - count($prepared['errors']),
+                    'error_count' => count($prepared['errors']),
+                    'errors' => $prepared['errors'],
+                ],
+            ], 422);
+        }
+
+        $createdCount = 0;
+
+        DB::transaction(function () use (&$createdCount, $prepared, $availabilityService): void {
+            foreach ($prepared['rows'] as $row) {
+                $payload = $row['payload'];
+
+                $scheduleConflict = $availabilityService->checkOfficialScheduleConflict(
+                    (int) $payload['classroom_id'],
+                    Carbon::parse($payload['start_at']),
+                    Carbon::parse($payload['end_at']),
+                    null,
+                    true
+                );
+
+                if ($scheduleConflict['has_conflict']) {
+                    throw ValidationException::withMessages([
+                        'import' => ['Room is occupied by official schedule at selected time (row '.$row['row_number'].').'],
+                    ]);
+                }
+
+                $reservationConflict = $availabilityService->checkReservationConflict(
+                    (int) $payload['classroom_id'],
+                    Carbon::parse($payload['start_at']),
+                    Carbon::parse($payload['end_at']),
+                    null,
+                    true
+                );
+
+                if ($reservationConflict['has_conflict']) {
+                    throw ValidationException::withMessages([
+                        'import' => ['Room is already reserved at selected time (row '.$row['row_number'].').'],
+                    ]);
+                }
+
+                Schedule::create($payload);
+                $createdCount++;
+            }
+        });
+
+        return response()->json([
+            'message' => 'Schedule import completed successfully.',
+            'data' => [
+                'created_count' => $createdCount,
             ],
-            'upcomingSessions' => [
-                ['date' => 'March 17, 2026', 'time' => '09:00 AM - 10:30 AM', 'room' => 'Room 102'],
-                ['date' => 'March 19, 2026', 'time' => '09:00 AM - 10:30 AM', 'room' => 'Room 102'],
-                ['date' => 'March 24, 2026', 'time' => '09:00 AM - 10:30 AM', 'room' => 'Room 102'],
-            ],
-        ];
+        ], 201);
+    }
+
+    public function show(int $id): View
+    {
+        $schedule = Schedule::query()
+            ->with(['classroom', 'course.instructor'])
+            ->whereHas('course.instructor', function ($scope): void {
+                $this->applyItDepartmentScope($scope);
+            })
+            ->findOrFail($id);
 
         return view('frontend.admin.schedule-detail', [
             'schedule' => $schedule,
         ]);
+    }
+
+    public function store(StoreScheduleRequest $request, RoomAvailabilityService $availabilityService): RedirectResponse|JsonResponse
+    {
+        $payload = $request->validated();
+
+        $startAt = Carbon::parse((string) $payload['start_at']);
+        $endAt = Carbon::parse((string) $payload['end_at']);
+        $repeatUntil = isset($payload['repeat_until'])
+            ? Carbon::parse((string) $payload['repeat_until'])->endOfDay()
+            : null;
+
+        $basePayload = $payload;
+        unset($basePayload['repeat_until']);
+
+        $createdSchedules = DB::transaction(function () use ($basePayload, $startAt, $endAt, $repeatUntil, $availabilityService) {
+            $created = collect();
+
+            $occurrenceStart = $startAt->copy();
+            $occurrenceEnd = $endAt->copy();
+
+            while ($repeatUntil === null || $occurrenceStart->lte($repeatUntil)) {
+                $conflict = $availabilityService->checkOfficialScheduleConflict(
+                    (int) $basePayload['classroom_id'],
+                    $occurrenceStart,
+                    $occurrenceEnd,
+                    null,
+                    true
+                );
+
+                if ($conflict['has_conflict']) {
+                    throw ValidationException::withMessages([
+                        'classroom_id' => ['Official schedule conflict on '.$occurrenceStart->format('M d, Y h:i A').'. Room is already occupied.'],
+                    ]);
+                }
+
+                $reservationConflict = $availabilityService->checkReservationConflict(
+                    (int) $basePayload['classroom_id'],
+                    $occurrenceStart,
+                    $occurrenceEnd,
+                    null,
+                    true
+                );
+
+                if ($reservationConflict['has_conflict']) {
+                    throw ValidationException::withMessages([
+                        'classroom_id' => ['Reservation conflict on '.$occurrenceStart->format('M d, Y h:i A').'. Room is already reserved.'],
+                    ]);
+                }
+
+                $occurrencePayload = $basePayload;
+                $occurrencePayload['start_at'] = $occurrenceStart->copy();
+                $occurrencePayload['end_at'] = $occurrenceEnd->copy();
+                $occurrencePayload['day_of_week'] = $occurrenceStart->dayOfWeek;
+
+                $created->push(Schedule::create($occurrencePayload));
+
+                if ($repeatUntil === null) {
+                    break;
+                }
+
+                $occurrenceStart->addWeek();
+                $occurrenceEnd->addWeek();
+            }
+
+            return $created;
+        });
+
+        $createdCount = $createdSchedules->count();
+        $primarySchedule = $createdSchedules->first();
+        $message = $createdCount > 1
+            ? 'Recurring schedules created successfully ('.$createdCount.' sessions).'
+            : 'Schedule created successfully.';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $message,
+                'data' => $primarySchedule,
+                'meta' => ['created_count' => $createdCount],
+            ], 201);
+        }
+
+        return redirect()->route('admin.schedule')->with('status', $message);
+    }
+
+    public function update(UpdateScheduleRequest $request, Schedule $schedule, RoomAvailabilityService $availabilityService): RedirectResponse|JsonResponse
+    {
+        $this->ensureItScheduleScope($schedule);
+
+        $payload = $request->validated();
+        $repeatUntil = isset($payload['repeat_until'])
+            ? Carbon::parse((string) $payload['repeat_until'])->endOfDay()
+            : null;
+        unset($payload['repeat_until']);
+
+        $effectiveStartAt = isset($payload['start_at']) ? Carbon::parse($payload['start_at']) : $schedule->start_at;
+        $effectiveEndAt = isset($payload['end_at']) ? Carbon::parse($payload['end_at']) : $schedule->end_at;
+
+        if ($effectiveStartAt) {
+            $payload['day_of_week'] = $effectiveStartAt->dayOfWeek;
+        }
+
+        $createdCount = DB::transaction(function () use ($schedule, $payload, $effectiveStartAt, $effectiveEndAt, $repeatUntil, $availabilityService): int {
+            $targetClassroomId = (int) ($payload['classroom_id'] ?? $schedule->classroom_id);
+
+            $conflict = $availabilityService->checkOfficialScheduleConflict(
+                $targetClassroomId,
+                $effectiveStartAt,
+                $effectiveEndAt,
+                (int) $schedule->id,
+                true
+            );
+
+            if ($conflict['has_conflict']) {
+                throw ValidationException::withMessages([
+                    'classroom_id' => ['Official schedule conflict: room is already occupied by another official schedule at selected time.'],
+                ]);
+            }
+
+            $reservationConflict = $availabilityService->checkReservationConflict(
+                $targetClassroomId,
+                $effectiveStartAt,
+                $effectiveEndAt,
+                (int) $schedule->id,
+                true
+            );
+
+            if ($reservationConflict['has_conflict']) {
+                throw ValidationException::withMessages([
+                    'classroom_id' => ['Reservation conflict: room is already reserved at selected time.'],
+                ]);
+            }
+
+            $schedule->update($payload);
+            $created = 0;
+
+            if ($repeatUntil && $effectiveStartAt && $effectiveEndAt) {
+                $occurrenceStart = $effectiveStartAt->copy()->addWeek();
+                $occurrenceEnd = $effectiveEndAt->copy()->addWeek();
+
+                while ($occurrenceStart->lte($repeatUntil)) {
+                    $loopConflict = $availabilityService->checkOfficialScheduleConflict(
+                        $targetClassroomId,
+                        $occurrenceStart,
+                        $occurrenceEnd,
+                        null,
+                        true
+                    );
+
+                    if ($loopConflict['has_conflict']) {
+                        throw ValidationException::withMessages([
+                            'classroom_id' => ['Official schedule conflict on '.$occurrenceStart->format('M d, Y h:i A').'. Room is already occupied.'],
+                        ]);
+                    }
+
+                    $loopReservationConflict = $availabilityService->checkReservationConflict(
+                        $targetClassroomId,
+                        $occurrenceStart,
+                        $occurrenceEnd,
+                        null,
+                        true
+                    );
+
+                    if ($loopReservationConflict['has_conflict']) {
+                        throw ValidationException::withMessages([
+                            'classroom_id' => ['Reservation conflict on '.$occurrenceStart->format('M d, Y h:i A').'. Room is already reserved.'],
+                        ]);
+                    }
+
+                    $copyPayload = array_merge($schedule->only([
+                        'classroom_id',
+                        'course_id',
+                        'status',
+                        'enrolled',
+                    ]), [
+                        'start_at' => $occurrenceStart->copy(),
+                        'end_at' => $occurrenceEnd->copy(),
+                        'day_of_week' => $occurrenceStart->dayOfWeek,
+                    ]);
+
+                    Schedule::create($copyPayload);
+                    $created++;
+
+                    $occurrenceStart->addWeek();
+                    $occurrenceEnd->addWeek();
+                }
+            }
+
+            return $created;
+        });
+
+        $message = $createdCount > 0
+            ? 'Schedule updated and '.$createdCount.' recurring session(s) created.'
+            : 'Schedule updated successfully.';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $message,
+                'data' => $schedule,
+                'meta' => ['created_count' => $createdCount],
+            ]);
+        }
+
+        return redirect()->route('admin.schedule.show', $schedule->id)->with('status', $message);
+    }
+
+    public function destroy(Request $request, Schedule $schedule): RedirectResponse|JsonResponse
+    {
+        $this->ensureItScheduleScope($schedule);
+
+        $schedule->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Schedule deleted successfully.']);
+        }
+
+        return redirect()->route('admin.schedule')->with('status', 'Schedule deleted successfully.');
+    }
+
+    public function bulkDestroy(Request $request): RedirectResponse|JsonResponse
+    {
+        $validated = $request->validate([
+            'schedule_ids' => ['required', 'array', 'min:1'],
+            'schedule_ids.*' => ['integer', 'distinct', 'exists:schedules,id'],
+        ]);
+
+        $requestedIds = collect($validated['schedule_ids'])
+            ->map(fn ($id): int => (int) $id)
+            ->unique()
+            ->values();
+
+        $schedules = Schedule::query()
+            ->with('course.instructor')
+            ->whereIn('id', $requestedIds)
+            ->get();
+
+        $allowedIds = $schedules
+            ->filter(function (Schedule $schedule): bool {
+                return app(RoomAvailabilityService::class)->isItUserDepartment($schedule->course?->instructor?->department);
+            })
+            ->pluck('id')
+            ->map(fn ($id): int => (int) $id)
+            ->values();
+
+        if ($allowedIds->count() !== $requestedIds->count()) {
+            throw ValidationException::withMessages([
+                'schedule_ids' => ['Some selected schedules are outside your allowed department scope.'],
+            ]);
+        }
+
+        $deletedCount = Schedule::query()->whereIn('id', $allowedIds)->delete();
+        $message = $deletedCount > 1
+            ? $deletedCount.' schedules deleted successfully.'
+            : 'Schedule deleted successfully.';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $message,
+                'meta' => ['deleted_count' => $deletedCount],
+            ]);
+        }
+
+        return redirect()->route('admin.schedule')->with('status', $message);
+    }
+
+    private function ensureItScheduleScope(Schedule $schedule): void
+    {
+        $schedule->loadMissing('course.instructor');
+
+        if (! app(RoomAvailabilityService::class)->isItUserDepartment($schedule->course?->instructor?->department)) {
+            abort(404);
+        }
+    }
+
+    private function applyItDepartmentScope($query): void
+    {
+        $query->where(function ($scope): void {
+            $scope->whereRaw('LOWER(COALESCE(department, \'\')) LIKE ?', ['%it%'])
+                ->orWhereRaw('LOWER(COALESCE(department, \'\')) LIKE ?', ['%cit%'])
+                ->orWhereRaw('LOWER(COALESCE(department, \'\')) LIKE ?', ['%cite%'])
+                ->orWhereRaw('LOWER(COALESCE(department, \'\')) LIKE ?', ['%information technology%']);
+        });
+    }
+
+    /**
+     * @param array<int, array<string, string|null>> $rows
+     * @param array<string, mixed> $defaults
+     * @return array{rows: array<int, array<string, mixed>>, errors: array<int, array<string, mixed>>}
+     */
+    private function prepareImportRows(array $rows, array $defaults, RoomAvailabilityService $availabilityService): array
+    {
+        $classroomsById = Classroom::query()->get()->keyBy('id');
+        $classroomsByName = Classroom::query()->get()->keyBy(function (Classroom $classroom): string {
+            return strtolower(trim($classroom->name));
+        });
+
+        $courses = Course::query()
+            ->with('instructor')
+            ->whereHas('instructor', function ($scope): void {
+                $this->applyItDepartmentScope($scope);
+            })
+            ->get();
+
+        $coursesById = $courses->keyBy('id');
+        $coursesByCode = $courses->keyBy(function (Course $course): string {
+            return strtolower(trim((string) $course->code));
+        });
+        $coursesByTitle = $courses->groupBy(function (Course $course): string {
+            return $this->normalizeLookup((string) $course->title);
+        });
+        $coursesByInstructorName = $courses->groupBy(function (Course $course): string {
+            return $this->normalizeLookup((string) $course->instructor?->name);
+        });
+        $coursesByInstructorEmail = $courses->groupBy(function (Course $course): string {
+            return strtolower(trim((string) $course->instructor?->email));
+        });
+
+        $itFacultyUsers = User::query()
+            ->whereRaw("LOWER(COALESCE(role, '')) = ?", ['faculty'])
+            ->where(function ($scope): void {
+                $this->applyItDepartmentScope($scope);
+            })
+            ->get(['id', 'name', 'email']);
+
+        $itFacultyByName = $itFacultyUsers->groupBy(function (User $faculty): string {
+            return $this->normalizeLookup((string) $faculty->name);
+        });
+        $itFacultyByEmail = $itFacultyUsers->groupBy(function (User $faculty): string {
+            return strtolower(trim((string) $faculty->email));
+        });
+
+        $preparedRows = [];
+        $errors = [];
+
+        foreach ($rows as $index => $rawRow) {
+            $rowNumber = $index + 2;
+            $rowErrors = [];
+
+            $classroom = null;
+            $roomId = $this->extractNullableInt($rawRow['classroom_id'] ?? $rawRow['room_id'] ?? null)
+                ?? $this->extractNullableInt($defaults['default_classroom_id'] ?? null);
+
+            if ($roomId !== null) {
+                $classroom = $classroomsById->get($roomId);
+            }
+
+            if (! $classroom) {
+                $roomName = trim((string) ($rawRow['classroom'] ?? $rawRow['room'] ?? $rawRow['classroom_name'] ?? $rawRow['room_name'] ?? ''));
+                if ($roomName !== '') {
+                    $classroom = $classroomsByName->get(strtolower($roomName));
+                }
+            }
+
+            if (! $classroom) {
+                $rowErrors[] = 'Classroom is required or not found.';
+            }
+
+            $course = null;
+            $courseId = $this->extractNullableInt($rawRow['course_id'] ?? null);
+            $instructorName = $this->normalizeLookup((string) ($rawRow['instructor'] ?? $rawRow['instructor_name'] ?? $rawRow['faculty'] ?? $rawRow['faculty_name'] ?? $rawRow['teacher'] ?? ''));
+            $instructorEmail = strtolower(trim((string) ($rawRow['instructor_email'] ?? $rawRow['faculty_email'] ?? $rawRow['teacher_email'] ?? '')));
+
+            if ($courseId !== null) {
+                $course = $coursesById->get($courseId);
+            }
+
+            if (! $course) {
+                $courseCode = strtolower(trim((string) ($rawRow['course_code'] ?? $rawRow['code'] ?? $rawRow['course'] ?? '')));
+                if ($courseCode !== '') {
+                    $course = $coursesByCode->get($courseCode);
+                }
+            }
+
+            if (! $course) {
+                $courseTitle = $this->normalizeLookup((string) ($rawRow['course_title'] ?? $rawRow['subject'] ?? $rawRow['title'] ?? $rawRow['course_name'] ?? ''));
+
+                if ($courseTitle !== '') {
+                    /** @var \Illuminate\Support\Collection<int, Course> $titleCandidates */
+                    $titleCandidates = collect($coursesByTitle->get($courseTitle, collect()));
+
+                    if ($instructorName !== '' || $instructorEmail !== '') {
+                        $titleCandidates = $titleCandidates->filter(function (Course $candidate) use ($instructorName, $instructorEmail): bool {
+                            $candidateName = $this->normalizeLookup((string) $candidate->instructor?->name);
+                            $candidateEmail = strtolower(trim((string) $candidate->instructor?->email));
+
+                            if ($instructorEmail !== '' && $candidateEmail === $instructorEmail) {
+                                return true;
+                            }
+
+                            if ($instructorName !== '' && $candidateName === $instructorName) {
+                                return true;
+                            }
+
+                            return false;
+                        })->values();
+                    }
+
+                    if ($titleCandidates->count() === 1) {
+                        $course = $titleCandidates->first();
+                    } elseif ($titleCandidates->count() > 1) {
+                        $rowErrors[] = 'Multiple courses matched this subject and instructor. Use course_code or course_id in import row.';
+                    }
+                }
+            }
+
+            if (! $course) {
+                /** @var \Illuminate\Support\Collection<int, Course> $instructorCandidates */
+                $instructorCandidates = collect();
+
+                if ($instructorEmail !== '') {
+                    $instructorCandidates = collect($coursesByInstructorEmail->get($instructorEmail, collect()));
+                }
+
+                if ($instructorName !== '') {
+                    if ($instructorCandidates->isEmpty()) {
+                        $instructorCandidates = collect($coursesByInstructorName->get($instructorName, collect()));
+                    } else {
+                        $instructorCandidates = $instructorCandidates
+                            ->filter(function (Course $candidate) use ($instructorName): bool {
+                                return $this->normalizeLookup((string) $candidate->instructor?->name) === $instructorName;
+                            })
+                            ->values();
+                    }
+                }
+
+                if ($instructorCandidates->isNotEmpty()) {
+                    $course = $instructorCandidates
+                        ->sortBy(function (Course $candidate): string {
+                            return strtolower((string) ($candidate->code ?? ''));
+                        })
+                        ->first();
+                }
+            }
+
+            $startValue = trim((string) ($rawRow['start_at'] ?? $rawRow['start'] ?? $rawRow['start_datetime'] ?? ''));
+            $endValue = trim((string) ($rawRow['end_at'] ?? $rawRow['end'] ?? $rawRow['end_datetime'] ?? ''));
+
+            $startAt = null;
+            $endAt = null;
+            if ($startValue === '') {
+                $rowErrors[] = 'Start datetime is required.';
+            } else {
+                try {
+                    $startAt = Carbon::parse($startValue);
+                } catch (Throwable $exception) {
+                    $rowErrors[] = 'Start datetime format is invalid.';
+                }
+            }
+
+            if ($endValue === '') {
+                $rowErrors[] = 'End datetime is required.';
+            } else {
+                try {
+                    $endAt = Carbon::parse($endValue);
+                } catch (Throwable $exception) {
+                    $rowErrors[] = 'End datetime format is invalid.';
+                }
+            }
+
+            if ($startAt && $endAt && $endAt->lte($startAt)) {
+                $rowErrors[] = 'End datetime must be after start datetime.';
+            }
+
+            $status = strtolower(trim((string) ($rawRow['status'] ?? 'scheduled')));
+            if (! in_array($status, ['scheduled', 'ongoing', 'completed', 'cancelled'], true)) {
+                $status = 'scheduled';
+            }
+
+            $enrolled = $this->extractNullableInt($rawRow['enrolled'] ?? null) ?? 0;
+
+            if ($rowErrors === [] && $classroom && $startAt && $endAt) {
+                $scheduleConflict = $availabilityService->checkOfficialScheduleConflict(
+                    (int) $classroom->id,
+                    $startAt,
+                    $endAt,
+                    null,
+                    false
+                );
+
+                if ($scheduleConflict['has_conflict']) {
+                    $rowErrors[] = 'Room is occupied by official schedule at selected time.';
+                }
+
+                $reservationConflict = $availabilityService->checkReservationConflict(
+                    (int) $classroom->id,
+                    $startAt,
+                    $endAt,
+                    null,
+                    false
+                );
+
+                if ($reservationConflict['has_conflict']) {
+                    $rowErrors[] = 'Room is already reserved at selected time.';
+                }
+            }
+
+            $payload = [
+                'classroom_id' => $classroom?->id,
+                'course_id' => $course?->id,
+                'start_at' => $startAt?->toDateTimeString(),
+                'end_at' => $endAt?->toDateTimeString(),
+                'status' => $status,
+                'day_of_week' => $startAt?->dayOfWeek,
+                'enrolled' => max(0, $enrolled),
+            ];
+
+            $preparedRows[] = [
+                'row_number' => $rowNumber,
+                'room' => $classroom?->name,
+                'course' => $course?->code,
+                'instructor' => $course?->instructor?->name
+                    ?? trim((string) ($rawRow['instructor'] ?? $rawRow['instructor_name'] ?? $rawRow['faculty'] ?? $rawRow['faculty_name'] ?? $rawRow['teacher'] ?? '')),
+                'subject' => $course?->title,
+                'start_at' => $payload['start_at'],
+                'end_at' => $payload['end_at'],
+                'status' => $status,
+                'enrolled' => $payload['enrolled'],
+                'is_valid' => count($rowErrors) === 0,
+                'errors' => $rowErrors,
+                'payload' => $payload,
+            ];
+
+            if ($rowErrors !== []) {
+                $errors[] = [
+                    'row_number' => $rowNumber,
+                    'messages' => $rowErrors,
+                ];
+            }
+        }
+
+        return [
+            'rows' => $preparedRows,
+            'errors' => $errors,
+        ];
+    }
+
+    private function extractNullableInt(mixed $value): ?int
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = trim((string) $value);
+        if ($trimmed === '' || ! ctype_digit($trimmed)) {
+            return null;
+        }
+
+        return (int) $trimmed;
+    }
+
+    private function normalizeLookup(string $value): string
+    {
+        $normalized = strtolower(trim($value));
+        $normalized = preg_replace('/[^a-z0-9]+/', ' ', $normalized) ?? $normalized;
+
+        return trim($normalized);
     }
 }

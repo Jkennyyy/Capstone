@@ -345,6 +345,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
 @media (max-width:1100px) { .cards-grid { grid-template-columns: 1fr; } .stat-row { grid-template-columns: repeat(2,1fr); } }
 @media (max-width:768px) { :root { --sidebar-w: 0px; } .sidebar { display: none; } .content { padding: 20px 16px 40px; } .topbar { padding: 0 16px; } .topbar-search { width: 200px; } }
 </style>
+@include('frontend.admin.partials.minimal-ui-overrides')
 </head>
 <body>
 
@@ -363,19 +364,13 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
   <span class="nav-section-label">Main Menu</span>
   <ul class="sidebar-nav">
     <li>
-      <a href="{{ url('/dashboard') }}">
-        <span class="nav-icon"><i class="fas fa-chart-line"></i></span>
-        Dashboard
-      </a>
-    </li>
-    <li>
-      <a href="{{ url('/classrooms') }}">
+      <a href="{{ route('admin.classrooms') }}">
         <span class="nav-icon"><i class="fas fa-school"></i></span>
-        Classrooms
+        Room Management
       </a>
     </li>
     <li>
-      <a href="{{ url('/schedule') }}">
+      <a href="{{ url('/admin/schedule') }}">
         <span class="nav-icon"><i class="fas fa-calendar-days"></i></span>
         Schedule
       </a>
@@ -416,14 +411,6 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
      MAIN
 ════════════════════════════════════════════ -->
 <div class="main">
-
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <div style="font-size:0.84rem;color:var(--text-secondary);display:flex;align-items:center;gap:7px;">
-      <i class="fas fa-clock" style="font-size:0.78rem;color:var(--text-light);"></i>
-      <span>{{ \Carbon\Carbon::now()->format('l, F j, Y') }}</span>
-    </div>
-  </div>
 
   <!-- CONTENT -->
   <div class="content">
@@ -471,7 +458,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
           </div>
           <div class="stat-tile-icon-wrap"><i class="fas fa-credit-card"></i></div>
         </div>
-        <div class="stat-tile-val">3</div>
+        <div class="stat-tile-val">{{ $stats['active_cards'] ?? 0 }}</div>
       </div>
       <div class="stat-tile tile-green">
         <div class="stat-tile-top">
@@ -480,7 +467,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
           </div>
           <div class="stat-tile-icon-wrap"><i class="fas fa-user-group"></i></div>
         </div>
-        <div class="stat-tile-val">4</div>
+        <div class="stat-tile-val">{{ $stats['total_instructors'] ?? 0 }}</div>
       </div>
       <div class="stat-tile tile-purple">
         <div class="stat-tile-top">
@@ -489,7 +476,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
           </div>
           <div class="stat-tile-icon-wrap"><i class="fas fa-school"></i></div>
         </div>
-        <div class="stat-tile-val">4</div>
+        <div class="stat-tile-val">{{ $stats['assigned_rooms'] ?? 0 }}</div>
       </div>
       <div class="stat-tile tile-orange">
         <div class="stat-tile-top">
@@ -498,262 +485,174 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
           </div>
           <div class="stat-tile-icon-wrap"><i class="fas fa-clock"></i></div>
         </div>
-        <div class="stat-tile-val">1</div>
+        <div class="stat-tile-val">{{ $stats['pending_cards'] ?? 0 }}</div>
       </div>
     </div>
 
-    <!-- Instructor Cards Grid -->
     <div class="cards-grid">
-
-      <!-- ── Card 1: Prof. Maria Santos ── -->
-      <div class="instructor-card">
-        <div class="ic-header">
-          <img class="ic-avatar" src="https://randomuser.me/api/portraits/women/68.jpg" alt="Prof. Maria Santos">
-          <div>
-            <div class="ic-name">Prof. Maria Santos</div>
-            <div class="ic-dept">Computer Science</div>
-            <div class="ic-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0964687b6068277a68677d667a49797a7c276c6d7c277961">[email&#160;protected]</a></div>
-          </div>
-        </div>
-
-        <!-- RFID Card Visual -->
-        <div class="rfid-card">
-          <div class="rfid-row1">
-            <div>
-              <div class="rfid-institution">PSU Assingan Campus</div>
-              <div class="rfid-system">SmartDoor System</div>
+        @foreach(($cards ?? []) as $card)
+          @php
+            $statusClass = match($card['status'] ?? 'active') {
+                'pending' => 'badge-pending',
+                'inactive' => 'badge-inactive',
+                default => 'badge-active',
+            };
+            $statusLabel = strtoupper($card['status'] ?? 'active');
+            $initials = collect(explode(' ', (string) ($card['name'] ?? 'U')))
+                ->filter()
+                ->take(2)
+                ->map(fn($word) => strtoupper(substr($word, 0, 1)))
+                ->join('');
+          @endphp
+          <div class="instructor-card">
+            <div class="ic-header">
+              <div class="ic-avatar" style="display:flex;align-items:center;justify-content:center;background:#e2e8f0;color:#475569;font-size:0.8rem;font-weight:700;">{{ $initials !== '' ? $initials : 'U' }}</div>
+              <div>
+                <div class="ic-name">{{ $card['name'] }}</div>
+                <div class="ic-dept">{{ $card['department'] }}</div>
+                <div class="ic-email"><a href="mailto:{{ $card['email'] }}">{{ $card['email'] }}</a></div>
+              </div>
             </div>
-            <span class="rfid-status-badge badge-active">ACTIVE</span>
-          </div>
-          <div class="rfid-row2">
-            <div class="rfid-chip"><div class="rfid-chip-dot"></div></div>
-            <i class="fas fa-wifi rfid-wifi"></i>
-          </div>
-          <div class="rfid-number-label">Card Number</div>
-          <div class="rfid-number">0012345678</div>
-          <div class="rfid-footer">
-            <div>
-              <div class="rfid-instructor-label">Instructor</div>
-              <div class="rfid-instructor-name">Prof. Maria Santos</div>
-              <div class="rfid-instructor-dept">Computer Science</div>
-            </div>
-            <div>
-              <div class="rfid-expires-label">Expires</div>
-              <div class="rfid-expires-val">03/26</div>
-            </div>
-          </div>
-          <div class="rfid-tag"><i class="fas fa-barcode"></i> RFID-A1B2C304E5F6</div>
-        </div>
 
-        <!-- Actions -->
-        <div class="ic-actions">
-          <button class="btn-reissue"><i class="fas fa-rotate"></i> Reissue Card</button>
-          <button class="btn-deactivate"><i class="fas fa-circle-xmark"></i> Deactivate</button>
-        </div>
+            <div class="rfid-card">
+              <div class="rfid-row1">
+                <div>
+                  <div class="rfid-institution">PSU Assingan Campus</div>
+                  <div class="rfid-system">SmartDoor System</div>
+                </div>
+                <span class="rfid-status-badge {{ $statusClass }}">{{ $statusLabel }}</span>
+              </div>
+              <div class="rfid-row2">
+                <div class="rfid-chip"><div class="rfid-chip-dot"></div></div>
+                <i class="fas fa-wifi rfid-wifi"></i>
+              </div>
+              <div class="rfid-number-label">Card Number</div>
+              <div class="rfid-number">{{ $card['card_number'] }}</div>
+              <div class="rfid-footer">
+                <div>
+                  <div class="rfid-instructor-label">Instructor</div>
+                  <div class="rfid-instructor-name">{{ $card['name'] }}</div>
+                  <div class="rfid-instructor-dept">{{ $card['department'] }}</div>
+                </div>
+                <div>
+                  <div class="rfid-expires-label">Expires</div>
+                  <div class="rfid-expires-val">{{ $card['expires'] }}</div>
+                </div>
+              </div>
+              <div class="rfid-tag"><i class="fas fa-barcode"></i> {{ $card['rfid_uid'] }}</div>
+            </div>
 
-        <!-- Assigned Rooms -->
-        <div class="ic-rooms">
-          <div class="ic-rooms-title"><i class="fas fa-door-open"></i> Assigned Rooms &amp; Schedule</div>
-          <div class="room-name-label">CS Lab 301</div>
-          <table class="room-sched-table">
-            <tr>
-              <td class="td-day">Monday</td>
-              <td class="td-time">08:00 – 10:00</td>
-              <td class="td-subj">Data Structures</td>
-            </tr>
-            <tr>
-              <td class="td-day">Wednesday</td>
-              <td class="td-time">13:00 – 15:00</td>
-              <td class="td-subj">Algorithms</td>
-            </tr>
-            <tr>
-              <td class="td-day">Friday</td>
-              <td class="td-time">10:00 – 12:00</td>
-              <td class="td-subj">Database Systems</td>
-            </tr>
-          </table>
-        </div>
+            <div class="ic-actions">
+              <a class="btn-reissue" href="{{ route('smartlocking.show', $card['id']) }}"><i class="fas fa-eye"></i> View Details</a>
+              <button class="btn-deactivate js-deactivate-card" data-card-id="{{ $card['id'] }}"><i class="fas fa-circle-xmark"></i> Deactivate</button>
+            </div>
+
+            <div class="ic-rooms">
+              <div class="ic-rooms-title"><i class="fas fa-door-open"></i> Assigned Rooms &amp; Schedule</div>
+              <div class="room-name-label">{{ $card['room'] }}</div>
+              <table class="room-sched-table">
+                @forelse(($card['schedule'] ?? []) as $row)
+                  <tr>
+                    <td class="td-day">{{ $row['day'] }}</td>
+                    <td class="td-time">{{ str_replace('-', ' - ', $row['time']) }}</td>
+                    <td class="td-subj">{{ $row['subject'] }}</td>
+                  </tr>
+                @empty
+                  <tr>
+                    <td class="td-day">-</td>
+                    <td class="td-time">No schedule assigned</td>
+                    <td class="td-subj">-</td>
+                  </tr>
+                @endforelse
+              </table>
+            </div>
+          </div>
+        @endforeach
       </div>
 
-      <!-- ── Card 2: Dr. Roberto Cruz ── -->
-      <div class="instructor-card">
-        <div class="ic-header">
-          <img class="ic-avatar" src="https://randomuser.me/api/portraits/men/32.jpg" alt="Dr. Roberto Cruz">
-          <div>
-            <div class="ic-name">Dr. Roberto Cruz</div>
-            <div class="ic-dept">Engineering</div>
-            <div class="ic-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="9deff2fff8efe9f2b3feefe8e7ddedeee8b3f8f9e8b3edf5">[email&#160;protected]</a></div>
-          </div>
-        </div>
+    </div>
 
-        <div class="rfid-card">
-          <div class="rfid-row1">
-            <div>
-              <div class="rfid-institution">PSU Assingan Campus</div>
-              <div class="rfid-system">SmartRoom System</div>
-            </div>
-            <span class="rfid-status-badge badge-active">ACTIVE</span>
-          </div>
-          <div class="rfid-row2">
-            <div class="rfid-chip"><div class="rfid-chip-dot"></div></div>
-            <i class="fas fa-wifi rfid-wifi"></i>
-          </div>
-          <div class="rfid-number-label">Card Number</div>
-          <div class="rfid-number">0023456789</div>
-          <div class="rfid-footer">
-            <div>
-              <div class="rfid-instructor-label">Instructor</div>
-              <div class="rfid-instructor-name">Dr. Roberto Cruz</div>
-              <div class="rfid-instructor-dept">Engineering</div>
-            </div>
-            <div>
-              <div class="rfid-expires-label">Expires</div>
-              <div class="rfid-expires-val">03/26</div>
-            </div>
-          </div>
-          <div class="rfid-tag"><i class="fas fa-barcode"></i> RFID-B2C304E5F6A1</div>
-        </div>
+  </div>
+</div>
 
-        <div class="ic-actions">
-          <button class="btn-reissue"><i class="fas fa-rotate"></i> Reissue Card</button>
-          <button class="btn-deactivate"><i class="fas fa-circle-xmark"></i> Deactivate</button>
-        </div>
+<script>
+const toastWrap = (() => {
+  let wrap = document.getElementById('toastWrap');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'toastWrap';
+    wrap.style.cssText = 'position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:8px;z-index:2200;pointer-events:none;';
+    document.body.appendChild(wrap);
+  }
+  return wrap;
+})();
 
-        <div class="ic-rooms">
-          <div class="ic-rooms-title"><i class="fas fa-door-open"></i> Assigned Rooms &amp; Schedule</div>
-          <div class="room-name-label">Engineering Lab 401</div>
-          <table class="room-sched-table">
-            <tr>
-              <td class="td-day">Tuesday</td>
-              <td class="td-time">09:00 – 11:00</td>
-              <td class="td-subj">Thermodynamics</td>
-            </tr>
-            <tr>
-              <td class="td-day">Thursday</td>
-              <td class="td-time">14:00 – 16:00</td>
-              <td class="td-subj">Fluid Mechanics</td>
-            </tr>
-          </table>
-        </div>
-      </div>
+function showToast(message, type = 'info') {
+  if (!message) return;
 
-      <!-- ── Card 3: Prof. Ana Reyes ── -->
-      <div class="instructor-card">
-        <div class="ic-header">
-          <img class="ic-avatar" src="https://randomuser.me/api/portraits/women/12.jpg" alt="Prof. Ana Reyes">
-          <div>
-            <div class="ic-name">Prof. Ana Reyes</div>
-            <div class="ic-dept">Business Administration</div>
-            <div class="ic-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="52333c337c20372b3721122221277c3736277c223a">[email&#160;protected]</a></div>
-          </div>
-        </div>
+  let background = '#eff6ff';
+  let border = '#bfdbfe';
+  let color = '#1d4ed8';
 
-        <div class="rfid-card">
-          <div class="rfid-row1">
-            <div>
-              <div class="rfid-institution">PSU Assingan Campus</div>
-              <div class="rfid-system">SmartDoor System</div>
-            </div>
-            <span class="rfid-status-badge badge-active">ACTIVE</span>
-          </div>
-          <div class="rfid-row2">
-            <div class="rfid-chip"><div class="rfid-chip-dot"></div></div>
-            <i class="fas fa-wifi rfid-wifi"></i>
-          </div>
-          <div class="rfid-number-label">Card Number</div>
-          <div class="rfid-number">0034567890</div>
-          <div class="rfid-footer">
-            <div>
-              <div class="rfid-instructor-label">Instructor</div>
-              <div class="rfid-instructor-name">Prof. Ana Reyes</div>
-              <div class="rfid-instructor-dept">Business Administration</div>
-            </div>
-            <div>
-              <div class="rfid-expires-label">Expires</div>
-              <div class="rfid-expires-val">03/26</div>
-            </div>
-          </div>
-          <div class="rfid-tag"><i class="fas fa-barcode"></i> RFID-C304E5F6A1B2</div>
-        </div>
+  if (type === 'error') {
+    background = '#fef2f2';
+    border = '#fecaca';
+    color = '#991b1b';
+  }
 
-        <div class="ic-actions">
-          <button class="btn-reissue"><i class="fas fa-rotate"></i> Reissue Card</button>
-          <button class="btn-deactivate"><i class="fas fa-circle-xmark"></i> Deactivate</button>
-        </div>
+  if (type === 'success') {
+    background = '#ecfdf5';
+    border = '#86efac';
+    color = '#166534';
+  }
 
-        <div class="ic-rooms">
-          <div class="ic-rooms-title"><i class="fas fa-door-open"></i> Assigned Rooms &amp; Schedule</div>
-          <div class="room-name-label">Business Room 203</div>
-          <table class="room-sched-table">
-            <tr>
-              <td class="td-day">Monday</td>
-              <td class="td-time">14:00 – 16:00</td>
-              <td class="td-subj">Marketing Management</td>
-            </tr>
-            <tr>
-              <td class="td-day">Wednesday</td>
-              <td class="td-time">10:00 – 12:00</td>
-              <td class="td-subj">Financial Analysis</td>
-            </tr>
-            <tr>
-              <td class="td-day">Friday</td>
-              <td class="td-time">13:00 – 15:00</td>
-              <td class="td-subj">Business Strategy</td>
-            </tr>
-          </table>
-        </div>
-      </div>
+  const toast = document.createElement('div');
+  toast.textContent = message;
+  toast.style.cssText = `min-width:240px;max-width:360px;padding:10px 12px;border-radius:10px;border:1px solid ${border};box-shadow:0 10px 28px rgba(11,22,64,.2);font-size:.8rem;font-weight:600;opacity:0;transform:translateY(10px);transition:opacity .2s,transform .2s;background:${background};color:${color};`;
+  toastWrap.appendChild(toast);
 
-      <!-- ── Card 4: Dr. Carlos Mendoza (PENDING) ── -->
-      <div class="instructor-card">
-        <div class="ic-header">
-          <img class="ic-avatar" src="https://randomuser.me/api/portraits/men/54.jpg" alt="Dr. Carlos Mendoza">
-          <div>
-            <div class="ic-name">Dr. Carlos Mendoza</div>
-            <div class="ic-dept">Mathematics</div>
-            <div class="ic-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="2a494b5846455904474f444e45504b6a5a595f044f4e5f045a42">[email&#160;protected]</a></div>
-          </div>
-        </div>
+  requestAnimationFrame(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+  });
 
-        <div class="rfid-card" style="background:linear-gradient(135deg,#1e3a8a 0%,#1d4ed8 55%,#2563eb 100%);">
-          <div class="rfid-row1">
-            <div>
-              <div class="rfid-institution">PSU Assingan Campus</div>
-              <div class="rfid-system">SmartDoor System</div>
-            </div>
-            <span class="rfid-status-badge badge-pending">PENDING</span>
-          </div>
-          <div class="rfid-row2">
-            <div class="rfid-chip"><div class="rfid-chip-dot"></div></div>
-            <i class="fas fa-wifi rfid-wifi"></i>
-          </div>
-          <div class="rfid-number-label">Card Number</div>
-          <div class="rfid-number">0045678901</div>
-          <div class="rfid-footer">
-            <div>
-              <div class="rfid-instructor-label">Instructor</div>
-              <div class="rfid-instructor-name">Dr. Carlos Mendoza</div>
-              <div class="rfid-instructor-dept">Mathematics</div>
-            </div>
-            <div>
-              <div class="rfid-expires-label">Expires</div>
-              <div class="rfid-expires-val">03/26</div>
-            </div>
-          </div>
-          <div class="rfid-tag"><i class="fas fa-barcode"></i> RFID-D4E5F6A1B2C3</div>
-        </div>
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(10px)';
+    setTimeout(() => toast.remove(), 220);
+  }, 2600);
+}
 
-        <div class="ic-actions">
-          <button class="btn-reissue"><i class="fas fa-rotate"></i> Reissue Card</button>
-          <button class="btn-deactivate"><i class="fas fa-circle-xmark"></i> Deactivate</button>
-        </div>
+document.querySelectorAll('.js-deactivate-card').forEach((button) => {
+  button.addEventListener('click', async (event) => {
+    event.preventDefault();
 
-        <div class="ic-rooms">
-          <div class="ic-rooms-title"><i class="fas fa-door-open"></i> Assigned Rooms &amp; Schedule</div>
-          <div class="room-name-label">Math Room 105</div>
-          <table class="room-sched-table">
-            <tr>
-              <td class="td-day">Tuesday</td>
-              <td class="td-time">08:00 – 10:00</td>
-              <td class="td-subj">Calculus II</td>
-            </t
+    const cardId = button.getAttribute('data-card-id');
+    if (!cardId) return;
+
+    const shouldDeactivate = confirm('Deactivate this RFID card?');
+    if (!shouldDeactivate) return;
+
+    const response = await fetch(`/admin/access-cards/${cardId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': "{{ csrf_token() }}",
+      },
+      body: JSON.stringify({ status: 'inactive' }),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      showToast(errorBody?.message || 'Failed to deactivate card.', 'error');
+      return;
+    }
+
+    window.location.reload();
+  });
+});
+</script>
+
+</body>
+</html>

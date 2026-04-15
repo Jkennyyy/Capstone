@@ -429,6 +429,74 @@ tbody td { padding: 14px 24px; font-size: 0.88rem; vertical-align: middle; }
 }
 .btn-cancel:hover { border-color: #d1d5db; color: var(--text); }
 
+/* ── Edit Overlay ── */
+.edit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 260;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 18px;
+  background: rgba(11,22,64,0.52);
+  backdrop-filter: blur(4px);
+}
+.edit-container {
+  width: min(760px, 100%);
+  background: var(--white);
+  border: 1.5px solid rgba(245,197,24,0.24);
+  border-radius: 18px;
+  box-shadow: 0 24px 70px rgba(11,22,64,0.28);
+  overflow: hidden;
+}
+.edit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 22px;
+  background: linear-gradient(120deg, rgba(11,22,64,0.98) 0%, rgba(26,47,128,0.95) 100%);
+  border-bottom: 1px solid rgba(245,197,24,0.24);
+}
+.edit-head-title {
+  color: #fff;
+  font-size: 1.03rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.edit-head-sub {
+  margin-top: 3px;
+  color: rgba(255,255,255,0.72);
+  font-size: 0.8rem;
+}
+.edit-name-pill {
+  border: 1px solid rgba(245,197,24,0.42);
+  background: rgba(245,197,24,0.16);
+  color: #fef3c7;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+.edit-body {
+  padding: 20px 22px 22px;
+}
+.edit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.edit-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 4px;
+}
+body.editing-open {
+  overflow: hidden;
+}
+
 /* ── Animations ── */
 @keyframes fadeSlideUp {
   from { opacity: 0; transform: translateY(14px); }
@@ -451,10 +519,13 @@ tbody td { padding: 14px 24px; font-size: 0.88rem; vertical-align: middle; }
   .topbar-search { width: 200px; }
   .summary-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
   .form-row { grid-template-columns: 1fr; }
+  .edit-grid { grid-template-columns: 1fr; }
+  .edit-container { width: 100%; }
 }
 </style>
+@include('frontend.admin.partials.minimal-ui-overrides')
 </head>
-<body>
+<body class="{{ isset($editUser) && $editUser ? 'editing-open' : '' }}">
 
 <!-- SIDEBAR -->
 <div class="sidebar">
@@ -468,9 +539,8 @@ tbody td { padding: 14px 24px; font-size: 0.88rem; vertical-align: middle; }
 
   <span class="nav-section-label">Main Menu</span>
   <ul class="sidebar-nav">
-    <li><a href="{{ url('/dashboard') }}"><span class="nav-icon"><i class="fas fa-chart-line"></i></span>Dashboard</a></li>
-    <li><a href="{{ url('/classrooms') }}"><span class="nav-icon"><i class="fas fa-school"></i></span>Classrooms</a></li>
-    <li><a href="{{ url('/schedule') }}"><span class="nav-icon"><i class="fas fa-calendar-days"></i></span>Schedule</a></li>
+    <li><a href="{{ route('admin.classrooms') }}"><span class="nav-icon"><i class="fas fa-school"></i></span>Room Management</a></li>
+    <li><a href="{{ url('/admin/schedule') }}"><span class="nav-icon"><i class="fas fa-calendar-days"></i></span>Schedule</a></li>
     <li><a href="{{ url('/admin/users') }}" class="active"><span class="nav-icon"><i class="fas fa-users-cog"></i></span>User Management</a></li>
     <li><a href="{{ url('/smartlocking') }}"><span class="nav-icon"><i class="fas fa-lock"></i></span>SmartLocking</a></li>
   </ul>
@@ -483,36 +553,39 @@ tbody td { padding: 14px 24px; font-size: 0.88rem; vertical-align: middle; }
         <div class="user-widget-role">Admin</div>
       </div>
     </div>
-    <button class="sidebar-logout-btn">
-      <i class="fas fa-arrow-right-from-bracket"></i>
-      Sign Out
-    </button>
+    <form method="POST" action="{{ route('auth.logout') }}">
+      @csrf
+      <button type="submit" class="sidebar-logout-btn">
+        <i class="fas fa-arrow-right-from-bracket"></i>
+        Sign Out
+      </button>
+    </form>
   </div>
 </div>
 
 <!-- MAIN -->
 <div class="main">
 
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <div class="topbar-search">
-      <i class="fas fa-magnifying-glass"></i>
-      <input type="text" placeholder="Search anything…">
-    </div>
-    <div class="topbar-right">
-      <button class="notif-btn"><i class="fas fa-bell"></i><span class="notif-badge"></span></button>
-      <div class="topbar-profile">
-        <div class="topbar-profile-info">
-          <div class="topbar-profile-name">Elena Santos</div>
-          <div class="topbar-profile-role">Administrator</div>
-        </div>
-        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Elena Santos">
-      </div>
-    </div>
-  </div>
-
   <!-- CONTENT -->
   <div class="content">
+
+    @if (session('status'))
+      <div style="margin-bottom:10px;padding:10px 12px;border:1px solid #bbf7d0;background:#f0fdf4;color:#166534;border-radius:8px;font-size:0.82rem;">
+        {{ session('status') }}
+      </div>
+    @endif
+
+    @if (session('warning'))
+      <div style="margin-bottom:10px;padding:10px 12px;border:1px solid #fde68a;background:#fffbeb;color:#92400e;border-radius:8px;font-size:0.82rem;">
+        {{ session('warning') }}
+      </div>
+    @endif
+
+    @if ($errors->any())
+      <div style="margin-bottom:10px;padding:10px 12px;border:1px solid #fecaca;background:#fff5f5;color:#991b1b;border-radius:8px;font-size:0.82rem;">
+        {{ $errors->first() }}
+      </div>
+    @endif
 
     <!-- Page Header -->
     <div class="page-header">
@@ -533,7 +606,7 @@ tbody td { padding: 14px 24px; font-size: 0.88rem; vertical-align: middle; }
           <i class="fas fa-users"></i>
         </div>
         <div class="sum-info">
-          <div class="sum-value" style="color:var(--text);">124</div>
+          <div class="sum-value" id="summaryTotal" style="color:var(--text);">{{ $summary['total'] ?? 0 }}</div>
           <div class="sum-label">Total Users</div>
         </div>
       </div>
@@ -542,7 +615,7 @@ tbody td { padding: 14px 24px; font-size: 0.88rem; vertical-align: middle; }
           <i class="fas fa-user-check"></i>
         </div>
         <div class="sum-info">
-          <div class="sum-value" style="color:var(--green);">108</div>
+          <div class="sum-value" id="summaryActive" style="color:var(--green);">{{ $summary['active'] ?? 0 }}</div>
           <div class="sum-label">Active Users</div>
         </div>
       </div>
@@ -551,7 +624,7 @@ tbody td { padding: 14px 24px; font-size: 0.88rem; vertical-align: middle; }
           <i class="fas fa-user-shield"></i>
         </div>
         <div class="sum-info">
-          <div class="sum-value" style="color:var(--purple-text);">4</div>
+          <div class="sum-value" id="summaryAdmins" style="color:var(--purple-text);">{{ $summary['admins'] ?? 0 }}</div>
           <div class="sum-label">Administrators</div>
         </div>
       </div>
@@ -560,7 +633,7 @@ tbody td { padding: 14px 24px; font-size: 0.88rem; vertical-align: middle; }
           <i class="fas fa-user-slash"></i>
         </div>
         <div class="sum-info">
-          <div class="sum-value" style="color:var(--red);">3</div>
+          <div class="sum-value" id="summarySuspended" style="color:var(--red);">{{ $summary['suspended'] ?? 0 }}</div>
           <div class="sum-label">Suspended</div>
         </div>
       </div>
@@ -577,7 +650,6 @@ tbody td { padding: 14px 24px; font-size: 0.88rem; vertical-align: middle; }
           <option value="">All Roles</option>
           <option>Admin</option>
           <option>Faculty</option>
-          <option>Staff</option>
           <option>Student</option>
         </select>
         <select class="filter-select" id="statusFilter" onchange="filterTable()">
@@ -587,7 +659,7 @@ tbody td { padding: 14px 24px; font-size: 0.88rem; vertical-align: middle; }
           <option>Suspended</option>
         </select>
         <button class="btn-icon" title="Export CSV" onclick="exportCSV()"><i class="fas fa-arrow-down-to-line"></i></button>
-        <button class="btn-icon" title="Refresh"><i class="fas fa-rotate-right"></i></button>
+        <button class="btn-icon" title="Refresh" onclick="refreshUsersData()"><i class="fas fa-rotate-right"></i></button>
       </div>
     </div>
 
@@ -595,7 +667,7 @@ tbody td { padding: 14px 24px; font-size: 0.88rem; vertical-align: middle; }
     <div class="table-card">
       <div class="table-card-header">
         <div class="table-card-title">All Users</div>
-        <span class="table-count" id="rowCount">12 users</span>
+        <span class="table-count" id="rowCount">{{ count($usersData ?? []) }} users</span>
       </div>
 
       <table id="userTable">
@@ -617,7 +689,7 @@ tbody td { padding: 14px 24px; font-size: 0.88rem; vertical-align: middle; }
 
       <!-- Pagination -->
       <div class="pagination">
-        <div class="pagination-info">Showing <strong>1–12</strong> of <strong>124</strong> users</div>
+        <div class="pagination-info" id="paginationInfo">Showing <strong>1-{{ count($usersData ?? []) }}</strong> of <strong>{{ $summary['total'] ?? count($usersData ?? []) }}</strong> users</div>
         <div class="pagination-btns">
           <button class="page-btn" disabled><i class="fas fa-chevron-left"></i></button>
           <button class="page-btn active">1</button>
@@ -640,84 +712,114 @@ tbody td { padding: 14px 24px; font-size: 0.88rem; vertical-align: middle; }
       <div class="modal-title">Add New User</div>
       <button class="modal-close" onclick="closeModal()"><i class="fas fa-xmark"></i></button>
     </div>
-    <div class="modal-body">
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">First Name</label>
-          <input class="form-input" type="text" placeholder="e.g. Maria">
+    <form method="POST" action="{{ route('admin.users.store') }}">
+      @csrf
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="first_name">First Name</label>
+            <input class="form-input" id="first_name" name="first_name" type="text" placeholder="e.g. Maria" value="{{ old('first_name') }}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="last_name">Last Name</label>
+            <input class="form-input" id="last_name" name="last_name" type="text" placeholder="e.g. Santos" value="{{ old('last_name') }}" required>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Last Name</label>
-          <input class="form-input" type="text" placeholder="e.g. Santos">
+        <div class="form-group full">
+          <label class="form-label" for="email">Email Address</label>
+          <input class="form-input" id="email" name="email" type="email" placeholder="user@psu.edu.ph" value="{{ old('email') }}" required>
         </div>
-      </div>
-      <div class="form-group full">
-        <label class="form-label">Email Address</label>
-        <input class="form-input" type="email" placeholder="user@psu.edu.ph">
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Role</label>
-          <select class="form-select">
-            <option value="">Select role…</option>
-            <option>Admin</option>
-            <option>Faculty</option>
-            <option>Staff</option>
-            <option>Student</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Department</label>
-          <select class="form-select">
-            <option value="">Select dept…</option>
-            <option>CITE</option>
-            <option>CAS</option>
-            <option>COE</option>
-            <option>CBA</option>
-            <option>COED</option>
-          </select>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="role">Role</label>
+            <select class="form-select" id="role" name="role" required>
+              <option value="">Select role...</option>
+              <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
+              <option value="faculty" {{ old('role') === 'faculty' ? 'selected' : '' }}>Faculty</option>
+              <option value="student" {{ old('role') === 'student' ? 'selected' : '' }}>Student</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="department">Department</label>
+            <input class="form-input" id="department" name="department" type="text" placeholder="e.g. CITE" value="{{ old('department') }}">
+          </div>
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Employee / Student ID</label>
-          <input class="form-input" type="text" placeholder="PSU-2024-0001">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Status</label>
-          <select class="form-select">
-            <option>Active</option>
-            <option>Inactive</option>
-            <option>Suspended</option>
-          </select>
-        </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn-primary"><i class="fas fa-user-plus"></i>Create User</button>
       </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-      <button class="btn-primary" onclick="closeModal()"><i class="fas fa-user-plus"></i>Create User</button>
-    </div>
+    </form>
   </div>
 </div>
 
+@if(isset($editUser) && $editUser)
+  <div class="edit-overlay">
+    <div class="edit-container">
+      <div class="edit-head">
+        <div>
+          <div class="edit-head-title">Edit User</div>
+          <div class="edit-head-sub">Update account details and permission role</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="edit-name-pill">{{ $editUser->name }}</span>
+          <a href="{{ route('admin.users') }}" class="modal-close" aria-label="Close edit form" style="text-decoration:none;">
+            <i class="fas fa-xmark"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="edit-body">
+        <form method="POST" action="{{ route('admin.users.update', $editUser) }}" class="edit-grid">
+          @csrf
+          @method('PATCH')
+          <div>
+            <label class="form-label" style="display:block;margin-bottom:6px;">Full Name</label>
+            <input class="form-input" type="text" name="name" value="{{ old('name', $editUser->name) }}" required>
+          </div>
+          <div>
+            <label class="form-label" style="display:block;margin-bottom:6px;">Email Address</label>
+            <input class="form-input" type="email" name="email" value="{{ old('email', $editUser->email) }}" required>
+          </div>
+          <div>
+            <label class="form-label" style="display:block;margin-bottom:6px;">Department</label>
+            <input class="form-input" type="text" name="department" value="{{ old('department', $editUser->department) }}">
+          </div>
+          <div>
+            <label class="form-label" style="display:block;margin-bottom:6px;">Role</label>
+            <select class="form-select" name="role" required>
+              @php($currentRole = strtolower((string) old('role', $editUser->role)))
+              <option value="admin" {{ $currentRole === 'admin' ? 'selected' : '' }}>Admin</option>
+              <option value="faculty" {{ $currentRole === 'faculty' ? 'selected' : '' }}>Faculty</option>
+              <option value="student" {{ $currentRole === 'student' ? 'selected' : '' }}>Student</option>
+            </select>
+          </div>
+          <div class="edit-actions">
+            <button type="submit" class="btn-primary"><i class="fas fa-floppy-disk"></i> Save Changes</button>
+            <a href="{{ route('admin.users') }}" class="btn-cancel" style="text-decoration:none;display:inline-flex;align-items:center;">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+@endif
+
+<script type="application/json" id="usersDataJson">{!! json_encode($usersData ?? []) !!}</script>
+<div id="usersDataEndpoint" data-url="{{ route('admin.users.data') }}" hidden></div>
+<div id="createUserModalState" data-open="{{ ($errors->has('first_name') || $errors->has('last_name') || $errors->has('email') || $errors->has('department') || $errors->has('role')) ? '1' : '0' }}" hidden></div>
 <script>
 /* ── Data ── */
-const USERS = [
-  { name:'Elena Santos',   email:'e.santos@psu.edu.ph',   id:'PSU-ADM-001', dept:'Administration', role:'Admin',   status:'Active',    avatar:'https://randomuser.me/api/portraits/women/44.jpg', last:'Just now' },
-  { name:'Ramon Reyes',    email:'r.reyes@psu.edu.ph',    id:'PSU-ADM-002', dept:'CITE',           role:'Admin',   status:'Active',    avatar:'https://randomuser.me/api/portraits/men/32.jpg',   last:'2 hrs ago' },
-  { name:'Dr. Ana Cruz',   email:'a.cruz@psu.edu.ph',     id:'PSU-FAC-041', dept:'CAS',            role:'Faculty', status:'Active',    avatar:'https://randomuser.me/api/portraits/women/68.jpg', last:'1 hr ago' },
-  { name:'Engr. Luis Tan', email:'l.tan@psu.edu.ph',      id:'PSU-FAC-018', dept:'COE',            role:'Faculty', status:'Active',    avatar:'https://randomuser.me/api/portraits/men/55.jpg',   last:'3 hrs ago' },
-  { name:'Prof. Joy Basa', email:'j.basa@psu.edu.ph',     id:'PSU-FAC-029', dept:'COED',           role:'Faculty', status:'Active',    avatar:'https://randomuser.me/api/portraits/women/12.jpg', last:'Yesterday' },
-  { name:'Mark Lim',       email:'m.lim@psu.edu.ph',      id:'PSU-STF-007', dept:'Facilities',     role:'Staff',   status:'Active',    avatar:'https://randomuser.me/api/portraits/men/78.jpg',   last:'5 hrs ago' },
-  { name:'Carla Dizon',    email:'c.dizon@psu.edu.ph',    id:'PSU-STF-011', dept:'IT Office',      role:'Staff',   status:'Inactive',  avatar:'',                                                 last:'3 days ago' },
-  { name:'Paolo Mercado',  email:'p.mercado@psu.edu.ph',  id:'PSU-STU-2024-0112', dept:'CITE',     role:'Student', status:'Active',    avatar:'https://randomuser.me/api/portraits/men/22.jpg',   last:'Today' },
-  { name:'Sofia Garcia',   email:'s.garcia@psu.edu.ph',   id:'PSU-STU-2024-0089', dept:'CBA',      role:'Student', status:'Active',    avatar:'https://randomuser.me/api/portraits/women/25.jpg', last:'Today' },
-  { name:'Jeric Abad',     email:'j.abad@psu.edu.ph',     id:'PSU-STU-2023-0445', dept:'COE',      role:'Student', status:'Suspended', avatar:'https://randomuser.me/api/portraits/men/41.jpg',   last:'2 weeks ago' },
-  { name:'Rhea Villanueva',email:'r.villanueva@psu.edu.ph',id:'PSU-FAC-033', dept:'CAS',           role:'Faculty', status:'Active',    avatar:'https://randomuser.me/api/portraits/women/56.jpg', last:'30 min ago' },
-  { name:'Ben Ocampo',     email:'b.ocampo@psu.edu.ph',   id:'PSU-STF-003', dept:'Security',       role:'Staff',   status:'Active',    avatar:'https://randomuser.me/api/portraits/men/63.jpg',   last:'1 hr ago' },
-];
+let USERS = JSON.parse(document.getElementById('usersDataJson')?.textContent || '[]');
+const usersDataUrl = document.getElementById('usersDataEndpoint')?.getAttribute('data-url') || '';
 
-const ROLE_CLASS   = { Admin:'role-admin', Faculty:'role-faculty', Staff:'role-staff', Student:'role-student' };
+const ROLE_CLASS   = {
+  'Admin':'role-admin',
+  'Super Admin':'role-admin',
+  'Faculty':'role-faculty',
+  'Staff':'role-staff',
+  'Student':'role-student',
+  'Suspended':'role-staff'
+};
 const STATUS_CLASS = { Active:'dot-active', Inactive:'dot-inactive', Suspended:'dot-suspended' };
 const AVATAR_COLORS= ['#1d4ed8','#16a34a','#7c3aed','#c2410c','#0891b2','#b45309'];
 
@@ -732,7 +834,7 @@ function avatarColor(name) {
 function renderRows(data) {
   const tbody = document.getElementById('tableBody');
   tbody.innerHTML = data.map((u,i)=>`
-    <tr>
+    <tr data-user-id="${u.user_id}">
       <td><input type="checkbox" style="accent-color:var(--navy);width:15px;height:15px;cursor:pointer;"></td>
       <td>
         <div class="user-cell">
@@ -755,13 +857,25 @@ function renderRows(data) {
       <td>
         <div class="action-btns" style="justify-content:center;">
           <button class="act-btn" title="View"><i class="fas fa-eye"></i></button>
-          <button class="act-btn act-edit" title="Edit"><i class="fas fa-pen"></i></button>
-          <button class="act-btn act-delete" title="Delete"><i class="fas fa-trash-can"></i></button>
+          <a class="act-btn act-edit" href="/admin/users/${u.user_id}/edit" title="Edit" style="text-decoration:none;"><i class="fas fa-pen"></i></a>
+          <form method="POST" action="/admin/users/${u.user_id}" style="display:inline;">
+            <input type="hidden" name="_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit" class="act-btn act-delete" title="Delete"><i class="fas fa-trash-can"></i></button>
+          </form>
         </div>
       </td>
     </tr>
   `).join('');
   document.getElementById('rowCount').textContent = `${data.length} user${data.length!==1?'s':''}`;
+
+  const total = USERS.length;
+  const start = total > 0 ? 1 : 0;
+  const end = data.length;
+  const paginationInfo = document.getElementById('paginationInfo');
+  if (paginationInfo) {
+    paginationInfo.innerHTML = `Showing <strong>${start}-${end}</strong> of <strong>${total}</strong> users`;
+  }
 }
 
 function filterTable() {
@@ -789,12 +903,60 @@ function exportCSV() {
   a.click();
 }
 
+function updateSummary(summary) {
+  if (!summary) {
+    return;
+  }
+
+  const totalEl = document.getElementById('summaryTotal');
+  const activeEl = document.getElementById('summaryActive');
+  const adminsEl = document.getElementById('summaryAdmins');
+  const suspendedEl = document.getElementById('summarySuspended');
+
+  if (totalEl) totalEl.textContent = String(summary.total ?? 0);
+  if (activeEl) activeEl.textContent = String(summary.active ?? 0);
+  if (adminsEl) adminsEl.textContent = String(summary.admins ?? 0);
+  if (suspendedEl) suspendedEl.textContent = String(summary.suspended ?? 0);
+}
+
+async function refreshUsersData() {
+  if (!usersDataUrl) {
+    return;
+  }
+
+  try {
+    const response = await fetch(usersDataUrl, {
+      method: 'GET',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      return;
+    }
+
+    const payload = await response.json();
+    USERS = Array.isArray(payload.usersData) ? payload.usersData : [];
+    updateSummary(payload.summary || {});
+    filterTable();
+  } catch (_) {
+    // Ignore transient refresh errors and keep current data visible.
+  }
+}
+
 function openModal()        { document.getElementById('modalOverlay').classList.add('open'); }
 function closeModal()       { document.getElementById('modalOverlay').classList.remove('open'); }
 function closeModalOutside(e){ if(e.target===document.getElementById('modalOverlay')) closeModal(); }
 
 /* init */
 renderRows(USERS);
+setInterval(refreshUsersData, 45000);
+const createUserModalState = document.getElementById('createUserModalState');
+if (createUserModalState?.getAttribute('data-open') === '1') {
+  openModal();
+}
 </script>
 </body>
 </html>

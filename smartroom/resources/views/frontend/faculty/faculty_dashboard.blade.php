@@ -1,7 +1,17 @@
 <?php
-// dashboard.php
-$now = new DateTime();
-$dateFormatted = $now->format('h:i A \• l, F j, Y');
+$dateFormatted = $dateFormatted ?? now()->format('h:i A • l, F j, Y');
+$facultyName = $facultyName ?? request()->user()?->name ?? 'Faculty';
+$facultyDept = $facultyDept ?? request()->user()?->department ?? 'Faculty';
+$facultyEmail = $facultyEmail ?? request()->user()?->email ?? '';
+$facultyInitials = $facultyInitials ?? strtoupper(substr((string) $facultyName, 0, 1));
+$stats = $stats ?? [
+  'available_rooms' => 0,
+  'my_reservations' => 0,
+  'active_classes' => 0,
+  'total_students' => 0,
+];
+$upcomingReservations = $upcomingReservations ?? [];
+$availableNowRooms = $availableNowRooms ?? [];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -247,6 +257,20 @@ body {
 .topbar-profile img {
   width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
   border: 2px solid var(--border); box-shadow: var(--shadow-xs);
+}
+.topbar-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--blue-mid);
+  background: #e0e7ff;
 }
 
 /* Profile dropdown */
@@ -603,6 +627,7 @@ body {
   .welcome-banner { flex-direction: column; gap: 16px; align-items: flex-start; }
 }
 </style>
+@include('partials.pro-motion')
 </head>
 <body>
 
@@ -662,14 +687,14 @@ body {
 
   <div class="sidebar-footer">
     <div class="user-widget">
-      <div class="user-avatar">ES</div>
+      <div class="user-avatar"><?= htmlspecialchars($facultyInitials) ?></div>
       <div class="user-widget-info">
-        <div class="user-widget-name">Prof. Elena Santos</div>
-        <div class="user-widget-role">Faculty of IT</div>
+        <div class="user-widget-name"><?= htmlspecialchars($facultyName) ?></div>
+        <div class="user-widget-role"><?= htmlspecialchars($facultyDept) ?></div>
       </div>
     </div>
     <form method="POST" action="<?= htmlspecialchars(url('/logout')) ?>">
-      <?php csrf_field(); ?>
+      <?= csrf_field(); ?>
       <button type="submit" class="sidebar-logout-btn">
         <i class="fas fa-arrow-right-from-bracket"></i>
         Sign Out
@@ -696,27 +721,27 @@ body {
       </button>
       <div class="topbar-profile">
         <div class="topbar-profile-info">
-          <div class="topbar-profile-name">Prof. Elena Santos</div>
-          <div class="topbar-profile-role">Faculty of IT</div>
+          <div class="topbar-profile-name"><?= htmlspecialchars($facultyName) ?></div>
+          <div class="topbar-profile-role"><?= htmlspecialchars($facultyDept) ?></div>
         </div>
-        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Prof. Elena Santos">
+        <div class="topbar-avatar"><?= htmlspecialchars($facultyInitials) ?></div>
         <div class="profile-dropdown">
           <div class="profile-dropdown-item">
             <span class="profile-dropdown-icon"><i class="fas fa-envelope"></i></span>
             <div class="profile-dropdown-text">
               <span class="profile-dropdown-label">Email</span>
-              <span class="profile-dropdown-value">elena.santos@university.edu</span>
+              <span class="profile-dropdown-value"><?= htmlspecialchars($facultyEmail) ?></span>
             </div>
           </div>
           <div class="profile-dropdown-item">
             <span class="profile-dropdown-icon"><i class="fas fa-briefcase"></i></span>
             <div class="profile-dropdown-text">
               <span class="profile-dropdown-label">University Position</span>
-              <span class="profile-dropdown-value">Faculty of IT</span>
+              <span class="profile-dropdown-value"><?= htmlspecialchars($facultyDept) ?></span>
             </div>
           </div>
           <form method="POST" action="<?= htmlspecialchars(url('/logout')) ?>">
-            <?php csrf_field(); ?>
+            <?= csrf_field(); ?>
             <button type="submit" class="profile-signout-btn">
               <i class="fas fa-arrow-right-from-bracket"></i>
               Sign Out
@@ -738,7 +763,7 @@ body {
           <div class="stat-icon green"><i class="fas fa-door-open"></i></div>
           <span class="stat-tag tag-green">+3 new</span>
         </div>
-        <div class="stat-value">12</div>
+        <div class="stat-value"><?= (int) ($stats['available_rooms'] ?? 0) ?></div>
         <div class="stat-label">Available Rooms</div>
       </div>
 
@@ -747,7 +772,7 @@ body {
           <div class="stat-icon blue"><i class="fas fa-calendar-check"></i></div>
           <span class="stat-tag tag-blue">This Week</span>
         </div>
-        <div class="stat-value">8</div>
+        <div class="stat-value"><?= (int) ($stats['my_reservations'] ?? 0) ?></div>
         <div class="stat-label">My Reservations</div>
       </div>
 
@@ -756,7 +781,7 @@ body {
           <div class="stat-icon amber"><i class="fas fa-book-open"></i></div>
           <span class="stat-tag tag-amber">This Semester</span>
         </div>
-        <div class="stat-value">12</div>
+        <div class="stat-value"><?= (int) ($stats['active_classes'] ?? 0) ?></div>
         <div class="stat-label">Active Classes</div>
       </div>
 
@@ -765,7 +790,7 @@ body {
           <div class="stat-icon purple"><i class="fas fa-users"></i></div>
           <span class="stat-tag tag-purple">Enrolled</span>
         </div>
-        <div class="stat-value">340</div>
+        <div class="stat-value"><?= (int) ($stats['total_students'] ?? 0) ?></div>
         <div class="stat-label">Total Students</div>
       </div>
 
@@ -774,70 +799,25 @@ body {
     <!-- ── Bottom Grid ── -->
     <div class="bottom-grid">
 
-      <!-- Upcoming Reservations -->
+      <!-- Upcoming Schedules -->
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">
             <span class="panel-title-icon pti-blue"><i class="fas fa-calendar-days"></i></span>
-            Upcoming Reservations
+            Upcoming Schedules
           </div>
           <a href="<?= htmlspecialchars(url('/reservations')) ?>" class="link-all">
             View all <i class="fas fa-arrow-right" style="font-size:0.65rem;"></i>
           </a>
         </div>
 
-        <?php
-        // Replace with: $reservations = DB::table('reservations')->where('user_id', auth()->id())->orderBy('date')->get();
-        $reservations = [
-          [
-            'room'     => 'IT Building – Room 301',
-            'subject'  => 'Database Systems',
-            'date_day' => 'Today',
-            'date_num' => '31',
-            'time'     => '2:00 PM – 4:00 PM',
-            'students' => 42,
-            'status'   => 'confirmed',
-            'is_today' => true,
-          ],
-          [
-            'room'     => 'IT Building – Room 205',
-            'subject'  => 'Software Engineering',
-            'date_day' => 'Tomorrow',
-            'date_num' => '1',
-            'time'     => '10:00 AM – 12:00 PM',
-            'students' => 38,
-            'status'   => 'confirmed',
-            'is_today' => false,
-          ],
-          [
-            'room'     => 'IT Building – Lab 102',
-            'subject'  => 'Web Development',
-            'date_day' => 'Thu',
-            'date_num' => '3',
-            'time'     => '1:00 PM – 3:00 PM',
-            'students' => 35,
-            'status'   => 'confirmed',
-            'is_today' => false,
-          ],
-          [
-            'room'     => 'IT Building – Room 310',
-            'subject'  => 'Systems Analysis',
-            'date_day' => 'Fri',
-            'date_num' => '4',
-            'time'     => '8:00 AM – 10:00 AM',
-            'students' => 30,
-            'status'   => 'pending',
-            'is_today' => false,
-          ],
-        ];
-
-        if (empty($reservations)): ?>
+        <?php if (empty($upcomingReservations)): ?>
           <div class="empty-state">
             <i class="fas fa-calendar-xmark"></i>
-            No upcoming reservations found.
+            No upcoming schedules found.
           </div>
         <?php else:
-          foreach ($reservations as $res):
+          foreach ($upcomingReservations as $res):
             $badgeClass = match($res['status']) {
               'confirmed' => 'badge-confirmed',
               'pending'   => 'badge-pending',
@@ -882,21 +862,13 @@ body {
           </div>
         </div>
 
-        <?php
-        // Replace with: $rooms = \App\Models\Room::where('status', 'available')->get();
-        $rooms = [
-          ['id' => 'IT-301', 'capacity' => 50, 'location' => 'IT Building · 3rd Floor', 'tags' => ['Projector', 'AC', 'WiFi']],
-          ['id' => 'IT-205', 'capacity' => 45, 'location' => 'IT Building · 2nd Floor', 'tags' => ['Smart Board', 'AC']],
-          ['id' => 'IT-104', 'capacity' => 40, 'location' => 'IT Building · 1st Floor', 'tags' => ['Projector', 'WiFi', 'Whiteboard']],
-        ];
-
-        if (empty($rooms)): ?>
+        <?php if (empty($availableNowRooms)): ?>
           <div class="empty-state">
             <i class="fas fa-door-closed"></i>
             No rooms available right now.
           </div>
         <?php else:
-          foreach ($rooms as $room): ?>
+          foreach ($availableNowRooms as $room): ?>
         <div class="room-row">
           <div class="room-header-row">
             <div class="room-id-text"><?= htmlspecialchars($room['id']) ?></div>

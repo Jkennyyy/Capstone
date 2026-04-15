@@ -445,6 +445,7 @@ section { position: relative; z-index: 2; }
   .footer-legal { flex-wrap: wrap; justify-content: center; }
 }
 </style>
+@include('partials.pro-motion')
 </head>
 <body>
 
@@ -468,7 +469,7 @@ section { position: relative; z-index: 2; }
     <li><a href="#how">How It Works</a></li>
     <li><a href="#objectives">Objectives</a></li>
     <li>
-      <a href="/login" class="nav-cta">
+      <a href="{{ route('auth.login') }}" class="nav-cta">
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M10 2h3a1 1 0 011 1v10a1 1 0 01-1 1h-3M7 11l3-3-3-3M10 8H2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Sign In
       </a>
@@ -831,7 +832,7 @@ section { position: relative; z-index: 2; }
   <h2 class="section-title reveal">Ready to Modernize Your Campus?</h2>
   <p class="section-desc reveal" style="margin:0 auto 44px;">SmartRoom brings intelligent scheduling and secure RFID access control to Pangasinan State University — Asingan Campus.</p>
   <div class="cta-actions reveal reveal-delay-1">
-    <a href="#" class="btn-primary" style="font-size:1rem;padding:16px 34px;">
+    <a href="{{ route('auth.login') }}" class="btn-primary" style="font-size:1rem;padding:16px 34px;">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 2h3a1 1 0 011 1v10a1 1 0 01-1 1h-3M7 11l3-3-3-3M10 8H2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Access the System
     </a>

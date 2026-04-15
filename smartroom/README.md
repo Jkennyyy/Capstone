@@ -7,6 +7,106 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## SmartRoom Backend (Supabase Postgres)
+
+This project is configured to use Supabase Postgres through Laravel's `pgsql` driver.
+
+### 1. Environment setup
+
+Update `.env` values:
+
+- `DB_CONNECTION=pgsql`
+- `DB_HOST=db.<project-ref>.supabase.co`
+- `DB_PORT=5432`
+- `DB_DATABASE=postgres`
+- `DB_USERNAME=postgres`
+- `DB_PASSWORD=<your-supabase-db-password>`
+- `DB_SCHEMA=public`
+- `DB_SSLMODE=require`
+
+Optional Supabase integration values (prepared for future Supabase Auth support):
+
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_JWT_SECRET`
+
+### 2. Run migrations
+
+```bash
+php artisan migrate
+```
+
+### 3. API endpoints
+
+Versioned API base path: `/api/v1`
+
+- `GET|POST /classrooms`
+- `GET|PUT|PATCH|DELETE /classrooms/{classroom}`
+- `GET|POST /schedules`
+- `GET|PUT|PATCH|DELETE /schedules/{schedule}`
+- `GET|POST /access-cards`
+- `GET|PUT|PATCH|DELETE /access-cards/{access_card}`
+- `GET /access-logs`
+
+### 4. Auth strategy
+
+- Current implementation uses standard Laravel auth model and sessions.
+- Database is Supabase Postgres only.
+- `users.supabase_user_id` is included so Supabase Auth can be linked later without changing core schema.
+
+### 5. Temporary password onboarding (admin-created users)
+
+When an admin creates a user, SmartRoom now:
+
+- generates a secure random temporary password (`8-12` characters)
+- hashes the password before save
+- sets `must_change_password = true`
+- sends the temporary password to the user's email using Laravel Mail
+
+On first login, the user is redirected to `/password/change` and must set a new password before accessing protected pages.
+
+### 6. Example admin user creation request
+
+`POST /admin/users`
+
+Form fields:
+
+- `first_name` (required)
+- `last_name` (required)
+- `email` (required, unique)
+- `role` (required: `admin|super_admin|faculty|staff|student`)
+- `department` (optional)
+
+Example payload:
+
+```http
+POST /admin/users
+Content-Type: application/x-www-form-urlencoded
+
+first_name=Jane&last_name=Doe&email=jane.doe@psu.edu.ph&role=faculty&department=CITE
+```
+
+### 7. Gmail SMTP mail configuration
+
+Set the following in `.env`:
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=yourgmail@gmail.com
+MAIL_PASSWORD=your-16-char-app-password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=yourgmail@gmail.com
+MAIL_FROM_NAME="SmartRoom"
+```
+
+Notes:
+
+- Use a Google App Password (not your normal Gmail password).
+- Ensure 2-Step Verification is enabled on the Gmail account.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

@@ -1,29 +1,16 @@
 <?php
-// SmartDoor Faculty Portal - Room Availability Page
+$facultyName = $facultyName ?? request()->user()?->name ?? 'Faculty';
+$facultyDept = $facultyDept ?? request()->user()?->department ?? 'Faculty';
+$facultyEmail = $facultyEmail ?? request()->user()?->email ?? '';
+$facultyInitials = $facultyInitials ?? strtoupper(substr((string) $facultyName, 0, 1));
 
-$rooms = [
-    ['id' => 101, 'name' => 'Room 101',  'building' => 'IT Building',          'floor' => '1st Floor', 'seats' => 40, 'status' => 'occupied',  'time_info' => 'Free at 10:30 AM', 'amenities' => ['Projector', 'AC', 'WiFi']],
-    ['id' => 205, 'name' => 'Room 205',  'building' => 'IT Building',          'floor' => '2nd Floor', 'seats' => 35, 'status' => 'available', 'time_info' => 'Until 01:00 PM',  'amenities' => ['Projector', 'AC', 'WiFi', 'Whiteboard']],
-    ['id' => 105, 'name' => 'Lab 105',   'building' => 'IT Building',          'floor' => '1st Floor', 'seats' => 30, 'status' => 'available', 'time_info' => 'Until 10:30 AM',  'amenities' => ['Computers', 'AC', 'WiFi', 'Projector']],
-    ['id' => 302, 'name' => 'Room 302',  'building' => 'Engineering Building', 'floor' => '3rd Floor', 'seats' => 45, 'status' => 'occupied',  'time_info' => 'Free at 12:00 PM', 'amenities' => ['Projector', 'AC', 'Sound System']],
-    ['id' => 201, 'name' => 'Room 201',  'building' => 'Admin Building',       'floor' => '2nd Floor', 'seats' => 50, 'status' => 'available', 'time_info' => 'Until 02:00 PM',  'amenities' => ['Projector', 'AC', 'WiFi', 'Sound System']],
-    ['id' => 203, 'name' => 'Lab 203',   'building' => 'IT Building',          'floor' => '2nd Floor', 'seats' => 30, 'status' => 'available', 'time_info' => 'Until 03:00 PM',  'amenities' => ['Computers', 'AC', 'WiFi']],
-];
-
-$filter = $_GET['filter'] ?? 'all';
-$search = $_GET['search'] ?? '';
-
-$filtered_rooms = array_filter($rooms, function($room) use ($filter, $search) {
-    $match_filter = $filter === 'all' || $room['status'] === $filter;
-    $match_search = empty($search) ||
-        stripos($room['name'], $search) !== false ||
-        stripos($room['building'], $search) !== false;
-    return $match_filter && $match_search;
-});
-
-$available_count = count(array_filter($rooms, fn($r) => $r['status'] === 'available'));
-$occupied_count  = count(array_filter($rooms, fn($r) => $r['status'] === 'occupied'));
-$total_count     = count($rooms);
+$filter = $filter ?? request('filter', 'all');
+$search = $search ?? request('search', '');
+$filtered_rooms = $filtered_rooms ?? ($rooms ?? []);
+$available_count = $available_count ?? 0;
+$occupied_count = $occupied_count ?? 0;
+$total_count = $total_count ?? 0;
+$mapBuildings = $mapBuildings ?? [];
 
 function amenity_icon($amenity) {
     $icons = [
@@ -181,6 +168,8 @@ body { font-family:var(--fb); background:var(--bg); color:var(--text); min-heigh
 .map-cell{background:#edf7ed;display:flex;align-items:center;justify-content:center;min-height:105px;position:relative}
 .map-cell:last-child{background:#f4f7f4}
 .building-pin{display:flex;flex-direction:column;align-items:center;gap:7px}
+.building-pin.js-building-pin{cursor:pointer}
+.building-pin.is-selected .pin-box{outline:2px solid var(--yellow);outline-offset:2px}
 .pin-box{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;position:relative;box-shadow:0 4px 14px rgba(0,0,0,.18)}
 .pin-box.avail{background:linear-gradient(135deg,#22c55e,#16a34a)}
 .pin-box.full {background:linear-gradient(135deg,#f87171,#dc2626)}
@@ -206,7 +195,9 @@ body { font-family:var(--fb); background:var(--bg); color:var(--text); min-heigh
 .room-id{font-size:.68rem;font-weight:700;letter-spacing:.07em;color:var(--text-4);text-transform:uppercase}
 .status-pill{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;padding:4px 10px;border-radius:20px}
 .pill-avail{background:var(--green-bg);color:var(--green-text);border:1px solid var(--green-bd)}
+.pill-res  {background:#fff7ed;color:#c2410c;border:1px solid #fed7aa}
 .pill-occ  {background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+.pill-maint{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
 .room-name{font-family:var(--fh);font-size:1.05rem;font-weight:800;color:var(--text);margin-bottom:4px}
 .room-loc{display:flex;align-items:center;gap:5px;font-size:.77rem;color:var(--text-3);margin-bottom:14px}
 .room-loc i{font-size:.65rem;color:var(--text-4)}
@@ -217,20 +208,33 @@ body { font-family:var(--fb); background:var(--bg); color:var(--text); min-heigh
 .meta-chip i{font-size:.65rem;color:var(--text-4)}
 .meta-chip.tg{background:var(--green-bg);color:var(--green-text);border-color:var(--green-bd);font-weight:600}
 .meta-chip.tg i{color:var(--green)}
+.meta-chip.ty{background:#fff7ed;color:#c2410c;border-color:#fed7aa;font-weight:600}
+.meta-chip.ty i{color:#c2410c}
 .meta-chip.tr{background:var(--red-bg);color:var(--red);border-color:var(--red-bd);font-weight:600}
 .meta-chip.tr i{color:var(--red)}
 .am-label{font-size:.67rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-4);margin-bottom:7px}
 .am-row{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:16px}
 .am-chip{display:inline-flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-xs);padding:3px 9px;font-size:.72rem;color:var(--text-3);font-weight:500}
+.issue-note{display:none;margin-bottom:12px;padding:8px 10px;border-radius:8px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-size:.74rem;font-weight:600;line-height:1.35}
+.issue-note.is-visible{display:block}
 .card-actions{display:flex;gap:8px;margin-top:auto}
-.btn-map,.btn-res{flex:1;padding:10px;border-radius:var(--r-sm);font-size:.8rem;font-weight:700;font-family:var(--fb);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s}
-.btn-map{background:var(--bg);color:var(--text-2);border:1.5px solid var(--border)}
-.btn-map:hover{background:#e8ecfb;color:var(--accent2);border-color:#c7d2fe}
-.btn-map.off{color:var(--text-4);cursor:default}
-.btn-map.off:hover{background:var(--bg);color:var(--text-4);border-color:var(--border)}
+.btn-check,.btn-res{flex:1;padding:10px;border-radius:var(--r-sm);font-size:.8rem;font-weight:700;font-family:var(--fb);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s}
+.btn-check{background:var(--bg);color:var(--text-2);border:1.5px solid var(--border)}
+.btn-check:hover{background:#e8ecfb;color:var(--accent2);border-color:#c7d2fe}
 .btn-res.on{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(26,43,109,.22)}
 .btn-res.on:hover{background:var(--navy-mid);transform:translateY(-1px);box-shadow:0 4px 14px rgba(26,43,109,.3)}
 .btn-res.off{background:var(--bg);color:var(--text-4);cursor:not-allowed;border:1.5px solid var(--border)}
+
+/* ── CHECK AVAILABILITY OVERLAY ── */
+.check-result{display:none;font-size:.77rem;border-radius:8px;padding:8px 10px;border:1px solid var(--border);background:#f8fafc;color:var(--text-2)}
+.check-result.is-visible{display:block}
+.check-result.ok{background:#ecfdf5;border-color:#86efac;color:#166534}
+.check-result.warn{background:#fff7ed;border-color:#fed7aa;color:#c2410c}
+.check-cancelled{display:none;border:1px solid var(--border);border-radius:8px;background:#fff;padding:9px 10px}
+.check-cancelled.is-visible{display:block}
+.check-cancelled-title{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);margin-bottom:6px}
+.check-cancelled-list{display:flex;flex-direction:column;gap:6px}
+.check-cancelled-item{font-size:.76rem;color:var(--text-2);background:#f9fafb;border:1px solid var(--border);border-radius:7px;padding:7px 8px}
 
 /* ── ANIMATIONS ── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
@@ -243,7 +247,39 @@ body { font-family:var(--fb); background:var(--bg); color:var(--text); min-heigh
 @media(max-width:1200px){.rooms-grid{grid-template-columns:1fr}}
 @media(max-width:900px){.content{padding:20px 18px 40px}}
 @media(max-width:768px){:root{--sidebar-w:0px}.sidebar{display:none}}
+
+/* ── RESERVE OVERLAY ── */
+.reserve-overlay{position:fixed;inset:0;background:rgba(11,22,64,.42);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:2100;padding:18px}
+.reserve-overlay.is-open{display:flex}
+.reserve-modal{width:min(460px,100%);background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);box-shadow:0 18px 45px rgba(11,22,64,.28);overflow:hidden}
+.reserve-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);background:#f8faff}
+.reserve-title{font-family:var(--fh);font-size:.95rem;font-weight:800;color:var(--text)}
+.reserve-sub{font-size:.75rem;color:var(--text-3);margin-top:2px}
+.reserve-close{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;color:var(--text-3);cursor:pointer;transition:all .15s}
+.reserve-close:hover{background:var(--bg);color:var(--text-2)}
+.reserve-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px}
+.reserve-group{display:flex;flex-direction:column;gap:5px}
+.reserve-label{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3)}
+.reserve-input{height:39px;border:1.5px solid var(--border);border-radius:9px;padding:0 11px;font-size:.83rem;font-family:var(--fb);color:var(--text);background:var(--bg);outline:none;transition:border-color .15s,box-shadow .15s,background .15s}
+.reserve-input:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(59,130,246,.09);background:#fff}
+.reserve-textarea{min-height:72px;resize:vertical;padding:10px 11px}
+.reserve-error{display:none;font-size:.77rem;color:var(--red);background:var(--red-bg);border:1px solid var(--red-bd);border-radius:8px;padding:8px 10px}
+.reserve-error.is-visible{display:block}
+.reserve-actions{display:flex;gap:8px;padding-top:2px}
+.reserve-cancel,.reserve-submit{flex:1;height:39px;border-radius:9px;font-size:.82rem;font-weight:700;font-family:var(--fb);cursor:pointer;transition:all .15s}
+.reserve-cancel{border:1.5px solid var(--border);background:var(--white);color:var(--text-2)}
+.reserve-cancel:hover{background:var(--bg)}
+.reserve-submit{border:none;background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(26,43,109,.2)}
+.reserve-submit:hover{background:var(--navy-mid)}
+.reserve-submit:disabled{opacity:.7;cursor:not-allowed}
+
+/* ── TOAST ── */
+.toast-wrap{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:8px;z-index:2200;pointer-events:none}
+.toast{min-width:240px;max-width:360px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);box-shadow:var(--shadow-md);font-size:.8rem;font-weight:600;opacity:0;transform:translateY(10px);transition:opacity .2s,transform .2s;background:var(--white);color:var(--text-2)}
+.toast.is-visible{opacity:1;transform:translateY(0)}
+.toast.toast-success{background:#ecfdf5;border-color:#86efac;color:#166534}
 </style>
+@include('partials.pro-motion')
 </head>
 <body>
 
@@ -292,14 +328,14 @@ body { font-family:var(--fb); background:var(--bg); color:var(--text); min-heigh
 
   <div class="sidebar-footer">
     <div class="user-widget">
-      <div class="user-avatar">ES</div>
+      <div class="user-avatar"><?= htmlspecialchars($facultyInitials) ?></div>
       <div class="user-widget-info">
-        <div class="user-widget-name">Prof. Elena Santos</div>
-        <div class="user-widget-role">Faculty of IT</div>
+        <div class="user-widget-name"><?= htmlspecialchars($facultyName) ?></div>
+        <div class="user-widget-role"><?= htmlspecialchars($facultyDept) ?></div>
       </div>
     </div>
     <form method="POST" action="<?= htmlspecialchars(url('/logout')) ?>">
-      <?php csrf_field(); ?>
+      <?= csrf_field(); ?>
       <button type="submit" class="sidebar-logout-btn">
         <i class="fas fa-arrow-right-from-bracket"></i> Sign Out
       </button>
@@ -323,29 +359,29 @@ body { font-family:var(--fb); background:var(--bg); color:var(--text); min-heigh
       </button>
       <div class="topbar-profile">
         <div>
-          <div class="topbar-profile-name">Prof. Elena Santos</div>
-          <div class="topbar-profile-role">Faculty of IT</div>
+          <div class="topbar-profile-name"><?= htmlspecialchars($facultyName) ?></div>
+          <div class="topbar-profile-role"><?= htmlspecialchars($facultyDept) ?></div>
         </div>
         <div class="topbar-avatar">
-          <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Prof. Elena Santos">
+          <span><?= htmlspecialchars($facultyInitials) ?></span>
         </div>
         <div class="profile-dropdown">
           <div class="profile-dropdown-item">
             <span class="profile-dropdown-icon"><i class="fas fa-envelope"></i></span>
             <div>
               <div class="profile-dropdown-label">Email</div>
-              <div class="profile-dropdown-value">elena.santos@university.edu</div>
+              <div class="profile-dropdown-value"><?= htmlspecialchars($facultyEmail) ?></div>
             </div>
           </div>
           <div class="profile-dropdown-item">
             <span class="profile-dropdown-icon"><i class="fas fa-briefcase"></i></span>
             <div>
               <div class="profile-dropdown-label">Position</div>
-              <div class="profile-dropdown-value">Faculty of IT</div>
+              <div class="profile-dropdown-value"><?= htmlspecialchars($facultyDept) ?></div>
             </div>
           </div>
           <form method="POST" action="<?= htmlspecialchars(url('/logout')) ?>">
-            <?php csrf_field(); ?>
+            <?= csrf_field(); ?>
             <button type="submit" class="profile-signout-btn">
               <i class="fas fa-arrow-right-from-bracket"></i> Sign Out
             </button>
@@ -366,7 +402,7 @@ body { font-family:var(--fb); background:var(--bg); color:var(--text); min-heigh
       </div>
       <div class="header-actions">
         <button class="btn-outline"><i class="fas fa-sliders"></i> Filter</button>
-        <button class="btn-primary"><i class="fas fa-file-export"></i> Export PDF</button>
+        <button class="btn-primary" onclick="window.location.href='<?= htmlspecialchars(route('faculty.rooms.export.csv', ['filter' => $filter, 'search' => $search])) ?>'"><i class="fas fa-file-export"></i> Export CSV</button>
       </div>
     </div>
 
@@ -400,24 +436,20 @@ body { font-family:var(--fb); background:var(--bg); color:var(--text); min-heigh
         <span class="live-badge"><span class="live-dot"></span> Live</span>
       </div>
       <div class="map-grid">
+        <?php for ($i = 0; $i < 3; $i++):
+          $building = $mapBuildings[$i] ?? ['building' => 'N/A', 'available' => 0, 'is_full' => true];
+          $isFull = (bool) ($building['is_full'] ?? true);
+        ?>
         <div class="map-cell">
-          <div class="building-pin">
-            <div class="pin-box avail"><i class="fas fa-building"></i><span class="pin-num g">3</span></div>
-            <span class="building-lbl">IT Building</span>
+          <div class="building-pin js-building-pin" data-building="<?= htmlspecialchars((string) ($building['building'] ?? 'N/A'), ENT_QUOTES) ?>">
+            <div class="pin-box <?= $isFull ? 'full' : 'avail' ?>">
+              <i class="fas fa-building"></i>
+              <span class="pin-num <?= $isFull ? 'r' : 'g' ?>" data-building-available><?= (int) ($building['available'] ?? 0) ?></span>
+            </div>
+            <span class="building-lbl" data-building-label><?= htmlspecialchars((string) ($building['building'] ?? 'N/A')) ?></span>
           </div>
         </div>
-        <div class="map-cell">
-          <div class="building-pin">
-            <div class="pin-box full"><i class="fas fa-building"></i><span class="pin-num r">0</span></div>
-            <span class="building-lbl">Engineering Building</span>
-          </div>
-        </div>
-        <div class="map-cell">
-          <div class="building-pin">
-            <div class="pin-box avail"><i class="fas fa-building-columns"></i><span class="pin-num g">1</span></div>
-            <span class="building-lbl">Admin Building</span>
-          </div>
-        </div>
+        <?php endfor; ?>
         <div class="map-cell"></div>
         <div class="map-north">N</div>
         <div class="map-legend">
@@ -437,16 +469,19 @@ body { font-family:var(--fb); background:var(--bg); color:var(--text); min-heigh
     <!-- Rooms Grid -->
     <div class="rooms-grid">
       <?php foreach ($filtered_rooms as $room):
-        $a = $room['status'] === 'available';
-        $pillCls  = $a ? 'pill-avail' : 'pill-occ';
-        $pillIcon = $a ? 'fas fa-circle-check' : 'fas fa-circle-xmark';
-        $pillLbl  = $a ? 'Available' : 'Occupied';
-        $tCls     = $a ? 'tg' : 'tr';
+        $status = (string) ($room['status'] ?? 'available');
+        $a = $status === 'available';
+        $isReserved = $status === 'reserved';
+        $isMaintenance = in_array($status, ['maintenance', 'unavailable'], true);
+        $pillCls = $a ? 'pill-avail' : ($isReserved ? 'pill-res' : ($isMaintenance ? 'pill-maint' : 'pill-occ'));
+        $pillIcon = $a ? 'fas fa-circle-check' : ($isReserved ? 'fas fa-calendar-check' : ($isMaintenance ? 'fas fa-triangle-exclamation' : 'fas fa-circle-xmark'));
+        $pillLbl = $a ? 'Available' : ($isReserved ? 'Reserved' : ($isMaintenance ? 'Unavailable' : 'Occupied'));
+        $tCls = $a ? 'tg' : ($isReserved ? 'ty' : 'tr');
       ?>
-      <div class="room-card">
+      <div class="room-card js-room-card" data-room-id="<?= (int) $room['id'] ?>" data-building="<?= htmlspecialchars((string) $room['building'], ENT_QUOTES) ?>">
         <div class="card-strip">
           <span class="room-id">ID · <?= $room['id'] ?></span>
-          <span class="status-pill <?= $pillCls ?>"><i class="<?= $pillIcon ?>"></i> <?= $pillLbl ?></span>
+          <span class="status-pill <?= $pillCls ?>" data-status-pill><i class="<?= $pillIcon ?>"></i> <span data-status-label><?= $pillLbl ?></span></span>
         </div>
         <div class="room-name"><?= htmlspecialchars($room['name']) ?></div>
         <div class="room-loc">
@@ -455,7 +490,7 @@ body { font-family:var(--fb); background:var(--bg); color:var(--text); min-heigh
         </div>
         <div class="room-meta">
           <div class="meta-chip"><i class="fas fa-users"></i> <?= $room['seats'] ?> seats</div>
-          <div class="meta-chip <?= $tCls ?>"><i class="fas fa-clock"></i> <?= htmlspecialchars($room['time_info']) ?></div>
+          <div class="meta-chip <?= $tCls ?>" data-time-chip><i class="fas fa-clock"></i> <span data-time-info><?= htmlspecialchars($room['time_info']) ?></span></div>
         </div>
         <div class="am-label">Amenities</div>
         <div class="am-row">
@@ -463,11 +498,24 @@ body { font-family:var(--fb); background:var(--bg); color:var(--text); min-heigh
           <span class="am-chip"><?= amenity_icon($am) ?> <?= htmlspecialchars($am) ?></span>
           <?php endforeach; ?>
         </div>
+        <div class="issue-note <?= (!empty($room['issue_note']) && in_array($status, ['maintenance', 'unavailable'], true)) ? 'is-visible' : '' ?>" data-issue-note>
+          <i class="fas fa-triangle-exclamation"></i>
+          <span data-issue-note-text><?= htmlspecialchars((string) ($room['issue_note'] ?? '')) ?></span>
+        </div>
         <div class="card-actions">
-          <button class="btn-map <?= $a ? '' : 'off' ?>">
-            <i class="fas fa-location-dot"></i> Show on Map
+          <button
+            class="btn-check js-check-btn"
+            data-room-id="<?= (int) $room['id'] ?>"
+            data-room-name="<?= htmlspecialchars($room['name'], ENT_QUOTES) ?>"
+          >
+            <i class="fas fa-magnifying-glass-clock"></i> Check Availability
           </button>
-          <button class="btn-res <?= $a ? 'on' : 'off' ?>" <?= $a ? '' : 'disabled' ?>>
+          <button
+            class="btn-res js-reserve-btn <?= $a ? 'on' : 'off' ?>"
+            data-room-id="<?= (int) $room['id'] ?>"
+            data-room-name="<?= htmlspecialchars($room['name'], ENT_QUOTES) ?>"
+            <?= $a ? '' : 'disabled' ?>
+          >
             <i class="fas fa-calendar-plus"></i> Reserve
           </button>
         </div>
@@ -478,8 +526,166 @@ body { font-family:var(--fb); background:var(--bg); color:var(--text); min-heigh
   </div><!-- /content -->
 </div><!-- /main -->
 
+<div class="reserve-overlay" id="reserveOverlay" aria-hidden="true">
+  <div class="reserve-modal" role="dialog" aria-modal="true" aria-labelledby="reserveTitle">
+    <div class="reserve-head">
+      <div>
+        <div class="reserve-title" id="reserveTitle">Reserve Room</div>
+        <div class="reserve-sub" id="reserveRoomName">Select your preferred time slot</div>
+      </div>
+      <button type="button" class="reserve-close" id="reserveCloseBtn" aria-label="Close reserve dialog">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+    <form id="reserveForm" class="reserve-body">
+      <input type="hidden" id="reserveRoomId" name="classroom_id">
+
+      <div class="reserve-group">
+        <label class="reserve-label" for="reserveStartAt">Start</label>
+        <input class="reserve-input" id="reserveStartAt" name="start_at" type="datetime-local" required>
+      </div>
+
+      <div class="reserve-group">
+        <label class="reserve-label" for="reserveEndAt">End</label>
+        <input class="reserve-input" id="reserveEndAt" name="end_at" type="datetime-local" required>
+      </div>
+
+      <div class="reserve-group">
+        <label class="reserve-label" for="reserveNotes">Notes (Optional)</label>
+        <textarea class="reserve-input reserve-textarea" id="reserveNotes" name="notes" placeholder="Purpose or class details..."></textarea>
+      </div>
+
+      <div class="reserve-error" id="reserveError"></div>
+
+      <div class="reserve-actions">
+        <button type="button" class="reserve-cancel" id="reserveCancelBtn">Cancel</button>
+        <button type="submit" class="reserve-submit" id="reserveSubmitBtn">Confirm Reservation</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="reserve-overlay" id="checkOverlay" aria-hidden="true">
+  <div class="reserve-modal" role="dialog" aria-modal="true" aria-labelledby="checkTitle">
+    <div class="reserve-head">
+      <div>
+        <div class="reserve-title" id="checkTitle">Check Availability</div>
+        <div class="reserve-sub" id="checkRoomName">Select a time range</div>
+      </div>
+      <button type="button" class="reserve-close" id="checkCloseBtn" aria-label="Close availability dialog">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+    <form id="checkForm" class="reserve-body">
+      <input type="hidden" id="checkRoomId" name="classroom_id">
+
+      <div class="reserve-group">
+        <label class="reserve-label" for="checkStartAt">Start</label>
+        <input class="reserve-input" id="checkStartAt" name="start_at" type="datetime-local" required>
+      </div>
+
+      <div class="reserve-group">
+        <label class="reserve-label" for="checkEndAt">End</label>
+        <input class="reserve-input" id="checkEndAt" name="end_at" type="datetime-local" required>
+      </div>
+
+      <div class="check-result" id="checkResultBox"></div>
+
+      <div class="check-cancelled" id="checkCancelledBox">
+        <div class="check-cancelled-title">Cancelled Classes In This Time</div>
+        <div class="check-cancelled-list" id="checkCancelledList"></div>
+      </div>
+
+      <div class="reserve-actions">
+        <button type="button" class="reserve-cancel" id="checkCancelBtn">Close</button>
+        <button type="submit" class="reserve-submit" id="checkSubmitBtn">Run Check</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="reserve-overlay" id="roomDetailOverlay" aria-hidden="true">
+  <div class="reserve-modal" role="dialog" aria-modal="true" aria-labelledby="roomDetailTitle">
+    <div class="reserve-head">
+      <div>
+        <div class="reserve-title" id="roomDetailTitle">Room Details</div>
+        <div class="reserve-sub" id="roomDetailSub">Loading room information...</div>
+      </div>
+      <button type="button" class="reserve-close" id="roomDetailCloseBtn" aria-label="Close room details dialog">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+    <div class="reserve-body">
+      <input type="hidden" id="roomDetailRoomId">
+
+      <div class="reserve-group">
+        <label class="reserve-label" for="detailViewMode">Schedule View</label>
+        <select class="reserve-input" id="detailViewMode">
+          <option value="day">Selected Day</option>
+          <option value="week">Selected Week</option>
+        </select>
+      </div>
+
+      <div class="reserve-group">
+        <label class="reserve-label" for="detailDate">Date</label>
+        <input class="reserve-input" id="detailDate" type="date">
+      </div>
+
+      <div class="check-result" id="detailStatusBox"></div>
+
+      <div class="check-cancelled is-visible" id="detailNextScheduleBox">
+        <div class="check-cancelled-title">Next Upcoming Schedule</div>
+        <div class="check-cancelled-list" id="detailNextScheduleList"></div>
+      </div>
+
+      <div class="check-cancelled is-visible" id="detailScheduleBox">
+        <div class="check-cancelled-title">Fixed Schedule</div>
+        <div class="check-cancelled-list" id="detailScheduleList"></div>
+      </div>
+
+      <div class="reserve-actions">
+        <button type="button" class="reserve-cancel" id="roomDetailCloseActionBtn">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="true"></div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+  var csrfToken = '<?= csrf_token() ?>';
+  var reserveOverlay = document.getElementById('reserveOverlay');
+  var reserveForm = document.getElementById('reserveForm');
+  var reserveRoomId = document.getElementById('reserveRoomId');
+  var reserveRoomName = document.getElementById('reserveRoomName');
+  var reserveStartAt = document.getElementById('reserveStartAt');
+  var reserveEndAt = document.getElementById('reserveEndAt');
+  var reserveNotes = document.getElementById('reserveNotes');
+  var reserveError = document.getElementById('reserveError');
+  var reserveSubmitBtn = document.getElementById('reserveSubmitBtn');
+  var checkOverlay = document.getElementById('checkOverlay');
+  var checkForm = document.getElementById('checkForm');
+  var checkRoomId = document.getElementById('checkRoomId');
+  var checkRoomName = document.getElementById('checkRoomName');
+  var checkStartAt = document.getElementById('checkStartAt');
+  var checkEndAt = document.getElementById('checkEndAt');
+  var checkResultBox = document.getElementById('checkResultBox');
+  var checkCancelledBox = document.getElementById('checkCancelledBox');
+  var checkCancelledList = document.getElementById('checkCancelledList');
+  var checkSubmitBtn = document.getElementById('checkSubmitBtn');
+  var toastWrap = document.getElementById('toastWrap');
+  var roomDetailOverlay = document.getElementById('roomDetailOverlay');
+  var roomDetailSub = document.getElementById('roomDetailSub');
+  var roomDetailRoomId = document.getElementById('roomDetailRoomId');
+  var detailViewMode = document.getElementById('detailViewMode');
+  var detailDate = document.getElementById('detailDate');
+  var detailStatusBox = document.getElementById('detailStatusBox');
+  var detailNextScheduleList = document.getElementById('detailNextScheduleList');
+  var detailScheduleList = document.getElementById('detailScheduleList');
+  var selectedBuilding = null;
+  var detailPollTimer = null;
+
   function closeAll() {
     document.querySelectorAll('.profile-dropdown').forEach(el => el.classList.remove('is-open'));
   }
@@ -494,7 +700,690 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
   document.addEventListener('click', closeAll);
+
+  function localIso(date) {
+    return new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 19);
+  }
+
+  function localDateTimeInput(date) {
+    return new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+  }
+
+  function formatDateOnly(date) {
+    return new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 10);
+  }
+
+  function escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function formatScheduleRange(startAt, endAt) {
+    var startLabel = startAt ? new Date(startAt).toLocaleString() : '-';
+    var endLabel = endAt ? new Date(endAt).toLocaleString() : '-';
+    return startLabel + ' - ' + endLabel;
+  }
+
+  function openReserveOverlay(roomId, roomName) {
+    if (!reserveOverlay || !reserveForm) {
+      return;
+    }
+
+    var now = new Date();
+    var startDefault = new Date(now.getTime() + 30 * 60000);
+    var endDefault = new Date(startDefault.getTime() + 60 * 60000);
+
+    reserveRoomId.value = String(roomId);
+    reserveRoomName.textContent = roomName;
+    reserveStartAt.value = localDateTimeInput(startDefault);
+    reserveEndAt.value = localDateTimeInput(endDefault);
+    reserveNotes.value = '';
+    reserveError.textContent = '';
+    reserveError.classList.remove('is-visible');
+    reserveSubmitBtn.disabled = false;
+
+    reserveOverlay.classList.add('is-open');
+    reserveOverlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    reserveStartAt.focus();
+  }
+
+  function closeReserveOverlay() {
+    if (!reserveOverlay) {
+      return;
+    }
+
+    reserveOverlay.classList.remove('is-open');
+    reserveOverlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  function openCheckOverlay(roomId, roomName) {
+    if (!checkOverlay || !checkForm) {
+      return;
+    }
+
+    var now = new Date();
+    var startDefault = new Date(now.getTime() + 30 * 60000);
+    var endDefault = new Date(startDefault.getTime() + 60 * 60000);
+
+    checkRoomId.value = String(roomId);
+    checkRoomName.textContent = roomName;
+    checkStartAt.value = localDateTimeInput(startDefault);
+    checkEndAt.value = localDateTimeInput(endDefault);
+    checkResultBox.textContent = '';
+    checkResultBox.classList.remove('is-visible', 'ok', 'warn');
+    checkCancelledList.innerHTML = '';
+    checkCancelledBox.classList.remove('is-visible');
+    checkSubmitBtn.disabled = false;
+
+    checkOverlay.classList.add('is-open');
+    checkOverlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeCheckOverlay() {
+    if (!checkOverlay) {
+      return;
+    }
+
+    checkOverlay.classList.remove('is-open');
+    checkOverlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  function openRoomDetailOverlay(roomId, roomName) {
+    if (!roomDetailOverlay) {
+      return;
+    }
+
+    roomDetailRoomId.value = String(roomId);
+    roomDetailSub.textContent = roomName;
+    detailViewMode.value = 'day';
+    detailDate.value = formatDateOnly(new Date());
+    detailStatusBox.textContent = '';
+    detailStatusBox.classList.remove('is-visible', 'ok', 'warn');
+    detailNextScheduleList.innerHTML = '<div class="check-cancelled-item">Loading next upcoming schedule...</div>';
+    detailScheduleList.innerHTML = '<div class="check-cancelled-item">Loading fixed schedule...</div>';
+
+    roomDetailOverlay.classList.add('is-open');
+    roomDetailOverlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+
+    refreshRoomDetail();
+    clearInterval(detailPollTimer);
+    detailPollTimer = setInterval(refreshRoomDetail, 15000);
+  }
+
+  function closeRoomDetailOverlay() {
+    if (!roomDetailOverlay) {
+      return;
+    }
+
+    roomDetailOverlay.classList.remove('is-open');
+    roomDetailOverlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    clearInterval(detailPollTimer);
+    detailPollTimer = null;
+  }
+
+  function showToast(message, type) {
+    if (!toastWrap || !message) {
+      return;
+    }
+
+    var toast = document.createElement('div');
+    toast.className = 'toast toast-' + (type || 'success');
+    toast.textContent = message;
+    toastWrap.appendChild(toast);
+
+    requestAnimationFrame(function () {
+      toast.classList.add('is-visible');
+    });
+
+    setTimeout(function () {
+      toast.classList.remove('is-visible');
+      setTimeout(function () {
+        if (toast.parentNode) {
+          toast.parentNode.removeChild(toast);
+        }
+      }, 220);
+    }, 2600);
+  }
+
+  function updateRoomCard(roomStatus) {
+    var card = document.querySelector('.room-card[data-room-id="' + roomStatus.classroom_id + '"]');
+    if (!card) {
+      return;
+    }
+
+    var statusPill = card.querySelector('[data-status-pill]');
+    var statusLabel = card.querySelector('[data-status-label]');
+    var timeChip = card.querySelector('[data-time-chip]');
+    var timeInfo = card.querySelector('[data-time-info]');
+    var reserveBtn = card.querySelector('.js-reserve-btn');
+    var issueNoteBox = card.querySelector('[data-issue-note]');
+    var issueNoteText = card.querySelector('[data-issue-note-text]');
+
+    var status = roomStatus.status || 'available';
+    var iconClass = 'fas fa-circle-check';
+    var pillClass = 'pill-avail';
+    var timeClass = 'tg';
+    var label = 'Available';
+    var canReserve = true;
+
+    if (status === 'reserved') {
+      iconClass = 'fas fa-calendar-check';
+      pillClass = 'pill-res';
+      timeClass = 'ty';
+      label = 'Reserved';
+      canReserve = false;
+    }
+
+    if (status === 'occupied') {
+      iconClass = 'fas fa-circle-xmark';
+      pillClass = 'pill-occ';
+      timeClass = 'tr';
+      label = 'Occupied';
+      canReserve = false;
+    }
+
+    if (status === 'maintenance' || status === 'unavailable') {
+      iconClass = 'fas fa-triangle-exclamation';
+      pillClass = 'pill-maint';
+      timeClass = 'tr';
+      label = 'Unavailable';
+      canReserve = false;
+    }
+
+    if (issueNoteBox && issueNoteText) {
+      var reason = String(roomStatus.reason || '').trim();
+      if ((status === 'maintenance' || status === 'unavailable') && reason !== '') {
+        issueNoteText.textContent = reason;
+        issueNoteBox.classList.add('is-visible');
+      } else {
+        issueNoteText.textContent = '';
+        issueNoteBox.classList.remove('is-visible');
+      }
+    }
+
+    if (statusPill) {
+      statusPill.classList.remove('pill-avail', 'pill-res', 'pill-occ');
+      statusPill.classList.add(pillClass);
+      statusPill.innerHTML = '<i class="' + iconClass + '"></i> <span data-status-label>' + label + '</span>';
+    }
+
+    if (timeChip) {
+      timeChip.classList.remove('tg', 'ty', 'tr');
+      timeChip.classList.add(timeClass);
+    }
+
+    if (timeInfo) {
+      timeInfo.textContent = roomStatus.time_info || 'Available all day';
+    }
+
+    if (reserveBtn) {
+      reserveBtn.disabled = !canReserve;
+      reserveBtn.classList.remove('on', 'off');
+      reserveBtn.classList.add(canReserve ? 'on' : 'off');
+    }
+  }
+
+  async function refreshRoomStatuses() {
+    var now = new Date();
+    var end = new Date(now.getTime() + (60 * 60 * 1000));
+    var query = new URLSearchParams({
+      start_at: localIso(now),
+      end_at: localIso(end)
+    });
+
+    var response = await fetch('/api/v1/room-statuses?' + query.toString(), {
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      return;
+    }
+
+    var payload = await response.json();
+    var items = Array.isArray(payload.data) ? payload.data : [];
+    items.forEach(updateRoomCard);
+  }
+
+  async function refreshMapBuildings() {
+    var response = await fetch('/api/v1/map/buildings', {
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      return;
+    }
+
+    var payload = await response.json();
+    var buildings = Array.isArray(payload.data) ? payload.data : [];
+    var byName = new Map(buildings.map(function (item) {
+      return [String(item.building || '').toLowerCase(), item];
+    }));
+
+    document.querySelectorAll('.js-building-pin').forEach(function (pin) {
+      var building = String(pin.dataset.building || '');
+      var data = byName.get(building.toLowerCase());
+      if (!data) {
+        return;
+      }
+
+      var pinBox = pin.querySelector('.pin-box');
+      var pinNum = pin.querySelector('[data-building-available]');
+      var available = Number(data.available || 0);
+
+      if (pinNum) {
+        pinNum.textContent = String(available);
+        pinNum.classList.remove('g', 'r');
+        pinNum.classList.add(available > 0 ? 'g' : 'r');
+      }
+
+      if (pinBox) {
+        pinBox.classList.remove('avail', 'full');
+        pinBox.classList.add(available > 0 ? 'avail' : 'full');
+      }
+    });
+  }
+
+  async function filterRoomsByBuilding(building) {
+    if (!building || building === 'N/A') {
+      selectedBuilding = null;
+      document.querySelectorAll('.js-building-pin').forEach(function (pin) {
+        pin.classList.remove('is-selected');
+      });
+      document.querySelectorAll('.js-room-card').forEach(function (card) {
+        card.style.display = '';
+      });
+      var allCount = document.querySelectorAll('.js-room-card').length;
+      var countBadgeAll = document.querySelector('.rooms-count-badge');
+      if (countBadgeAll) {
+        countBadgeAll.textContent = allCount + ' rooms found';
+      }
+      return;
+    }
+
+    var isSameSelection = selectedBuilding === building;
+    if (isSameSelection) {
+      await filterRoomsByBuilding('');
+      return;
+    }
+
+    var response = await fetch('/api/v1/map/buildings/' + encodeURIComponent(building) + '/rooms', {
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      return;
+    }
+
+    var payload = await response.json();
+    var rooms = Array.isArray(payload.data) ? payload.data : [];
+    var roomIdSet = new Set(rooms.map(function (room) {
+      return String(room.id);
+    }));
+
+    selectedBuilding = building;
+
+    document.querySelectorAll('.js-building-pin').forEach(function (pin) {
+      pin.classList.toggle('is-selected', pin.dataset.building === building);
+    });
+
+    document.querySelectorAll('.js-room-card').forEach(function (card) {
+      var roomId = String(card.dataset.roomId || '');
+      card.style.display = roomIdSet.has(roomId) ? '' : 'none';
+    });
+
+    rooms.forEach(function (room) {
+      updateRoomCard({
+        classroom_id: room.id,
+        status: room.status,
+        time_info: room.time_info
+      });
+    });
+
+    var countBadge = document.querySelector('.rooms-count-badge');
+    if (countBadge) {
+      countBadge.textContent = rooms.length + ' rooms found';
+    }
+  }
+
+  async function refreshRoomDetail() {
+    var roomId = roomDetailRoomId ? Number(roomDetailRoomId.value) : 0;
+    if (!roomId) {
+      return;
+    }
+
+    var selectedDate = detailDate && detailDate.value ? detailDate.value : formatDateOnly(new Date());
+    var mode = detailViewMode ? detailViewMode.value : 'day';
+
+    var scheduleQuery = new URLSearchParams();
+    if (mode === 'week') {
+      scheduleQuery.set('week_start', selectedDate);
+    } else {
+      scheduleQuery.set('date', selectedDate);
+    }
+
+    var statusResponse = fetch('/api/v1/map/rooms/' + roomId + '/status', {
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+      }
+    });
+
+    var schedulesResponse = fetch('/api/v1/map/rooms/' + roomId + '/fixed-schedules?' + scheduleQuery.toString(), {
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+      }
+    });
+
+    var responses = await Promise.all([statusResponse, schedulesResponse]);
+    if (!responses[0].ok || !responses[1].ok) {
+      detailStatusBox.textContent = 'Unable to load room details right now.';
+      detailStatusBox.classList.add('is-visible', 'warn');
+      return;
+    }
+
+    var statusPayload = await responses[0].json();
+    var schedulesPayload = await responses[1].json();
+
+    var statusData = statusPayload.data || {};
+    var scheduleData = schedulesPayload.data || {};
+    var schedules = Array.isArray(scheduleData.schedules) ? scheduleData.schedules : [];
+    var roomName = scheduleData.classroom_name || statusData.classroom_name || 'Room';
+    roomDetailSub.textContent = roomName;
+
+    var statusLabel = statusData.status_label || 'Available';
+    detailStatusBox.textContent = 'Current Status: ' + statusLabel;
+    detailStatusBox.classList.remove('ok', 'warn');
+    detailStatusBox.classList.add('is-visible', statusData.status === 'available' ? 'ok' : 'warn');
+
+    if (statusData.next_schedule) {
+      detailNextScheduleList.innerHTML = '<div class="check-cancelled-item">'
+        + '<strong>' + escapeHtml(statusData.next_schedule.course || 'Untitled Subject') + '</strong><br>'
+        + '<span>' + escapeHtml(statusData.next_schedule.instructor || 'Unassigned Instructor') + '</span><br>'
+        + '<span>' + escapeHtml(formatScheduleRange(statusData.next_schedule.start_at, statusData.next_schedule.end_at)) + '</span>'
+        + '</div>';
+    } else {
+      detailNextScheduleList.innerHTML = '<div class="check-cancelled-item">No upcoming fixed schedule.</div>';
+    }
+
+    if (schedules.length === 0) {
+      detailScheduleList.innerHTML = '<div class="check-cancelled-item">'
+        + (mode === 'week' ? 'No fixed schedule for this week' : 'No fixed schedule for this day')
+        + '</div>';
+      return;
+    }
+
+    detailScheduleList.innerHTML = schedules.map(function (entry) {
+      return '<div class="check-cancelled-item">'
+        + '<strong>' + escapeHtml(entry.course || 'Untitled Subject') + '</strong> '
+        + '<span>(' + escapeHtml(entry.status || 'scheduled') + ')</span><br>'
+        + '<span>' + escapeHtml(entry.instructor || 'Unassigned Instructor') + '</span><br>'
+        + '<span>' + escapeHtml(formatScheduleRange(entry.start_at, entry.end_at)) + '</span>'
+        + '</div>';
+    }).join('');
+  }
+
+  async function createReservation(roomId, startAt, endAt, notes) {
+    reserveSubmitBtn.disabled = true;
+    reserveError.textContent = '';
+    reserveError.classList.remove('is-visible');
+
+    if (!startAt || !endAt) {
+      reserveError.textContent = 'Start and end date/time are required.';
+      reserveError.classList.add('is-visible');
+      reserveSubmitBtn.disabled = false;
+      return;
+    }
+
+    if (typeof window.showGlobalLoading === 'function') {
+      window.showGlobalLoading('Creating reservation...');
+    }
+
+    try {
+      var response = await fetch('/api/v1/reservations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          classroom_id: Number(roomId),
+          start_at: startAt,
+          end_at: endAt,
+          notes: notes
+        })
+      });
+
+      var payload = await response.json().catch(function () {
+        return {};
+      });
+
+      if (!response.ok) {
+        reserveError.textContent = payload.message || 'Room is already reserved/occupied for the selected time.';
+        reserveError.classList.add('is-visible');
+        reserveSubmitBtn.disabled = false;
+        return;
+      }
+
+      closeReserveOverlay();
+      showToast(payload.message || 'Reservation created successfully.', 'success');
+      refreshRoomStatuses();
+    } finally {
+      if (typeof window.hideGlobalLoading === 'function') {
+        window.hideGlobalLoading();
+      }
+    }
+  }
+
+  function renderCancelledClasses(classes) {
+    if (!checkCancelledList || !checkCancelledBox) {
+      return;
+    }
+
+    if (!Array.isArray(classes) || classes.length === 0) {
+      checkCancelledList.innerHTML = '';
+      checkCancelledBox.classList.remove('is-visible');
+      return;
+    }
+
+    checkCancelledList.innerHTML = classes.map(function (item) {
+      var startLabel = item.start_at ? new Date(item.start_at).toLocaleString() : '-';
+      var endLabel = item.end_at ? new Date(item.end_at).toLocaleString() : '-';
+      var code = item.course_code ? ('[' + item.course_code + '] ') : '';
+
+      return '<div class="check-cancelled-item">'
+        + '<strong>' + code + (item.subject || 'Untitled Subject') + '</strong><br>'
+        + '<span>' + (item.instructor || 'Unassigned') + '</span><br>'
+        + '<span>' + startLabel + ' - ' + endLabel + '</span>'
+        + '</div>';
+    }).join('');
+
+    checkCancelledBox.classList.add('is-visible');
+  }
+
+  async function runAvailabilityCheck(roomId, startAt, endAt) {
+    checkSubmitBtn.disabled = true;
+    checkResultBox.textContent = '';
+    checkResultBox.classList.remove('is-visible', 'ok', 'warn');
+
+    try {
+      var query = new URLSearchParams({
+        classroom_id: String(roomId),
+        start_at: startAt,
+        end_at: endAt,
+      });
+
+      var response = await fetch('/api/v1/room-availability/check?' + query.toString(), {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        }
+      });
+
+      var payload = await response.json().catch(function () {
+        return {};
+      });
+
+      if (!response.ok) {
+        checkResultBox.textContent = payload.message || 'Unable to check availability.';
+        checkResultBox.classList.add('is-visible', 'warn');
+        renderCancelledClasses([]);
+        return;
+      }
+
+      var data = payload.data || {};
+      var isAvailable = Boolean(data.available);
+      checkResultBox.textContent = isAvailable
+        ? 'Room is available for the selected time.'
+        : (data.reason || 'Room is not available for the selected time.');
+      checkResultBox.classList.add('is-visible', isAvailable ? 'ok' : 'warn');
+      renderCancelledClasses(data.cancelled_classes || []);
+    } finally {
+      checkSubmitBtn.disabled = false;
+    }
+  }
+
+  if (reserveForm) {
+    reserveForm.addEventListener('submit', function (event) {
+      event.preventDefault();
+
+      var roomId = Number(reserveRoomId.value);
+      var startAt = reserveStartAt.value;
+      var endAt = reserveEndAt.value;
+      var notes = reserveNotes.value || '';
+
+      createReservation(roomId, startAt, endAt, notes);
+    });
+  }
+
+  document.getElementById('reserveCloseBtn')?.addEventListener('click', closeReserveOverlay);
+  document.getElementById('reserveCancelBtn')?.addEventListener('click', closeReserveOverlay);
+  document.getElementById('checkCloseBtn')?.addEventListener('click', closeCheckOverlay);
+  document.getElementById('checkCancelBtn')?.addEventListener('click', closeCheckOverlay);
+
+  if (reserveOverlay) {
+    reserveOverlay.addEventListener('click', function (event) {
+      if (event.target === reserveOverlay) {
+        closeReserveOverlay();
+      }
+    });
+  }
+
+  if (checkOverlay) {
+    checkOverlay.addEventListener('click', function (event) {
+      if (event.target === checkOverlay) {
+        closeCheckOverlay();
+      }
+    });
+  }
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== 'Escape') {
+      return;
+    }
+
+    if (reserveOverlay && reserveOverlay.classList.contains('is-open')) {
+      closeReserveOverlay();
+      return;
+    }
+
+    if (checkOverlay && checkOverlay.classList.contains('is-open')) {
+      closeCheckOverlay();
+    }
+  });
+
+  if (checkForm) {
+    checkForm.addEventListener('submit', function (event) {
+      event.preventDefault();
+
+      var roomId = Number(checkRoomId.value);
+      var startAt = checkStartAt.value;
+      var endAt = checkEndAt.value;
+
+      if (!startAt || !endAt) {
+        checkResultBox.textContent = 'Start and end date/time are required.';
+        checkResultBox.classList.add('is-visible', 'warn');
+        return;
+      }
+
+      runAvailabilityCheck(roomId, startAt, endAt);
+    });
+  }
+
+  document.querySelectorAll('.js-check-btn').forEach(function (button) {
+    button.addEventListener('click', function () {
+      openCheckOverlay(button.dataset.roomId, button.dataset.roomName || 'Room');
+    });
+  });
+
+  document.querySelectorAll('.js-reserve-btn').forEach(function (button) {
+    button.addEventListener('click', function () {
+      if (button.disabled) {
+        return;
+      }
+
+      openReserveOverlay(button.dataset.roomId, button.dataset.roomName || 'Room');
+    });
+  });
+
+  document.querySelectorAll('.js-building-pin').forEach(function (pin) {
+    pin.addEventListener('click', function () {
+      filterRoomsByBuilding(pin.dataset.building || '');
+    });
+  });
+
+  document.querySelectorAll('.js-room-card').forEach(function (card) {
+    card.addEventListener('click', function (event) {
+      if (event.target.closest('.btn-check') || event.target.closest('.btn-res')) {
+        return;
+      }
+
+      openRoomDetailOverlay(card.dataset.roomId, card.querySelector('.room-name')?.textContent || 'Room');
+    });
+  });
+
+  document.getElementById('roomDetailCloseBtn')?.addEventListener('click', closeRoomDetailOverlay);
+  document.getElementById('roomDetailCloseActionBtn')?.addEventListener('click', closeRoomDetailOverlay);
+  detailViewMode?.addEventListener('change', refreshRoomDetail);
+  detailDate?.addEventListener('change', refreshRoomDetail);
+
+  if (roomDetailOverlay) {
+    roomDetailOverlay.addEventListener('click', function (event) {
+      if (event.target === roomDetailOverlay) {
+        closeRoomDetailOverlay();
+      }
+    });
+  }
+
+  refreshRoomStatuses();
+  refreshMapBuildings();
+  setInterval(function () {
+    refreshRoomStatuses();
+    refreshMapBuildings();
+  }, 15000);
 });
 </script>
+@include('partials.loading-feedback')
 </body>
 </html>

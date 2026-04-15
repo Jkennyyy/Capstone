@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Classroom extends Model
 {
@@ -14,22 +16,46 @@ class Classroom extends Model
         'building',
         'floor',
         'capacity',
+        'current_occupancy',
         'status',
+        'unavailable_reason',
+        'rfid_status',
+        'temperature',
+        'last_accessed_at',
     ];
 
-    protected $attributes = [
-        'status' => 'available',
-    ];
-
-    // Mock method to get current class
-    public function getCurrentClass()
+    protected function casts(): array
     {
-        return null;
+        return [
+            'last_accessed_at' => 'datetime',
+            'temperature' => 'decimal:1',
+        ];
     }
 
-    // Mock method to get next class
-    public function getNextClass()
+    public function schedules(): HasMany
     {
-        return null;
+        return $this->hasMany(Schedule::class);
+    }
+
+    public function accessCards(): HasMany
+    {
+        return $this->hasMany(AccessCard::class);
+    }
+
+    public function accessLogs(): HasMany
+    {
+        return $this->hasMany(AccessLog::class);
+    }
+
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(Reservation::class);
+    }
+
+    public function authorizedUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'classroom_user_access')
+            ->withPivot('access_level')
+            ->withTimestamps();
     }
 }

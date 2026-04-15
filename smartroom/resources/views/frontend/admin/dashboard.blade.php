@@ -478,6 +478,7 @@ body {
   .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
 }
 </style>
+@include('frontend.admin.partials.minimal-ui-overrides')
 </head>
 <body>
 
@@ -500,13 +501,13 @@ body {
       </a>
     </li>
     <li>
-      <a href="{{ url('/classrooms') }}" class="{{ Request::is('classrooms*') ? 'active' : '' }}">
+      <a href="{{ route('admin.classrooms') }}" class="{{ Request::is('admin/classrooms*') ? 'active' : '' }}">
         <span class="nav-icon"><i class="fas fa-school"></i></span>
-        Classrooms
+        Room Management
       </a>
     </li>
     <li>
-      <a href="{{ url('/schedule') }}" class="{{ Request::is('schedule*') ? 'active' : '' }}">
+      <a href="{{ url('/admin/schedule') }}" class="{{ Request::is('admin/schedule*') ? 'active' : '' }}">
         <span class="nav-icon"><i class="fas fa-calendar-days"></i></span>
         Schedule
       </a>

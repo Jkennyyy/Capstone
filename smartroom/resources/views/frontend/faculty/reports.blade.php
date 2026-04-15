@@ -1,36 +1,23 @@
 <?php
-// SmartDoor - System Analytics & Reports
-$user = "Prof. Elena Santos";
-$stats = [
-    ["icon" => "fas fa-calendar-check", "label" => "Total Weekly Bookings", "value" => "1,248", "change" => "+12%", "positive" => true,  "color" => "blue"],
-    ["icon" => "fas fa-chart-line",     "label" => "Avg. Utilization",       "value" => "74.2%", "change" => "+5.4%","positive" => true,  "color" => "green"],
-    ["icon" => "fas fa-users",          "label" => "Active Users",           "value" => "3,420", "change" => "+21%", "positive" => true,  "color" => "purple"],
-    ["icon" => "fas fa-triangle-exclamation","label"=>"Conflict Rate",       "value" => "1.2%",  "change" => "-0.8%","positive" => false, "color" => "red"],
-];
-$departments = [
-    ["name" => "IT / CS",       "pct" => 40, "color" => "#3b82f6"],
-    ["name" => "Engineering",   "pct" => 30, "color" => "#6366f1"],
-    ["name" => "Business",      "pct" => 20, "color" => "#f59e0b"],
-    ["name" => "Arts",          "pct" => 10, "color" => "#10b981"],
-];
-$reports = [
-    ["title" => "Weekly Utilization Summary", "date" => "Feb 19, 2026", "size" => "2.4 MB", "type" => "PDF", "type_color" => "#dc2626"],
-    ["title" => "Conflict Resolution Log",    "date" => "Feb 18, 2026", "size" => "1.1 MB", "type" => "XLS", "type_color" => "#16a34a"],
-    ["title" => "Faculty Usage Audit",        "date" => "Feb 15, 2026", "size" => "4.8 MB", "type" => "PDF", "type_color" => "#dc2626"],
-    ["title" => "Predictive Load Analysis",   "date" => "Feb 14, 2026", "size" => "3.2 MB", "type" => "PDF", "type_color" => "#dc2626"],
-];
-$bar_data   = [80, 75, 90, 70, 55, 15];
-$bar_labels = ["Mon","Tue","Wed","Thu","Fri","Sat"];
-$line_data   = [10, 34, 42, 38, 40, 25, 12];
-$line_labels = ["7 AM","9 AM","11 AM","1 PM","3 PM","5 PM","7 PM"];
+$user = $user ?? request()->user()?->name ?? 'Faculty';
+$facultyDept = $facultyDept ?? request()->user()?->department ?? 'Faculty';
+$facultyInitials = $facultyInitials ?? strtoupper(substr((string) $user, 0, 1));
+
+$stats = $stats ?? [];
+$departments = $departments ?? [];
+$reports = $reports ?? [];
+$bar_data = $bar_data ?? [0, 0, 0, 0, 0, 0];
+$bar_labels = $bar_labels ?? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+$line_data = $line_data ?? [0, 0, 0, 0, 0, 0, 0];
+$line_labels = $line_labels ?? ["7 AM", "9 AM", "11 AM", "1 PM", "3 PM", "5 PM", "7 PM"];
 
 // SVG line chart coords
-$pts = count($line_data);
+$pts = max(1, count($line_data));
 $lineMax = 60;
 $svgW = 420; $svgH = 180; $padX = 10; $padY = 16;
 $xs = []; $ys = [];
 for ($i = 0; $i < $pts; $i++) {
-    $xs[] = $padX + ($i / ($pts-1)) * ($svgW - $padX*2);
+    $xs[] = $padX + ($i / max(1, ($pts - 1))) * ($svgW - $padX*2);
   $ys[] = $svgH - $padY - ($line_data[$i]/$lineMax)*($svgH - $padY*2);
 }
 
@@ -124,6 +111,7 @@ body{font-family:var(--fb);background:var(--bg);color:var(--text);display:flex;m
 .sidebar-footer{margin-top:auto;padding:16px 12px 24px;border-top:1px solid rgba(255,255,255,.06)}
 .user-widget{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r-sm);background:rgba(255,255,255,.05);margin-bottom:8px}
 .user-widget img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid rgba(245,197,24,.4)}
+.user-widget-avatar{width:34px;height:34px;border-radius:50%;border:2px solid rgba(245,197,24,.4);display:flex;align-items:center;justify-content:center;font-size:.74rem;font-weight:700;color:#f5c518;background:#1a2f80}
 .user-widget-info{flex:1;min-width:0}
 .user-widget-name{font-size:.83rem;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .user-widget-role{font-size:.73rem;color:rgba(255,255,255,.4)}
@@ -151,6 +139,7 @@ body{font-family:var(--fb);background:var(--bg);color:var(--text);display:flex;m
 .tp-role{font-size:.74rem;color:var(--text-3)}
 .tp-avatar{width:38px;height:38px;border-radius:50%;overflow:hidden;border:2px solid var(--border)}
 .tp-avatar img{width:100%;height:100%;object-fit:cover}
+.tp-avatar-initials{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;color:var(--blue-mid);background:#e0e7ff}
 
 /* ════════════════════════════════
    CONTENT
@@ -277,6 +266,7 @@ svg.lc{width:100%;overflow:visible;display:block}
 @media(max-width:1280px){.stats-grid{grid-template-columns:repeat(2,1fr)}.charts-row{grid-template-columns:1fr}.bottom-row{grid-template-columns:1fr}.content{padding:24px 20px 40px}.topbar{padding:0 20px}}
 @media(max-width:768px){:root{--sidebar-w:0px}.sidebar{display:none}.stats-grid{grid-template-columns:1fr 1fr}}
 </style>
+@include('partials.pro-motion')
 </head>
 <body>
 
@@ -325,10 +315,10 @@ svg.lc{width:100%;overflow:visible;display:block}
 
   <div class="sidebar-footer">
     <div class="user-widget">
-      <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Prof. Elena Santos">
+      <div class="user-widget-avatar"><?= htmlspecialchars($facultyInitials) ?></div>
       <div class="user-widget-info">
-        <div class="user-widget-name">Prof. Elena Santos</div>
-        <div class="user-widget-role">Faculty of IT</div>
+        <div class="user-widget-name"><?= htmlspecialchars($user) ?></div>
+        <div class="user-widget-role"><?= htmlspecialchars($facultyDept) ?></div>
       </div>
     </div>
     <form method="POST" action="{{ url('/logout') }}">
@@ -356,11 +346,11 @@ svg.lc{width:100%;overflow:visible;display:block}
       </button>
       <div class="topbar-profile">
         <div>
-          <div class="tp-name">Prof. Elena Santos</div>
-          <div class="tp-role">Faculty of IT</div>
+          <div class="tp-name"><?= htmlspecialchars($user) ?></div>
+          <div class="tp-role"><?= htmlspecialchars($facultyDept) ?></div>
         </div>
         <div class="tp-avatar">
-          <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="">
+          <div class="tp-avatar-initials"><?= htmlspecialchars($facultyInitials) ?></div>
         </div>
       </div>
     </div>
@@ -377,7 +367,7 @@ svg.lc{width:100%;overflow:visible;display:block}
       </div>
       <div class="header-actions">
         <button class="btn-outline"><i class="fas fa-sliders"></i> Filter</button>
-        <button class="btn-primary"><i class="fas fa-file-arrow-down"></i> Export PDF</button>
+        <button class="btn-primary" onclick="window.location.href='<?= htmlspecialchars(route('faculty.reports.export.csv')) ?>'"><i class="fas fa-file-arrow-down"></i> Export CSV</button>
       </div>
     </div>
 
@@ -563,7 +553,7 @@ svg.lc{width:100%;overflow:visible;display:block}
               <span class="report-type-badge" style="background:<?=$r['type']==='PDF'?'#fee2e2':'#dcfce7'?>;color:<?=$r['type_color']?>"><?=$r['type']?></span>
             </div>
           </div>
-          <button class="dl-btn" title="Download"><i class="fas fa-arrow-down"></i></button>
+          <button class="dl-btn" title="Download" onclick="window.location.href='<?= htmlspecialchars(route('faculty.reports.export.csv')) ?>'"><i class="fas fa-arrow-down"></i></button>
         </div>
         <?php endforeach; ?>
       </div>
