@@ -298,6 +298,7 @@ body { font-family:var(--fb); background:var(--bg); color:var(--text); min-heigh
     <li>
       <a href="{{ url('/faculty_dashboard') }}" class="{{ Request::is('faculty_dashboard') ? 'active' : '' }}">
         <span class="nav-icon"><i class="fas fa-chart-line"></i></span>Dashboard
+   
       </a>
     </li>
     <li>
@@ -308,6 +309,12 @@ body { font-family:var(--fb); background:var(--bg); color:var(--text); min-heigh
     <li>
       <a href="{{ url('/faculty-schedule') }}" class="{{ Request::is('faculty-schedule') ? 'active' : '' }}">
         <span class="nav-icon"><i class="fas fa-clock"></i></span>Schedule
+      </a>
+    </li>
+     <li>
+      <a href="{{ url('/attendance') }}" class="{{ Request::is('attendance*') ? 'active' : '' }}">
+        <span class="nav-icon"><i class="fas fa-clipboard-check"></i></span>
+        Attendance
       </a>
     </li>
   </ul>

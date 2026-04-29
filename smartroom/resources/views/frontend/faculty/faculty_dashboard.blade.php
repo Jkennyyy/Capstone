@@ -666,6 +666,12 @@ body {
         Schedule
       </a>
     </li>
+    <li>
+      <a href="{{ url('/attendance') }}" class="{{ Request::is('attendance*') ? 'active' : '' }}">
+        <span class="nav-icon"><i class="fas fa-clipboard-check"></i></span>
+        Attendance
+      </a>
+    </li>
   </ul>
 
   <span class="nav-section-label">Tools</span>

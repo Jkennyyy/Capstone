@@ -283,18 +283,23 @@ svg.lc{width:100%;overflow:visible;display:block}
   <span class="nav-section-label">Main Menu</span>
   <ul class="sidebar-nav">
     <li>
-      <a href="{{ url('/faculty_dashboard') }}">
+      <a href="{{ url('/faculty_dashboard') }}" class="{{ Request::is('faculty_dashboard') ? 'active' : '' }}">
         <span class="nav-icon"><i class="fas fa-chart-line"></i></span>Dashboard
       </a>
     </li>
     <li>
-      <a href="{{ url('/rooms') }}">
+      <a href="{{ url('/rooms') }}" class="{{ Request::is('rooms*') ? 'active' : '' }}">
         <span class="nav-icon"><i class="fas fa-door-open"></i></span>Rooms
       </a>
     </li>
     <li>
-      <a href="{{ url('/faculty-schedule') }}">
+      <a href="{{ url('/faculty-schedule') }}" class="{{ Request::is('faculty-schedule') ? 'active' : '' }}">
         <span class="nav-icon"><i class="fas fa-clock"></i></span>Schedule
+      </a>
+    </li>
+    <li>
+      <a href="{{ url('/attendance') }}" class="{{ Request::is('attendance*') ? 'active' : '' }}">
+        <span class="nav-icon"><i class="fas fa-clipboard-check"></i></span>Attendance
       </a>
     </li>
   </ul>
@@ -302,12 +307,12 @@ svg.lc{width:100%;overflow:visible;display:block}
   <span class="nav-section-label">Tools</span>
   <ul class="sidebar-nav">
     <li>
-      <a href="{{ url('/ai-recommendations') }}">
+      <a href="{{ url('/ai-recommendations') }}" class="{{ Request::is('ai-recommendations') ? 'active' : '' }}">
         <span class="nav-icon"><i class="fas fa-robot"></i></span>AI Recommendations
       </a>
     </li>
     <li>
-      <a href="{{ url('/reports') }}" class="active">
+      <a href="{{ url('/reports') }}" class="{{ Request::is('reports*') ? 'active' : '' }}">
         <span class="nav-icon"><i class="fas fa-chart-bar"></i></span>Reports
       </a>
     </li>

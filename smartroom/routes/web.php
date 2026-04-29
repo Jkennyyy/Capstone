@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\RoomAvailabilityController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClassroomController;
 use App\Http\Controllers\FacultyController;
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ScheduleController;
 
@@ -53,6 +54,15 @@ Route::middleware(['auth', 'password.changed', 'role:faculty'])->group(function 
     Route::get('/ai-recommendations', function () {
         return view('frontend.faculty.ai-recommendations');
     });
+
+    // Faculty Attendance
+    Route::get('/attendance', [AttendanceController::class, 'index'])->name('faculty.attendance');
+    Route::post('/attendance', [AttendanceController::class, 'store'])->name('faculty.attendance.store');
+    Route::get('/attendance/{id}', [AttendanceController::class, 'showSession'])->name('faculty.attendance.session');
+    Route::get('/attendance/{id}/export', [AttendanceController::class, 'export'])->name('faculty.attendance.export');
+    Route::post('/attendance/{id}/records', [AttendanceController::class, 'storeRecord'])->name('faculty.attendance.record');
+    Route::post('/attendance/{id}/records/bulk', [AttendanceController::class, 'storeRecordsBulk'])->name('faculty.attendance.record.bulk');
+    Route::post('/attendance/{id}/close', [AttendanceController::class, 'close'])->name('faculty.attendance.close');
 
     Route::get('/reports', [FacultyController::class, 'reports'])->name('faculty.reports');
     Route::get('/reports/export/csv', [FacultyController::class, 'exportReportsCsv'])->name('faculty.reports.export.csv');

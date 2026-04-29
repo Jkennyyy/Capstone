@@ -448,6 +448,7 @@
                 <li><a href="/schedule" class="{{ Request::is('schedule*') ? 'active' : '' }}"><i class="fas fa-calendar"></i> Schedule</a></li>
                 <li><a href="/smartlocking" class="{{ Request::is('smartlocking*') ? 'active' : '' }}"><i class="fas fa-lock"></i> SmartLocking</a></li>
                 <li><a href="/ai-recommendations" class="{{ Request::is('ai-recommendations') ? 'active' : '' }}"><i class="fas fa-robot"></i> AI Recommendations</a></li>
+                <li><a href="/attendance" class="{{ Request::is('attendance*') ? 'active' : '' }}"><i class="fas fa-clipboard-check"></i> Attendance</a></li>
                 <li><a href="#"><i class="fas fa-chart-bar"></i> Reports</a></li>
             </ul>
 
