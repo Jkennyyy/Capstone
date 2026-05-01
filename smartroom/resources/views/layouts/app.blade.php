@@ -563,14 +563,19 @@
 
             async function fetchNotifications() {
                 try {
+                    if (notifPanel) notifPanel.innerHTML = '<div class="notif-item">Loading...</div>';
                     var res = await fetch('/api/v1/notifications', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
-                    if (!res.ok) return;
+                    if (!res.ok) {
+                        renderNotifications([]);
+                        return;
+                    }
                     var payload = await res.json().catch(()=>({}));
                     var items = Array.isArray(payload.data) ? payload.data : [];
                     lastItems = items;
                     renderNotifications(items);
                 } catch (e) {
                     console.error('Failed to fetch notifications', e);
+                    renderNotifications([]);
                 }
             }
 
