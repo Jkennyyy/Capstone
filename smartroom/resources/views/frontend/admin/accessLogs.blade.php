@@ -471,7 +471,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
         <div class="user-widget-role">Admin</div>
       </div>
     </div>
-    <form method="POST" action="{{ route('auth.logout') }}">
+    <form method="POST" action="{{ route('logout') }}">
       @csrf
       <button type="submit" class="sidebar-logout-btn"><i class="fas fa-arrow-right-from-bracket"></i> Sign Out</button>
     </form>

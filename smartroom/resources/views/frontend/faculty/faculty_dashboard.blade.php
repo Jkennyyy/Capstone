@@ -10,9 +10,8 @@ $stats = $stats ?? [
   'active_classes' => 0,
   'total_students' => 0,
 ];
-$upcomingReservations = $upcomingReservations ?? [];
-$availableNowRooms = $availableNowRooms ?? [];
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -626,6 +625,28 @@ body {
   .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
   .welcome-banner { flex-direction: column; gap: 16px; align-items: flex-start; }
 }
+
+/* ── AI Recommendations (local page styles) ───────────────────── */
+.rec-list { display:flex;flex-direction:column;gap:10px;padding:12px 16px; }
+.rec-card { display:flex;align-items:center;gap:16px;padding:14px;border-radius:12px;border:1px solid var(--border);background:var(--white);text-decoration:none;color:inherit;transition:transform .12s,box-shadow .12s; }
+.rec-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+.rec-card.top-pick{background:linear-gradient(90deg,rgba(29,78,216,0.04),transparent);border-color:rgba(37,99,235,0.08)}
+.rec-rank{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;flex-shrink:0;background:linear-gradient(135deg,#1d4ed8,#3b82f6)}
+.rec-info{flex:1;min-width:0}
+.rec-name{font-size:0.98rem;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
+.rec-best-tag{font-size:0.64rem;font-weight:800;padding:4px 8px;border-radius:8px;background:var(--yellow-light);color:#b45309;border:1px solid rgba(245,197,24,0.25)}
+.rec-meta{display:flex;gap:10px;color:var(--text-3);font-size:0.85rem;margin:6px 0}
+.rec-reason{font-size:0.85rem;color:var(--blue-text);font-weight:600;margin-top:4px;display:flex;align-items:center;gap:8px}
+.rec-features{display:flex;gap:6px;margin-top:6px}
+.rec-feat-tag{font-size:0.72rem;padding:4px 8px;border-radius:8px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-2}
+.rec-score{display:flex;flex-direction:column;align-items:center;gap:6px;margin-left:8px}
+.rec-score-ring{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid var(--border);}
+.rec-score-ring.high{border-color:#60a5fa;background:var(--blue-bg)}
+.rec-score-ring.med{border-color:#a78bfa;background:var(--purple-bg)}
+.rec-score-val{font-size:1rem;font-weight:800;color:var(--blue-text)}
+.rec-score-label{font-size:0.64rem;color:var(--text-3);font-weight:800}
+.rec-arrow{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--bg);color:var(--text-3)}
+
 </style>
 @include('partials.pro-motion')
 </head>
@@ -676,13 +697,7 @@ body {
 
   <span class="nav-section-label">Tools</span>
   <ul class="sidebar-nav">
-    <li>
-      <a href="{{ url('/ai-recommendations') }}"
-         class="{{ Request::is('ai-recommendations') ? 'active' : '' }}">
-        <span class="nav-icon"><i class="fas fa-robot"></i></span>
-        AI Recommendations
-      </a>
-    </li>
+    <!-- AI Recommendations removed from sidebar -->
     <li>
       <a href="{{ url('/reports') }}" class="{{ Request::is('reports*') ? 'active' : '' }}">
         <span class="nav-icon"><i class="fas fa-chart-bar"></i></span>
@@ -805,58 +820,24 @@ body {
     <!-- ── Bottom Grid ── -->
     <div class="bottom-grid">
 
-      <!-- Upcoming Schedules -->
-      <div class="panel">
+      <!-- AI Recommendations (replaces Upcoming Schedules) -->
+      <div class="panel" id="ai-recommendations-panel">
         <div class="panel-header">
           <div class="panel-title">
-            <span class="panel-title-icon pti-blue"><i class="fas fa-calendar-days"></i></span>
-            Upcoming Schedules
+            <span class="panel-title-icon pti-blue"><i class="fas fa-robot"></i></span>
+            AI Recommendations
           </div>
-          <a href="<?= htmlspecialchars(url('/reservations')) ?>" class="link-all">
+          <a href="<?= htmlspecialchars(url('/ai-recommendations')) ?>" class="link-all">
             View all <i class="fas fa-arrow-right" style="font-size:0.65rem;"></i>
           </a>
         </div>
 
-        <?php if (empty($upcomingReservations)): ?>
+        <div id="ai-recommendations-content">
           <div class="empty-state">
-            <i class="fas fa-calendar-xmark"></i>
-            No upcoming schedules found.
+            <i class="fas fa-robot"></i>
+            Loading recommendations...
           </div>
-        <?php else:
-          foreach ($upcomingReservations as $res):
-            $badgeClass = match($res['status']) {
-              'confirmed' => 'badge-confirmed',
-              'pending'   => 'badge-pending',
-              default     => 'badge-cancelled',
-            };
-            $badgeIcon = match($res['status']) {
-              'confirmed' => 'fas fa-circle-check',
-              'pending'   => 'fas fa-clock',
-              default     => 'fas fa-circle-xmark',
-            };
-            $badgeLabel = ucfirst($res['status']);
-        ?>
-        <div class="res-row">
-          <div class="res-date-col <?= $res['is_today'] ? 'today' : '' ?>">
-            <div class="res-date-day"><?= htmlspecialchars($res['date_num']) ?></div>
-            <div class="res-date-label"><?= htmlspecialchars($res['date_day']) ?></div>
-          </div>
-          <div class="res-body">
-            <div class="res-room-name">
-              <?= htmlspecialchars($res['room']) ?>
-              <span class="badge <?= $badgeClass ?>">
-                <i class="<?= $badgeIcon ?>"></i> <?= $badgeLabel ?>
-              </span>
-            </div>
-            <div class="res-subject-name"><?= htmlspecialchars($res['subject']) ?></div>
-            <div class="res-chips">
-              <span class="res-chip"><i class="fas fa-clock"></i> <?= htmlspecialchars($res['time']) ?></span>
-              <span class="res-chip"><i class="fas fa-users"></i> <?= htmlspecialchars($res['students']) ?> students</span>
-            </div>
-          </div>
-          <div class="res-caret"><i class="fas fa-chevron-right"></i></div>
         </div>
-        <?php endforeach; endif; ?>
       </div>
 
       <!-- Available Now -->
@@ -921,6 +902,57 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   document.addEventListener('click', closeAllProfileDropdowns);
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const root = document.getElementById('ai-recommendations-content');
+  if (!root) return;
+  fetch('/api/ai/recommendations')
+    .then(r => r.json())
+    .then(j => {
+      if (!j.success || !Array.isArray(j.recommendations) || j.recommendations.length === 0) {
+        root.innerHTML = '<div class="empty-state"><i class="fas fa-robot"></i>No recommendations available.</div>';
+        return;
+      }
+
+      const list = document.createElement('div');
+      list.className = 'rec-list';
+
+      j.recommendations.slice(0,3).forEach((r, idx) => {
+        const card = document.createElement('a');
+        card.className = 'rec-card' + (idx === 0 ? ' top-pick' : '');
+        card.href = '#';
+        card.innerHTML = `
+          <div class="rec-rank rank-${idx+1}">${r.id}</div>
+          <div class="rec-info">
+            <div class="rec-name">${r.name} ${idx===0? '<span class="rec-best-tag">BEST MATCH</span>':''}</div>
+            <div class="rec-meta">
+              <span class="rec-meta-item"><i class="fas fa-location-dot"></i> ${r.distance}</span>
+              <span class="rec-meta-item"><i class="fas fa-users"></i> ${r.capacity} seats</span>
+              <span class="rec-meta-item"><i class="fas fa-clock"></i> Free ${r.free_for} hrs</span>
+            </div>
+            <div class="rec-reason"><i class="fas fa-lightbulb"></i> Recommended by availability heuristic</div>
+            <div class="rec-features">${(r.features||[]).map(f=>`<span class="rec-feat-tag">${f}</span>`).join('')}</div>
+          </div>
+          <div class="rec-score">
+            <div class="rec-score-ring ${r.score>92? 'high' : (r.score>86? 'med':'low')}">
+              <div class="rec-score-val">${r.score}%</div>
+            </div>
+            <div class="rec-score-label">Smart Score</div>
+          </div>
+          <div class="rec-arrow"><i class="fas fa-arrow-right"></i></div>
+        `;
+        list.appendChild(card);
+      });
+
+      root.innerHTML = '';
+      root.appendChild(list);
+    })
+    .catch(() => {
+      root.innerHTML = '<div class="empty-state"><i class="fas fa-robot"></i>Failed loading recommendations.</div>';
+    });
 });
 </script>
 

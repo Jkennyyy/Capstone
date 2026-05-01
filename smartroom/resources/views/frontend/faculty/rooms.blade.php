@@ -298,7 +298,7 @@ body { font-family:var(--fb); background:var(--bg); color:var(--text); min-heigh
     <li>
       <a href="{{ url('/faculty_dashboard') }}" class="{{ Request::is('faculty_dashboard') ? 'active' : '' }}">
         <span class="nav-icon"><i class="fas fa-chart-line"></i></span>Dashboard
-   
+     
       </a>
     </li>
     <li>
@@ -321,11 +321,7 @@ body { font-family:var(--fb); background:var(--bg); color:var(--text); min-heigh
 
   <span class="nav-section-label">Tools</span>
   <ul class="sidebar-nav">
-    <li>
-      <a href="{{ url('/ai-recommendations') }}" class="{{ Request::is('ai-recommendations') ? 'active' : '' }}">
-        <span class="nav-icon"><i class="fas fa-robot"></i></span>AI Recommendations
-      </a>
-    </li>
+    <!-- AI Recommendations removed from sidebar -->
     <li>
       <a href="{{ url('/reports') }}" class="{{ Request::is('reports*') ? 'active' : '' }}">
         <span class="nav-icon"><i class="fas fa-chart-bar"></i></span>Reports
@@ -1166,40 +1162,55 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     try {
-      var response = await fetch('/api/v1/reservations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': csrfToken,
-          'X-Requested-With': 'XMLHttpRequest',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          classroom_id: Number(roomId),
-          start_at: startAt,
-          end_at: endAt,
-          notes: notes
-        })
-      });
+        var response;
+        try {
+          response = await fetch('/api/v1/reservations', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrfToken,
+              'X-Requested-With': 'XMLHttpRequest',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+              classroom_id: Number(roomId),
+              start_at: startAt,
+              end_at: endAt,
+              notes: notes
+            })
+          });
+        } catch (fetchErr) {
+          reserveError.textContent = 'Network error. Please check your connection and try again.';
+          reserveError.classList.add('is-visible');
+          return;
+        }
 
-      var payload = await response.json().catch(function () {
-        return {};
-      });
+        var payload = await response.json().catch(function () { return {}; });
 
-      if (!response.ok) {
-        reserveError.textContent = payload.message || 'Room is already reserved/occupied for the selected time.';
-        reserveError.classList.add('is-visible');
-        reserveSubmitBtn.disabled = false;
-        return;
-      }
+        if (!response.ok) {
+          // Prefer explicit server message; fall back to validation errors if present.
+          var msg = payload.message || 'Room is already reserved/occupied for the selected time.';
+          if (payload.errors) {
+            if (Array.isArray(payload.errors) && payload.errors.length) {
+              msg = payload.errors[0];
+            } else if (typeof payload.errors === 'object') {
+              var first = Object.values(payload.errors)[0];
+              if (Array.isArray(first)) msg = first[0]; else msg = String(first);
+            }
+          }
+          reserveError.textContent = msg;
+          reserveError.classList.add('is-visible');
+          return;
+        }
 
-      closeReserveOverlay();
-      showToast(payload.message || 'Reservation created successfully.', 'success');
-      refreshRoomStatuses();
+        closeReserveOverlay();
+        showToast(payload.message || 'Reservation created successfully.', 'success');
+        refreshRoomStatuses();
     } finally {
-      if (typeof window.hideGlobalLoading === 'function') {
-        window.hideGlobalLoading();
-      }
+        if (typeof window.hideGlobalLoading === 'function') {
+          window.hideGlobalLoading();
+        }
+        reserveSubmitBtn.disabled = false;
     }
   }
 

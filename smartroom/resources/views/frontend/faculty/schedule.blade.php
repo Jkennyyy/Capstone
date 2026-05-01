@@ -601,13 +601,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);display
 
   <span class="nav-section-label">Tools</span>
   <ul class="sidebar-nav">
-    <li>
-      <a href="{{ url('/ai-recommendations') }}"
-         class="{{ Request::is('ai-recommendations') ? 'active' : '' }}">
-        <span class="nav-icon"><i class="fas fa-robot"></i></span>
-        AI Recommendations
-      </a>
-    </li>
+    <!-- AI Recommendations removed from sidebar -->
     <li>
       <a href="{{ url('/reports') }}" class="{{ Request::is('reports*') ? 'active' : '' }}">
         <span class="nav-icon"><i class="fas fa-chart-bar"></i></span>

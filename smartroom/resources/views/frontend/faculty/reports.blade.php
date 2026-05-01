@@ -1,7 +1,9 @@
 <?php
-$user = $user ?? request()->user()?->name ?? 'Faculty';
+$facultyName = $facultyName ?? request()->user()?->name ?? 'Faculty';
 $facultyDept = $facultyDept ?? request()->user()?->department ?? 'Faculty';
-$facultyInitials = $facultyInitials ?? strtoupper(substr((string) $user, 0, 1));
+$facultyInitials = $facultyInitials ?? strtoupper(substr((string) $facultyName, 0, 1));
+
+$user = $user ?? $facultyName;
 
 $stats = $stats ?? [];
 $departments = $departments ?? [];
@@ -89,34 +91,98 @@ body{font-family:var(--fb);background:var(--bg);color:var(--text);display:flex;m
 /* ════════════════════════════════
    SIDEBAR — UNCHANGED
 ════════════════════════════════ */
-.sidebar{position:fixed;left:0;top:0;width:var(--sidebar-w);height:100vh;background:#0b1640;display:flex;flex-direction:column;overflow:hidden;z-index:100}
-.sidebar::before{content:'';position:absolute;inset:0;background:linear-gradient(160deg,rgba(245,197,24,.06) 0%,transparent 55%);pointer-events:none}
-.sidebar::after{content:'';position:absolute;bottom:-60px;right:-60px;width:180px;height:180px;border-radius:50%;border:1px solid rgba(245,197,24,.08);pointer-events:none}
-.sidebar-logo{display:flex;align-items:center;gap:12px;padding:28px 20px 24px 24px;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:8px}
-.logo-mark{width:40px;height:40px;background:#f5c518;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#0b1640;flex-shrink:0;box-shadow:0 4px 12px rgba(245,197,24,.4)}
-.logo-text .brand-psu{font-size:.6rem;font-weight:700;letter-spacing:.18em;color:rgba(255,255,255,.45);display:block;margin-bottom:3px;text-transform:uppercase}
-.logo-text .brand-main{font-size:1.05rem;font-weight:700;color:#fff;letter-spacing:-.01em}
-.logo-text .brand-main span{color:#f5c518}
-.nav-section-label{font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.25);padding:16px 24px 6px}
-.sidebar-nav{list-style:none;overflow-y:auto;padding:0 12px}
-.sidebar-nav::-webkit-scrollbar{width:0}
-.sidebar-nav li{margin-bottom:2px}
-.sidebar-nav a{display:flex;align-items:center;gap:11px;padding:11px 12px;text-decoration:none;color:rgba(255,255,255,.6);font-size:.88rem;font-weight:500;border-radius:var(--r-sm);transition:all .22s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden}
-.sidebar-nav a .nav-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.85rem;background:rgba(255,255,255,.05);flex-shrink:0;transition:all .22s}
-.sidebar-nav a:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.06)}
-.sidebar-nav a:hover .nav-icon{background:rgba(255,255,255,.1)}
-.sidebar-nav a.active{background:rgba(245,197,24,.14);color:#f5c518}
-.sidebar-nav a.active .nav-icon{background:rgba(245,197,24,.2);color:#f5c518}
-.sidebar-nav a.active::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:3px;background:#f5c518;border-radius:0 2px 2px 0}
-.sidebar-footer{margin-top:auto;padding:16px 12px 24px;border-top:1px solid rgba(255,255,255,.06)}
-.user-widget{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r-sm);background:rgba(255,255,255,.05);margin-bottom:8px}
-.user-widget img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid rgba(245,197,24,.4)}
-.user-widget-avatar{width:34px;height:34px;border-radius:50%;border:2px solid rgba(245,197,24,.4);display:flex;align-items:center;justify-content:center;font-size:.74rem;font-weight:700;color:#f5c518;background:#1a2f80}
-.user-widget-info{flex:1;min-width:0}
-.user-widget-name{font-size:.83rem;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.user-widget-role{font-size:.73rem;color:rgba(255,255,255,.4)}
-.sidebar-logout-btn{display:flex;align-items:center;gap:10px;padding:9px 12px;color:rgba(255,255,255,.4);font-size:.84rem;font-weight:500;border-radius:var(--r-sm);transition:all .22s;width:100%;background:none;border:none;cursor:pointer;font-family:inherit;text-decoration:none}
-.sidebar-logout-btn:hover{color:#f87171;background:rgba(244,63,94,.08)}
+.sidebar {
+  position: fixed; left: 0; top: 0;
+  width: var(--sidebar-w); height: 100vh;
+  background: var(--navy);
+  display: flex; flex-direction: column;
+  overflow: hidden; z-index: 100;
+}
+.sidebar::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(160deg, rgba(245,197,24,0.06) 0%, transparent 55%);
+  pointer-events: none;
+}
+.sidebar::after {
+  content: ''; position: absolute;
+  bottom: -60px; right: -60px;
+  width: 180px; height: 180px; border-radius: 50%;
+  border: 1px solid rgba(245,197,24,0.08); pointer-events: none;
+}
+.sidebar-logo {
+  display: flex; align-items: center; gap: 12px;
+  padding: 28px 20px 24px 24px; text-decoration: none;
+  border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px;
+}
+.logo-mark {
+  width: 40px; height: 40px; background: var(--yellow); border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; color: var(--navy); flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(245,197,24,0.4);
+}
+.logo-text { line-height: 1; }
+.logo-text .brand-psu {
+  font-size: 0.6rem; font-weight: 600; letter-spacing: 0.18em;
+  color: rgba(255,255,255,0.45); text-transform: uppercase;
+  display: block; margin-bottom: 3px;
+}
+.logo-text .brand-main { font-size: 1.05rem; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
+.logo-text .brand-main span { color: var(--yellow); }
+.nav-section-label {
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: rgba(255,255,255,0.25); padding: 16px 24px 6px;
+}
+.sidebar-nav { list-style: none; overflow-y: auto; padding: 0 12px; }
+.sidebar-nav::-webkit-scrollbar { width: 0; }
+.sidebar-nav li { margin-bottom: 2px; }
+.sidebar-nav a {
+  display: flex; align-items: center; gap: 11px; padding: 11px 12px;
+  text-decoration: none; color: rgba(255,255,255,0.6); font-size: 0.88rem; font-weight: 500;
+  border-radius: var(--radius-sm);
+  transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
+  position: relative; overflow: hidden;
+}
+.sidebar-nav a .nav-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; background: rgba(255,255,255,0.05); flex-shrink: 0; transition: all 0.22s;
+}
+.sidebar-nav a:hover { color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.06); }
+.sidebar-nav a:hover .nav-icon { background: rgba(255,255,255,0.1); }
+.sidebar-nav a.active { background: rgba(245,197,24,0.14); color: var(--yellow); }
+.sidebar-nav a.active .nav-icon { background: rgba(245,197,24,0.2); color: var(--yellow); }
+.sidebar-nav a.active::before {
+  content: ''; position: absolute; left: 0; top: 20%; bottom: 20%;
+  width: 3px; background: var(--yellow); border-radius: 0 2px 2px 0;
+}
+.sidebar-footer {
+  margin-top: auto; padding: 16px 12px 24px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.user-widget {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border-radius: var(--radius-sm); background: rgba(255,255,255,0.05); margin-bottom: 8px;
+}
+.user-avatar {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  background: var(--navy-mid); border: 2px solid rgba(245,197,24,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.78rem; font-weight: 700; color: var(--yellow);
+}
+.user-widget-info { flex: 1; min-width: 0; }
+.user-widget-name {
+  font-size: 0.83rem; font-weight: 600; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.user-widget-role { font-size: 0.73rem; color: rgba(255,255,255,0.4); }
+.sidebar-logout-btn {
+  display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+  color: rgba(255,255,255,0.4); font-size: 0.84rem; font-weight: 500;
+  border-radius: var(--radius-sm); transition: all 0.22s; width: 100%;
+  background: none; border: none; cursor: pointer; font-family: inherit;
+}
+.sidebar-logout-btn:hover { color: #f87171; background: rgba(244,63,94,0.08); }
+
 
 /* ════════════════════════════════
    MAIN LAYOUT
@@ -263,77 +329,81 @@ svg.lc{width:100%;overflow:visible;display:block}
 .bottom-row   {animation:fadeUp .35s both .20s}
 
 /* ── RESPONSIVE ── */
-@media(max-width:1280px){.stats-grid{grid-template-columns:repeat(2,1fr)}.charts-row{grid-template-columns:1fr}.bottom-row{grid-template-columns:1fr}.content{padding:24px 20px 40px}.topbar{padding:0 20px}}
-@media(max-width:768px){:root{--sidebar-w:0px}.sidebar{display:none}.stats-grid{grid-template-columns:1fr 1fr}}
+
 </style>
 @include('partials.pro-motion')
 </head>
 <body>
 
-<!-- ════ SIDEBAR (UNCHANGED) ════ -->
-<aside class="sidebar">
-  <a href="{{ url('/faculty_dashboard') }}" class="sidebar-logo">
+<div class="sidebar">
+  <a href="<?= htmlspecialchars(url('/dashboard')) ?>" class="sidebar-logo">
     <div class="logo-mark"><i class="fas fa-door-open"></i></div>
     <div class="logo-text">
       <span class="brand-psu">PSU</span>
-      <span class="brand-main">Smart<span>Room</span></span>
+      <span class="brand-main">Smart<span>Door</span></span>
     </div>
   </a>
 
   <span class="nav-section-label">Main Menu</span>
   <ul class="sidebar-nav">
     <li>
-      <a href="{{ url('/faculty_dashboard') }}" class="{{ Request::is('faculty_dashboard') ? 'active' : '' }}">
-        <span class="nav-icon"><i class="fas fa-chart-line"></i></span>Dashboard
+      <a href="{{ url('/faculty_dashboard') }}"
+         class="{{ Request::is('faculty_dashboard') ? 'active' : '' }}">
+        <span class="nav-icon"><i class="fas fa-chart-line"></i></span>
+        Dashboard
       </a>
     </li>
     <li>
-      <a href="{{ url('/rooms') }}" class="{{ Request::is('rooms*') ? 'active' : '' }}">
-        <span class="nav-icon"><i class="fas fa-door-open"></i></span>Rooms
+      <a href="{{ url('/rooms') }}"
+         class="{{ Request::is('rooms*') ? 'active' : '' }}">
+        <span class="nav-icon"><i class="fas fa-door-open"></i></span>
+        Rooms
       </a>
     </li>
     <li>
-      <a href="{{ url('/faculty-schedule') }}" class="{{ Request::is('faculty-schedule') ? 'active' : '' }}">
-        <span class="nav-icon"><i class="fas fa-clock"></i></span>Schedule
+      <a href="{{ url('/faculty-schedule') }}"
+         class="{{ Request::is('faculty-schedule') ? 'active' : '' }}">
+        <span class="nav-icon"><i class="fas fa-clock"></i></span>
+        Schedule
       </a>
     </li>
     <li>
       <a href="{{ url('/attendance') }}" class="{{ Request::is('attendance*') ? 'active' : '' }}">
-        <span class="nav-icon"><i class="fas fa-clipboard-check"></i></span>Attendance
+        <span class="nav-icon"><i class="fas fa-clipboard-check"></i></span>
+        Attendance
       </a>
     </li>
   </ul>
 
   <span class="nav-section-label">Tools</span>
   <ul class="sidebar-nav">
-    <li>
-      <a href="{{ url('/ai-recommendations') }}" class="{{ Request::is('ai-recommendations') ? 'active' : '' }}">
-        <span class="nav-icon"><i class="fas fa-robot"></i></span>AI Recommendations
-      </a>
-    </li>
+    <!-- AI Recommendations removed from sidebar -->
     <li>
       <a href="{{ url('/reports') }}" class="{{ Request::is('reports*') ? 'active' : '' }}">
-        <span class="nav-icon"><i class="fas fa-chart-bar"></i></span>Reports
+        <span class="nav-icon"><i class="fas fa-chart-bar"></i></span>
+        Reports
       </a>
     </li>
   </ul>
 
   <div class="sidebar-footer">
     <div class="user-widget">
-      <div class="user-widget-avatar"><?= htmlspecialchars($facultyInitials) ?></div>
+      <div class="user-avatar"><?= htmlspecialchars($facultyInitials) ?></div>
       <div class="user-widget-info">
-        <div class="user-widget-name"><?= htmlspecialchars($user) ?></div>
+        <div class="user-widget-name"><?= htmlspecialchars($facultyName) ?></div>
         <div class="user-widget-role"><?= htmlspecialchars($facultyDept) ?></div>
       </div>
     </div>
-    <form method="POST" action="{{ url('/logout') }}">
-      @csrf
+    <form method="POST" action="<?= htmlspecialchars(url('/logout')) ?>">
+      <?= csrf_field(); ?>
       <button type="submit" class="sidebar-logout-btn">
-        <i class="fas fa-arrow-right-from-bracket"></i>Sign Out
+        <i class="fas fa-arrow-right-from-bracket"></i>
+        Sign Out
       </button>
     </form>
   </div>
-</aside>
+</div>
+
 
 <!-- ════ MAIN ════ -->
 <div class="main">

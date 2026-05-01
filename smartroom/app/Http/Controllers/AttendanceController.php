@@ -22,7 +22,11 @@ class AttendanceController extends Controller
         $filterMonth = $request->query('month', now()->format('Y-m'));
 
         $q = AttendanceSession::query()->where('created_by', Auth::id());
-        if ($filterCourse) $q->where('course_id', $filterCourse);
+        if ($filterCourse) {
+            // attendance_sessions table doesn't have a reliable `course_id` column in some schemas,
+            // filter by the schedule's course instead.
+            $q->whereHas('schedule', fn($qq) => $qq->where('course_id', $filterCourse));
+        }
         if ($filterStatus) $q->where('status', $filterStatus);
         if ($filterMonth) {
             [$y, $m] = explode('-', $filterMonth);
@@ -42,8 +46,24 @@ class AttendanceController extends Controller
 
         $open = AttendanceSession::where('created_by', Auth::id())->where('status', 'open')->latest()->first();
 
-        $stats = ['total_sessions' => $total, 'this_month' => $thisMonth, 'overall_rate' => $overallRate, 'open_session' => $open];
+        // attendance_sessions may not have a course_id column; derive course count from schedules
+        $scheduleIds = AttendanceSession::where('created_by', Auth::id())->pluck('schedule_id')->filter()->unique()->toArray();
+        $coursesCount = 0;
+        if (!empty($scheduleIds)) {
+            $coursesCount = Schedule::whereIn('id', $scheduleIds)->distinct('course_id')->count('course_id');
+        }
 
+        // Provide stats keys used by both views (attendance index and dashboard)
+        $stats = [
+            'total_sessions' => $total,
+            'this_month' => $thisMonth,
+            'overall_rate' => $overallRate,
+            'rate' => $overallRate,
+            'open_session' => $open,
+            'courses' => $coursesCount,
+        ];
+
+        // Render the attendance index view
         return view('frontend.faculty.attendance', compact('courses', 'sessions', 'stats', 'filterCourse', 'filterStatus', 'filterMonth'));
     }
 
@@ -82,6 +102,34 @@ class AttendanceController extends Controller
         }
 
         return view('frontend.faculty.attendance-session', ['session' => $session]);
+    }
+
+    /**
+     * Attendance dashboard view (faculty)
+     */
+    public function dashboard(Request $request)
+    {
+        $q = AttendanceSession::query()->where('created_by', Auth::id());
+        $sessions = $q->orderBy('date', 'desc')->get();
+
+        $total = AttendanceSession::where('created_by', Auth::id())->count();
+        $thisMonth = AttendanceSession::where('created_by', Auth::id())->whereYear('date', now()->year)->whereMonth('date', now()->month)->count();
+
+        $records = AttendanceRecord::whereHas('session', fn($q) => $q->where('created_by', Auth::id()))->get();
+        $rate = 0;
+        if ($records->count() > 0) {
+            $rate = round(100 * ($records->where('present', true)->count() / $records->count()), 1);
+        }
+
+        $scheduleIds = AttendanceSession::where('created_by', Auth::id())->pluck('schedule_id')->filter()->unique()->toArray();
+        $coursesCount = 0;
+        if (!empty($scheduleIds)) {
+            $coursesCount = Schedule::whereIn('id', $scheduleIds)->distinct('course_id')->count('course_id');
+        }
+
+        $stats = ['total_sessions' => $total, 'this_month' => $thisMonth, 'rate' => $rate, 'courses' => $coursesCount];
+
+        return view('frontend.faculty.attendance-dashboard', compact('sessions', 'stats'));
     }
 
     public function storeRecord(Request $request, $id)

@@ -1,5 +1,5 @@
 <aside class="sidebar" role="navigation" aria-label="Main sidebar">
-  <a href="{{ route('dashboard') }}" class="sidebar-logo">
+  <a href="{{ route('faculty.dashboard') }}" class="sidebar-logo">
     <div class="logo-mark">SR</div>
     <div class="logo-text">
       <span class="brand-psu">SmartRoom</span>
@@ -10,7 +10,7 @@
   <div class="nav-section-label">Navigation</div>
   <ul class="sidebar-nav">
     <li>
-      <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
+      <a href="{{ route('faculty.dashboard') }}" class="{{ request()->routeIs('faculty.dashboard') ? 'active' : '' }}">
         <span class="nav-icon"><i class="fas fa-house"></i></span>
         <span>Dashboard</span>
       </a>
@@ -22,17 +22,12 @@
       </a>
     </li>
     <li>
-      <a href="{{ route('faculty.schedules') }}" class="{{ request()->routeIs('faculty.schedules*') ? 'active' : '' }}">
+      <a href="{{ route('faculty.schedule') }}" class="{{ request()->routeIs('faculty.schedule*') ? 'active' : '' }}">
         <span class="nav-icon"><i class="fas fa-calendar-days"></i></span>
         <span>Schedules</span>
       </a>
     </li>
-    <li>
-      <a href="{{ route('faculty.courses') }}" class="{{ request()->routeIs('faculty.courses*') ? 'active' : '' }}">
-        <span class="nav-icon"><i class="fas fa-book-open"></i></span>
-        <span>Courses</span>
-      </a>
-    </li>
+    <!-- Courses link removed (no faculty.courses route defined) -->
   </ul>
 
   <div class="sidebar-footer">

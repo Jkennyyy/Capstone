@@ -50,162 +50,33 @@ $facultyInitials = $facultyInitials !== '' ? $facultyInitials : 'U';
 
 body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; }
 
-/* ══════════════════════════════════════════════
-   SIDEBAR — EXACT COPY FROM CLASSROOMS
-══════════════════════════════════════════════ */
+/* SIDEBAR + MAIN LAYOUT (ensure consistent app layout) */
 .sidebar {
-  position: fixed; left: 0; top: 0;
-  width: var(--sidebar-w); height: 100vh;
-  background: var(--navy);
-  display: flex; flex-direction: column;
-  padding: 0; overflow: hidden; z-index: 100;
-}
-.sidebar::before {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(160deg, rgba(245,197,24,0.06) 0%, transparent 55%);
-  pointer-events: none;
-}
-.sidebar::after {
-  content: ''; position: absolute; bottom: -60px; right: -60px;
-  width: 180px; height: 180px; border-radius: 50%;
-  border: 1px solid rgba(245,197,24,0.08); pointer-events: none;
-}
-.sidebar-logo {
-  display: flex; align-items: center; gap: 12px;
-  padding: 28px 20px 24px 24px; text-decoration: none;
-  border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px;
-}
-.logo-mark {
-  width: 40px; height: 40px; background: var(--yellow); border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.1rem; color: var(--navy); flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(245,197,24,0.4);
-}
-.logo-text { line-height: 1; }
-.logo-text .brand-psu {
-  font-size: 0.6rem; font-weight: 600; letter-spacing: 0.18em;
-  color: rgba(255,255,255,0.45); text-transform: uppercase; display: block; margin-bottom: 3px;
-}
-.logo-text .brand-main { font-size: 1.05rem; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
-.logo-text .brand-main span { color: var(--yellow); }
-.nav-section-label {
-  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em;
-  text-transform: uppercase; color: rgba(255,255,255,0.25); padding: 16px 24px 6px;
-}
-.sidebar-nav { list-style: none; overflow-y: auto; padding: 0 12px; }
-.sidebar-nav::-webkit-scrollbar { width: 0; }
-.sidebar-nav li { margin-bottom: 2px; }
-.sidebar-nav a {
-  display: flex; align-items: center; gap: 11px; padding: 11px 12px; text-decoration: none;
-  color: rgba(255,255,255,0.6); font-size: 0.88rem; font-weight: 500;
-  border-radius: var(--radius-sm); transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
-  position: relative; overflow: hidden;
-}
-.sidebar-nav a .nav-icon {
-  width: 32px; height: 32px; border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.85rem; background: rgba(255,255,255,0.05); flex-shrink: 0; transition: all 0.22s;
-}
-.sidebar-nav a:hover { color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.06); }
-.sidebar-nav a:hover .nav-icon { background: rgba(255,255,255,0.1); }
-.sidebar-nav a.active { background: rgba(245,197,24,0.14); color: var(--yellow); }
-.sidebar-nav a.active .nav-icon { background: rgba(245,197,24,0.2); color: var(--yellow); }
-.sidebar-nav a.active::before {
-  content: ''; position: absolute; left: 0; top: 20%; bottom: 20%;
-  width: 3px; background: var(--yellow); border-radius: 0 2px 2px 0;
-}
-.sidebar-footer { margin-top: auto; padding: 16px 12px 24px; border-top: 1px solid rgba(255,255,255,0.06); }
-.user-widget {
-  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
-  border-radius: var(--radius-sm); background: rgba(255,255,255,0.05); margin-bottom: 8px;
-}
-.user-avatar {
-  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
-  background: var(--navy-mid); border: 2px solid rgba(245,197,24,0.4);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.78rem; font-weight: 700; color: var(--yellow);
-}
-.user-widget-info { flex: 1; min-width: 0; }
-.user-widget-name { font-size: 0.83rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.user-widget-role { font-size: 0.73rem; color: rgba(255,255,255,0.4); }
-.sidebar-logout-btn {
-  display: flex; align-items: center; gap: 10px; padding: 9px 12px;
-  color: rgba(255,255,255,0.4); font-size: 0.84rem; font-weight: 500;
-  border-radius: var(--radius-sm); transition: all 0.22s; width: 100%;
-  background: none; border: none; cursor: pointer; font-family: inherit;
-}
-.sidebar-logout-btn:hover { color: #f87171; background: rgba(244,63,94,0.08); }
-
-/* ══════════════════════════════════════════════
-   MAIN LAYOUT
-══════════════════════════════════════════════ */
-.main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
-
-/* TOPBAR */
-.topbar {
-  background: var(--white); border-bottom: 1px solid var(--border);
-  padding: 0 36px; height: 64px;
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  position: sticky; top: 0; z-index: 50;
-}
-.topbar-search {
-  display: flex; align-items: center; gap: 10px;
-  background: var(--bg); border: 1.5px solid var(--border);
-  border-radius: 24px; padding: 8px 18px; width: 340px; transition: border-color 0.2s;
-}
-.topbar-search:focus-within { border-color: #93c5fd; box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
-.topbar-search i { color: var(--text-light); font-size: 0.88rem; }
-.topbar-search input { border: none; outline: none; background: transparent; font-size: 0.9rem; font-family: 'Inter', sans-serif; color: var(--text); width: 100%; }
-.topbar-search input::placeholder { color: var(--text-light); }
-.topbar-right { display: flex; align-items: center; gap: 18px; }
-.notif-btn { position: relative; background: none; border: none; cursor: pointer; color: var(--text-secondary); font-size: 1.15rem; padding: 7px; border-radius: 9px; transition: background 0.2s; }
-.notif-btn:hover { background: var(--bg); }
-.notif-badge { position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; background: var(--red); border-radius: 50%; border: 1.5px solid var(--white); }
-.topbar-profile { position: relative; display: flex; align-items: center; gap: 10px; cursor: pointer; }
-.topbar-profile-info { text-align: right; }
-.topbar-profile-name { font-size: 0.88rem; font-weight: 700; color: var(--text); line-height: 1.2; }
-.topbar-profile-role { font-size: 0.76rem; color: var(--text-secondary); }
-.topbar-profile img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); }
-.topbar-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; color: var(--navy-mid); background: #e0e7ff; }
-
-/* Profile dropdown */
-.profile-dropdown {
-  position: absolute;
-  top: 115%;
-  right: 0;
-  min-width: 230px;
-  background: var(--white);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  box-shadow: 0 8px 24px rgba(15,23,42,0.16);
-  padding: 10px 12px 8px;
-  display: none;
-  z-index: 2000;
-}
-.profile-dropdown.is-open { display: block; }
-.profile-dropdown-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-.profile-dropdown-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg);
-  color: var(--text-light);
-  font-size: 0.82rem;
-  flex-shrink: 0;
-}
-.profile-dropdown-text {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: var(--sidebar-w);
+  height: 100vh;
+  background: linear-gradient(180deg, var(--navy) 0%, var(--navy-mid) 100%);
+  color: var(--white);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  padding: 18px 14px;
+  gap: 12px;
+  z-index: 100;
+  overflow-y: auto;
 }
+.main {
+  flex: 1 1 auto;
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  width: calc(100% - var(--sidebar-w));
+}
+.topbar { display:flex; align-items:center; justify-content:space-between; padding: 10px 24px; background: transparent; }
+
+.profile-dropdown-text { display: flex; flex-direction: column; gap: 2px; }
 .profile-dropdown-label {
   font-size: 0.72rem;
   text-transform: uppercase;
@@ -488,80 +359,31 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════
-  SIDEBAR — DO NOT CHANGE
-═══════════════════════════════════════════ -->
+<!-- Sidebar copied from layouts/app.blade.php for consistency -->
 <div class="sidebar">
-  <a href="{{ url('/faculty_dashboard') }}" class="sidebar-logo">
-    <div class="logo-mark"><i class="fas fa-door-open"></i></div>
-    <div class="logo-text">
+  <a href="#" class="sidebar-logo">
+    <img src="{{ asset('images/logo.png') }}" alt="PSU SmartDoor Logo" class="sidebar-logo-img">
+    <div class="sidebar-logo-text">
       <span class="brand-psu">PSU</span>
-      <span class="brand-main">Smart<span>Door</span></span>
+      <span class="brand-main">Smart<span class="door-accent">Door</span></span>
     </div>
   </a>
 
-  <span class="nav-section-label">Main Menu</span>
   <ul class="sidebar-nav">
-    <li>
-      <a href="{{ url('/faculty_dashboard') }}"
-         class="{{ Request::is('faculty_dashboard') ? 'active' : '' }}">
-        <span class="nav-icon"><i class="fas fa-chart-line"></i></span>
-        Dashboard
-      </a>
-    </li>
-    <li>
-      <a href="{{ url('/rooms') }}"
-         class="{{ Request::is('rooms*') ? 'active' : '' }}">
-        <span class="nav-icon"><i class="fas fa-door-open"></i></span>
-        Rooms
-      </a>
-    </li>
-    <li>
-      <a href="{{ url('/faculty-schedule') }}"
-         class="{{ Request::is('faculty-schedule') ? 'active' : '' }}">
-        <span class="nav-icon"><i class="fas fa-clock"></i></span>
-        Schedule
-      </a>
-    </li>
-    <li>
-      <a href="{{ url('/attendance') }}"
-         class="{{ Request::is('attendance*') ? 'active' : '' }}">
-        <span class="nav-icon"><i class="fas fa-clipboard-check"></i></span>
-        Attendance
-      </a>
-    </li>
+    <li><a href="/dashboard" class="{{ Request::is('dashboard') ? 'active' : '' }}"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+    <li><a href="/classrooms" class="{{ Request::is('classrooms*') ? 'active' : '' }}"><i class="fas fa-school"></i> Classrooms</a></li>
+    <li><a href="/schedule" class="{{ Request::is('schedule*') ? 'active' : '' }}"><i class="fas fa-calendar"></i> Schedule</a></li>
+    <li><a href="/smartlocking" class="{{ Request::is('smartlocking*') ? 'active' : '' }}"><i class="fas fa-lock"></i> SmartLocking</a></li>
+    <!-- AI Recommendations link removed from sidebar -->
+    <li><a href="/attendance" class="{{ Request::is('attendance*') ? 'active' : '' }}"><i class="fas fa-clipboard-check"></i> Attendance</a></li>
+    <!-- Reports link removed from sidebar -->
   </ul>
 
-  <span class="nav-section-label">Tools</span>
-  <ul class="sidebar-nav">
-    <li>
-      <a href="{{ url('/ai-recommendations') }}"
-         class="{{ Request::is('ai-recommendations') ? 'active' : '' }}">
-        <span class="nav-icon"><i class="fas fa-robot"></i></span>
-        AI Recommendations
-      </a>
-    </li>
-    <li>
-      <a href="{{ url('/reports') }}" class="{{ Request::is('reports*') ? 'active' : '' }}">
-        <span class="nav-icon"><i class="fas fa-chart-bar"></i></span>
-        Reports
-      </a>
-    </li>
-  </ul>
-
-  <div class="sidebar-footer">
-    <div class="user-widget">
-      <div class="user-avatar"><?= htmlspecialchars($facultyInitials) ?></div>
-      <div class="user-widget-info">
-        <div class="user-widget-name"><?= htmlspecialchars($facultyName) ?></div>
-        <div class="user-widget-role"><?= htmlspecialchars($facultyDept) ?></div>
-      </div>
-    </div>
-    <form method="POST" action="{{ url('/logout') }}">
+  <div class="sidebar-logout">
+    <form method="POST" action="/logout" style="display:inline;">
       @csrf
-      <button type="submit" class="sidebar-logout-btn">
-        <i class="fas fa-arrow-right-from-bracket"></i>
-        Sign Out
+      <button type="submit" style="background:none;border:none;padding:0;color:inherit;font:inherit;cursor:pointer;display:flex;align-items:center;gap:8px;">
+        <i class="fas fa-sign-out-alt"></i> Sign Out
       </button>
     </form>
   </div>

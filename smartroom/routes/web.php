@@ -11,6 +11,7 @@ use App\Http\Controllers\FacultyController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\AiRecommendationController;
 
 Route::get('/', function () {
     return view('frontend.landing');
@@ -32,7 +33,7 @@ Route::middleware('guest')->group(function (): void {
     Route::post('/reset-password', [AuthController::class, 'updatePassword'])->name('password.update');
 });
 
-Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('auth.logout');
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 Route::middleware('auth')->group(function (): void {
     Route::get('/password/change', [AuthController::class, 'showChangePasswordForm'])->name('password.change');
@@ -57,9 +58,13 @@ Route::middleware(['auth', 'password.changed', 'role:faculty'])->group(function 
 
     // Faculty Attendance
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('faculty.attendance');
+    Route::get('/attendance/dashboard', [AttendanceController::class, 'dashboard'])->name('faculty.attendance.dashboard');
     Route::post('/attendance', [AttendanceController::class, 'store'])->name('faculty.attendance.store');
     Route::get('/attendance/{id}', [AttendanceController::class, 'showSession'])->name('faculty.attendance.session');
     Route::get('/attendance/{id}/export', [AttendanceController::class, 'export'])->name('faculty.attendance.export');
+
+    // AI recommendations (simple heuristic endpoint)
+    Route::get('/api/ai/recommendations', [AiRecommendationController::class, 'index']);
     Route::post('/attendance/{id}/records', [AttendanceController::class, 'storeRecord'])->name('faculty.attendance.record');
     Route::post('/attendance/{id}/records/bulk', [AttendanceController::class, 'storeRecordsBulk'])->name('faculty.attendance.record.bulk');
     Route::post('/attendance/{id}/close', [AttendanceController::class, 'close'])->name('faculty.attendance.close');
@@ -85,6 +90,8 @@ Route::middleware(['auth', 'password.changed', 'role:admin'])->group(function ()
 
     Route::get('/admin/classrooms', [ClassroomController::class, 'index'])->name('admin.classrooms');
     Route::get('/admin/classrooms/{id}', [ClassroomController::class, 'show'])->name('admin.classrooms.show');
+    Route::post('/admin/classrooms/{classroom}/occupancy', [ClassroomController::class, 'updateOccupancy'])->name('admin.classrooms.occupancy');
+    Route::get('/admin/classrooms/{classroom}/qr', [ClassroomController::class, 'qr'])->name('admin.classrooms.qr');
     Route::post('/admin/classrooms', [ClassroomController::class, 'store'])->name('admin.classrooms.store');
     Route::match(['put', 'patch'], '/admin/classrooms/{classroom}', [ClassroomController::class, 'update'])->name('admin.classrooms.update');
     Route::delete('/admin/classrooms/{classroom}', [ClassroomController::class, 'destroy'])->name('admin.classrooms.destroy');

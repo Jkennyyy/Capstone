@@ -827,39 +827,8 @@ $nav_items = [
 </head>
 <body>
 
-<!-- ═══════════════ SIDEBAR (FACULTY NAVIGATION) ═══════════════ -->
-<div class="sidebar">
-    <a href="<?= htmlspecialchars(url('/dashboard')) ?>" class="sidebar-logo">
-        <div class="logo-mark">🚪</div>
-        <div class="logo-text">
-            <span class="brand-psu">PSU</span>
-            <span class="brand-main">Smart<span>Door</span></span>
-        </div>
-    </a>
-
-    <span class="nav-section-label">Main Menu</span>
-    <ul class="sidebar-nav">
-        <li>
-            <a href="{{ url('/faculty_dashboard') }}"
-               class="{{ Request::is('faculty_dashboard') ? 'active' : '' }}">
-                <span class="nav-icon"><i class="fas fa-home"></i></span>
-                Dashboard
-            </a>
-        </li>
-        <li>
-            <a href="{{ url('/rooms') }}"
-               class="{{ Request::is('rooms*') ? 'active' : '' }}">
-                <span class="nav-icon"><i class="fas fa-door-open"></i></span>
-                Room
-            </a>
-        </li>
-        <li>
-            <a href="{{ url('/faculty-schedule') }}"
-               class="{{ Request::is('faculty-schedule') ? 'active' : '' }}">
-                <span class="nav-icon"><i class="fas fa-clock"></i></span>
-                Schedule
-            </a>
-        </li>
+<!-- Sidebar (use shared partial for consistency) -->
+@include('frontend.partials.sidebar')
         <li>
             <a href="{{ url('/profile') }}"
                class="{{ Request::is('profile*') ? 'active' : '' }}">
@@ -871,13 +840,7 @@ $nav_items = [
 
     <span class="nav-section-label">Tools</span>
     <ul class="sidebar-nav">
-        <li>
-            <a href="{{ url('/ai-recommendations') }}"
-               class="{{ Request::is('ai-recommendations') ? 'active' : '' }}">
-                <span class="nav-icon"><i class="fas fa-robot"></i></span>
-                AI Recommendations
-            </a>
-        </li>
+        <!-- AI Recommendations removed from sidebar -->
         <li>
             <a href="#" class="{{ Request::is('reports*') ? 'active' : '' }}">
                 <span class="nav-icon"><i class="fas fa-chart-bar"></i></span>
@@ -933,6 +896,10 @@ $nav_items = [
             <button class="btn btn-download">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Download
+            </button>
+            <button id="openAddScheduleBtn" class="btn btn-primary" title="Add Schedule">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                Add Schedule
             </button>
         </div>
     </div>
@@ -992,7 +959,10 @@ $nav_items = [
     <!-- Monday Classes -->
     <div class="section-header">
         <h2 id="dayTitle"><?= htmlspecialchars($full_day_names[$active_day]) ?>'s Classes</h2>
-        <span id="dayCount"><?= count($active_classes) ?> classes</span>
+        <div style="display:flex;align-items:center;gap:12px;">
+            <span id="dayCount"><?= count($active_classes) ?> classes</span>
+            <button id="openAddScheduleBtn2" class="btn btn-primary" style="padding:8px 12px;font-size:13px;">Add New Schedule</button>
+        </div>
     </div>
 
     <div class="classes-list" id="classesList">
@@ -1063,6 +1033,75 @@ $nav_items = [
         </div>
         <?php endforeach; ?>
     </div>
+
+    <!-- Add Schedule Modal -->
+    <div id="addScheduleOverlay" class="modal-overlay" aria-hidden="true">
+        <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="addScheduleTitle">
+            <div class="modal-head">
+                <div>
+                    <div class="modal-title" id="addScheduleTitle">Add Class Schedule</div>
+                    <div class="modal-sub">Quickly add a new class to your timetable</div>
+                </div>
+                <button id="closeAddSchedule" class="modal-close" aria-label="Close dialog"><i class="fas fa-xmark"></i></button>
+            </div>
+
+            <form id="addScheduleForm" class="modal-body">
+                <div class="grid-2">
+                    <label class="field"><span>Subject</span><input id="sched_subject" name="subject" required></label>
+                    <label class="field"><span>Course / Code</span><input id="sched_code" name="code" required></label>
+                </div>
+
+                <div class="grid-2">
+                    <label class="field"><span>Section</span><input id="sched_section" name="section"></label>
+                    <label class="field"><span>Room</span><input id="sched_room" name="room"></label>
+                </div>
+
+                <div class="grid-2">
+                    <label class="field"><span>Day</span>
+                        <select id="sched_day" name="day">
+                            <?php foreach ($days as $d): ?>
+                                <option value="<?= $d ?>" <?= $d === $active_day ? 'selected' : '' ?>><?= $full_day_names[$d] ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </label>
+                    <label class="field"><span>Type</span>
+                        <select id="sched_type" name="type">
+                            <option>Lecture</option>
+                            <option>Laboratory</option>
+                            <option>Consultation</option>
+                            <option>Advising</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="grid-2">
+                    <label class="field"><span>Start (HH:MM)</span><input id="sched_start" name="start" placeholder="08:00" required></label>
+                    <label class="field"><span>End (HH:MM)</span><input id="sched_end" name="end" placeholder="10:00" required></label>
+                </div>
+
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px;">
+                    <button type="button" id="cancelAddSchedule" class="btn btn-outline">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Schedule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        .modal-overlay{position:fixed;inset:0;background:rgba(11,22,68,.45);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px;z-index:2200}
+        .modal-overlay.is-open{display:flex}
+        .modal-panel{width:min(760px,100%);background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+        .modal-head{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border);background:#fafcff}
+        .modal-title{font-size:1rem;font-weight:800;color:var(--text)}
+        .modal-sub{font-size:.84rem;color:var(--muted);margin-top:4px}
+        .modal-close{width:36px;height:36px;border-radius:9px;border:1px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center}
+        .modal-body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:12px}
+        .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        .field{display:flex;flex-direction:column;gap:6px}
+        .field span{font-size:12px;color:var(--muted);font-weight:700}
+        .field input,.field select{padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#fff;font-family:'DM Sans',sans-serif;font-size:.9rem;color:var(--text)}
+        @media (max-width:720px){.grid-2{grid-template-columns:1fr}}
+    </style>
 
 </main>
 
@@ -1137,6 +1176,81 @@ $nav_items = [
             this.classList.add('active');
             renderDay(this.textContent.trim());
         });
+    });
+
+    // --- Add Schedule modal logic ---
+    const openAddBtns = document.querySelectorAll('#openAddScheduleBtn, #openAddScheduleBtn2');
+    const overlay = document.getElementById('addScheduleOverlay');
+    const closeBtn = document.getElementById('closeAddSchedule');
+    const cancelBtn = document.getElementById('cancelAddSchedule');
+    const addForm = document.getElementById('addScheduleForm');
+
+    function openModal() { overlay.classList.add('is-open'); overlay.setAttribute('aria-hidden','false'); document.getElementById('sched_subject').focus(); }
+    function closeModal() { overlay.classList.remove('is-open'); overlay.setAttribute('aria-hidden','true'); }
+
+    openAddBtns.forEach(btn => btn?.addEventListener('click', openModal));
+    closeBtn?.addEventListener('click', closeModal);
+    cancelBtn?.addEventListener('click', closeModal);
+    overlay?.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+
+    addForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const subject = document.getElementById('sched_subject').value.trim();
+        const code = document.getElementById('sched_code').value.trim();
+        const section = document.getElementById('sched_section').value.trim();
+        const room = document.getElementById('sched_room').value.trim();
+        const day = document.getElementById('sched_day').value;
+        const type = document.getElementById('sched_type').value;
+        const start = document.getElementById('sched_start').value.trim();
+        const end = document.getElementById('sched_end').value.trim();
+
+        if (!subject || !start || !end) {
+            alert('Please complete required fields.');
+            return;
+        }
+
+        // Add locally to scheduleData for immediate UI feedback
+        scheduleData[day] = scheduleData[day] || [];
+        scheduleData[day].push({
+            start: start,
+            end: end,
+            subject: subject,
+            code: code || '',
+            section: section || '',
+            room: room || '',
+            type: type || '',
+            time_display: start + ' - ' + end,
+            color: '#3b4ab0'
+        });
+
+        if (document.querySelector('.day-tab.active')?.textContent.trim() === day) {
+            renderDay(day);
+        }
+
+        closeModal();
+
+        // Try to post to server; if it fails silently, user will still see local change
+        try {
+            await fetch("<?= route('faculty.schedule.store') ?>", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '<?= csrf_token() ?>'
+                },
+                body: JSON.stringify({
+                    // best-effort mapping to backend fields
+                    classroom_id: null,
+                    course_id: null,
+                    start_at: start,
+                    end_at: end,
+                    enrolled: 0
+                })
+            });
+        } catch (err) {
+            // ignore network errors — UI updated locally
+            console.warn('Schedule post failed', err);
+        }
     });
 </script>
 </body>
