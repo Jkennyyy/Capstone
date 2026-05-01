@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Api\StoreClassroomRequest;
 use App\Http\Requests\Api\UpdateClassroomRequest;
 use App\Models\Classroom;
+use App\Models\Notification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -124,9 +125,43 @@ class ClassroomController extends Controller
             return response()->json(['message' => 'Occupancy cannot exceed capacity.'], 422);
         }
 
+        $oldOcc = (int) ($classroom->current_occupancy ?? 0);
+
         $classroom->current_occupancy = $occ;
         $classroom->save();
 
+        // Create notifications when classroom becomes full or becomes available again
+        if ($capacity > 0) {
+            if ($oldOcc !== $capacity && $occ === $capacity) {
+                Notification::create([
+                    'type' => 'occupancy',
+                    'title' => 'Classroom full',
+                    'body' => sprintf("%s is now full (%s/%s)", $classroom->name, $occ, $capacity),
+                    'data' => [
+                        'classroom_id' => $classroom->id,
+                        'current_occupancy' => $occ,
+                        'capacity' => $capacity,
+                    ],
+                ]);
+            } elseif ($oldOcc === $capacity && $occ < $capacity) {
+                $notif = Notification::create([
+                    'type' => 'occupancy',
+                    'title' => 'Classroom available',
+                    'body' => sprintf("%s is now available (%s/%s)", $classroom->name, $occ, $capacity),
+                    'data' => [
+                        'classroom_id' => $classroom->id,
+                        'current_occupancy' => $occ,
+                        'capacity' => $capacity,
+                    ],
+                ]);
+                try {
+                    event(new \App\Events\NewNotification($notif));
+                } catch (\Throwable $e) {
+                    // non-fatal
+                }
+            }
+        }
+                    $notif = Notification::create([
         // Broadcast update (requires broadcasting driver configured)
         try {
             event(new \App\Events\OccupancyUpdated($classroom->id, $occ, $capacity));
@@ -136,6 +171,11 @@ class ClassroomController extends Controller
 
         return response()->json(['message' => 'Occupancy updated.', 'data' => [
             'classroom_id' => $classroom->id,
+                    try {
+                        event(new \App\Events\NewNotification($notif));
+                    } catch (\Throwable $e) {
+                        // non-fatal
+                    }
             'current_occupancy' => $occ,
             'capacity' => $capacity,
         ]]);

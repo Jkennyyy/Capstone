@@ -507,6 +507,44 @@
     </div>
 
     <script>
+        // Current user id for realtime subscriptions
+        var CURRENT_USER_ID = {{ auth()->check() ? auth()->id() : 'null' }};
+        // Pusher realtime setup (optional if env configured)
+        (function () {
+            try {
+                var pusherKey = '{{ env('PUSHER_APP_KEY') }}';
+                var pusherCluster = '{{ env('PUSHER_APP_CLUSTER') }}';
+                if (pusherKey) {
+                    var script = document.createElement('script');
+                    script.src = 'https://js.pusher.com/7.2/pusher.min.js';
+                    script.onload = function () {
+                        try {
+                            var pusher = new Pusher(pusherKey, { cluster: pusherCluster || undefined, forceTLS: true });
+                            pusher.subscribe('notifications').bind('notification.created', function (data) {
+                                // prepend incoming announcement
+                                lastItems.unshift(data);
+                                // cap to 50
+                                lastItems = lastItems.slice(0,50);
+                                renderNotifications(lastItems);
+                            });
+                            if (CURRENT_USER_ID) {
+                                pusher.subscribe('notifications.user.' + CURRENT_USER_ID).bind('notification.created', function (data) {
+                                    lastItems.unshift(data);
+                                    lastItems = lastItems.slice(0,50);
+                                    renderNotifications(lastItems);
+                                });
+                            }
+                        } catch (e) {
+                            console.error('Realtime init error', e);
+                        }
+                    };
+                    document.head.appendChild(script);
+                }
+            } catch (e) {
+                // ignore
+            }
+        })();
+
         // Active nav link
         document.querySelectorAll('.sidebar-nav a').forEach(link => {
             if (link.href === window.location.href) {
@@ -544,22 +582,39 @@
                     return;
                 }
 
-                notifPanel.innerHTML = items.map(function (it) {
+                var header = '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--gray-light);font-size:0.85rem;">'
+                    + '<span style="color:var(--text-secondary);font-weight:600;">Notifications</span>'
+                    + '<button id="markAllBtn" style="background:none;border:0;color:var(--blue);cursor:pointer;padding:4px 8px;border-radius:6px">Mark all read</button>'
+                    + '</div>';
+
+                var list = items.map(function (it) {
                     var title = String(it.title || 'Notification');
                     var body = String(it.body || '');
                     var time = it.created_at ? new Date(it.created_at).toLocaleString() : '';
                     var unreadClass = it.read_at ? '' : ' unread';
-                    return '<div class="notif-item' + unreadClass + '" data-id="' + (it.id || '') + '">'
+                    return '<div class="notif-item' + unreadClass + '" data-id="' + (it.id || '') + '">' 
                         + '<h4>' + escapeHtml(title) + '</h4>'
                         + '<div style="color:var(--text-secondary);font-size:0.85rem;">' + escapeHtml(body) + '</div>'
                         + '<div style="margin-top:6px;font-size:0.75rem;color:var(--text-secondary);">' + escapeHtml(time) + '</div>'
                         + '</div>';
                 }).join('');
+                notifPanel.innerHTML = header + list;
 
                 // show badge for unread count
                 var unreadCount = items.filter(function (i) { return !i.read_at; }).length;
                 notifBadge.style.display = unreadCount ? '' : 'none';
                 notifBadge.textContent = unreadCount > 9 ? '9+' : String(unreadCount);
+
+                // hook mark all button
+                var markAllBtn = document.getElementById('markAllBtn');
+                if (markAllBtn) {
+                    markAllBtn.addEventListener('click', function () {
+                        fetch('/api/v1/notifications/read-all', { method: 'PATCH', credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+                            .then(function (r) { if (!r.ok) throw r; return r.json(); })
+                            .then(function () { lastItems.forEach(function (it) { it.read_at = new Date().toISOString(); }); renderNotifications(lastItems); })
+                            .catch(function (e) { console.error('Failed to mark all read', e); });
+                    });
+                }
             }
 
             function escapeHtml(value) {

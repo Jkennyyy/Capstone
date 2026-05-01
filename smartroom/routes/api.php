@@ -26,6 +26,7 @@ Route::prefix('v1')->group(function (): void {
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('notifications', [App\Http\Controllers\Api\NotificationController::class, 'index']);
         Route::patch('notifications/{id}/read', [App\Http\Controllers\Api\NotificationController::class, 'markRead']);
+        Route::patch('notifications/read-all', [App\Http\Controllers\Api\NotificationController::class, 'markAllRead']);
         Route::apiResource('reservations', ReservationController::class)->only(['store', 'update', 'destroy']);
     });
 });

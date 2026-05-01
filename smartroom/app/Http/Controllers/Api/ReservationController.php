@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\DB;
+use App\Models\Notification;
 
 class ReservationController extends Controller
 {
@@ -41,11 +42,32 @@ class ReservationController extends Controller
                 ], 422));
             }
 
-            $reservationConflict = $availabilityService->checkReservationConflict(
-                (int) $payload['classroom_id'],
-                $startAt,
-                $endAt,
-                null,
+            $reservation->load(['classroom', 'user']);
+
+            $notif = Notification::create([
+                'type' => 'reservation',
+                'title' => 'Reservation created',
+                'body' => sprintf("%s reserved %s from %s to %s", $request->user()->name, $reservation->classroom->name, $reservation->start_at->toDateTimeString(), $reservation->end_at->toDateTimeString()),
+                'data' => [
+                    'reservation_id' => $reservation->id,
+                    'classroom_id' => $reservation->classroom_id,
+                    'user_id' => $reservation->user_id,
+                    'start_at' => $reservation->start_at->toDateTimeString(),
+                    'end_at' => $reservation->end_at->toDateTimeString(),
+                ],
+                'user_id' => $reservation->user_id,
+            ]);
+
+            try {
+                event(new \App\Events\NewNotification($notif));
+            } catch (\Throwable $e) {
+                // non-fatal
+            }
+
+            return response()->json([
+                'message' => 'Reservation created successfully.',
+                'data' => $reservation->fresh(['classroom', 'user']),
+            ], 201);
                 true
             );
 
@@ -83,6 +105,8 @@ class ReservationController extends Controller
 
         $startAt = isset($payload['start_at']) ? Carbon::parse($payload['start_at']) : $reservation->start_at;
         $endAt = isset($payload['end_at']) ? Carbon::parse($payload['end_at']) : $reservation->end_at;
+
+        $oldStatus = $reservation->status;
 
         DB::transaction(function () use ($reservation, $payload, $startAt, $endAt, $availabilityService): void {
             $nextStatus = $payload['status'] ?? $reservation->status;
@@ -134,6 +158,32 @@ class ReservationController extends Controller
             ]);
         });
 
+        $reservation->refresh();
+        $reservation->load(['classroom', 'user']);
+
+        if ($oldStatus !== $reservation->status) {
+            $title = 'Reservation updated';
+            $body = sprintf("%s updated reservation for %s (status: %s)", $reservation->user->name, $reservation->classroom->name, $reservation->status);
+
+            $notif = Notification::create([
+                'type' => 'reservation_status',
+                'title' => $title,
+                'body' => $body,
+                'data' => [
+                    'reservation_id' => $reservation->id,
+                    'old_status' => $oldStatus,
+                    'new_status' => $reservation->status,
+                ],
+                'user_id' => $reservation->user_id,
+            ]);
+
+            try {
+                event(new \App\Events\NewNotification($notif));
+            } catch (\Throwable $e) {
+                // non-fatal
+            }
+        }
+
         return response()->json([
             'message' => 'Reservation updated successfully.',
             'data' => $reservation->fresh(['classroom', 'user']),
@@ -150,6 +200,27 @@ class ReservationController extends Controller
                 'cancelled_at' => now(),
             ]);
         });
+
+        $reservation->refresh();
+        $reservation->load(['classroom', 'user']);
+
+        $notif = Notification::create([
+            'type' => 'reservation',
+            'title' => 'Reservation cancelled',
+            'body' => sprintf("%s cancelled reservation for %s scheduled %s to %s", $reservation->user->name, $reservation->classroom->name, $reservation->start_at->toDateTimeString(), $reservation->end_at->toDateTimeString()),
+            'data' => [
+                'reservation_id' => $reservation->id,
+                'classroom_id' => $reservation->classroom_id,
+                'user_id' => $reservation->user_id,
+            ],
+            'user_id' => $reservation->user_id,
+        ]);
+
+        try {
+            event(new \App\Events\NewNotification($notif));
+        } catch (\Throwable $e) {
+            // non-fatal
+        }
 
         return response()->json([
             'message' => 'Reservation cancelled successfully.',

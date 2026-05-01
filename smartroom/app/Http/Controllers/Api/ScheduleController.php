@@ -76,7 +76,7 @@ class ScheduleController extends Controller
             return Schedule::create($payload);
         })->load(['classroom', 'course.instructor']);
 
-        Notification::create([
+        $notif = Notification::create([
             'type' => 'schedule',
             'title' => 'Schedule created',
             'body' => sprintf("%s scheduled in %s from %s to %s", $schedule->course->name ?? 'A course', $schedule->classroom->name ?? 'a room', $schedule->start_at->toDateTimeString(), $schedule->end_at->toDateTimeString()),
@@ -85,7 +85,14 @@ class ScheduleController extends Controller
                 'classroom_id' => $schedule->classroom_id,
                 'course_id' => $schedule->course_id,
             ],
+            'user_id' => $schedule->course?->instructor?->id ?? null,
         ]);
+
+        try {
+            event(new \App\Events\NewNotification($notif));
+        } catch (\Throwable $e) {
+            // non-fatal
+        }
 
         return new ScheduleResource($schedule);
     }
@@ -132,7 +139,7 @@ class ScheduleController extends Controller
 
         $schedule = $schedule->fresh()->load(['classroom', 'course.instructor']);
 
-        Notification::create([
+        $notif = Notification::create([
             'type' => 'schedule',
             'title' => 'Schedule updated',
             'body' => sprintf("Schedule for %s in %s was updated", $schedule->course->name ?? 'a course', $schedule->classroom->name ?? 'a room'),
@@ -143,7 +150,14 @@ class ScheduleController extends Controller
                     'after' => $schedule->toArray(),
                 ],
             ],
+            'user_id' => $schedule->course?->instructor?->id ?? null,
         ]);
+
+        try {
+            event(new \App\Events\NewNotification($notif));
+        } catch (\Throwable $e) {
+            // non-fatal
+        }
 
         return new ScheduleResource($schedule);
     }
@@ -155,12 +169,19 @@ class ScheduleController extends Controller
         $payload = ['schedule_id' => $schedule->id, 'classroom_id' => $schedule->classroom_id, 'course_id' => $schedule->course_id];
         $schedule->delete();
 
-        Notification::create([
+        $notif = Notification::create([
             'type' => 'schedule',
             'title' => 'Schedule deleted',
             'body' => sprintf("A schedule was removed from %s", $schedule->classroom?->name ?? 'a room'),
             'data' => $payload,
+            'user_id' => $schedule->course?->instructor?->id ?? null,
         ]);
+
+        try {
+            event(new \App\Events\NewNotification($notif));
+        } catch (\Throwable $e) {
+            // non-fatal
+        }
 
         return response()->json(['message' => 'Schedule deleted successfully.']);
     }
