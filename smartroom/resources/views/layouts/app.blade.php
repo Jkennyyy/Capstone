@@ -236,6 +236,14 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 0 rgba(255, 255, 255, 0.5);
         }
 
+        /* Notification dropdown */
+        .notif-dropdown { position: relative; }
+        .notif-panel { position: absolute; right: 0; top: 44px; width: 320px; background: var(--white); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 6px 30px rgba(11,22,64,0.12); display: none; z-index: 1200; }
+        .notif-panel.is-open { display: block; }
+        .notif-item { padding: 12px; border-bottom: 1px solid var(--gray-light); font-size: 0.9rem; }
+        .notif-item:last-child { border-bottom: none; }
+        .notif-item h4 { font-size: 0.9rem; margin-bottom: 4px; }
+
         .page-title {
             font-size: 1.8rem;
             font-weight: 700;
@@ -464,6 +472,15 @@
 
         <!-- Main Content -->
         <div class="main-content">
+            <div style="display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-bottom:12px;">
+                <div class="notif-dropdown">
+                    <button class="filter-icon-btn notif-btn" id="notifBtn" title="Notifications">
+                        <i class="fas fa-bell"></i>
+                        <span id="notifBadge" class="notif-badge" style="display:none;"></span>
+                    </button>
+                    <div id="notifPanel" class="notif-panel" aria-hidden="true"></div>
+                </div>
+            </div>
             @yield('content')
         </div>
     </div>
@@ -475,6 +492,75 @@
                 link.classList.add('active');
             }
         });
+
+        // Notifications polling
+        (function () {
+            var pollInterval = 15000;
+            var notifBtn = document.getElementById('notifBtn');
+            var notifBadge = document.getElementById('notifBadge');
+            var notifPanel = document.getElementById('notifPanel');
+            var open = false;
+
+            async function fetchNotifications() {
+                try {
+                    var res = await fetch('/api/v1/notifications', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
+                    if (!res.ok) return;
+                    var payload = await res.json().catch(()=>({}));
+                    var items = Array.isArray(payload.data) ? payload.data : [];
+                    renderNotifications(items);
+                } catch (e) {
+                    console.error('Failed to fetch notifications', e);
+                }
+            }
+
+            function renderNotifications(items) {
+                if (!notifPanel) return;
+                if (!items || items.length === 0) {
+                    notifPanel.innerHTML = '<div class="notif-item">No notifications</div>';
+                    notifBadge.style.display = 'none';
+                    return;
+                }
+
+                notifPanel.innerHTML = items.map(function (it) {
+                    var title = String(it.title || 'Notification');
+                    var body = String(it.body || '');
+                    var time = it.created_at ? new Date(it.created_at).toLocaleString() : '';
+                    return '<div class="notif-item">'<
+                        + '<h4>' + escapeHtml(title) + '</h4>'
+                        + '<div style="color:var(--text-secondary);font-size:0.85rem;">' + escapeHtml(body) + '</div>'
+                        + '<div style="margin-top:6px;font-size:0.75rem;color:var(--text-secondary);">' + escapeHtml(time) + '</div>'
+                        + '</div>';
+                }).join('');
+
+                // show badge if there are any items
+                notifBadge.style.display = items.length ? '' : 'none';
+                notifBadge.textContent = items.length > 9 ? '9+' : String(items.length);
+            }
+
+            function escapeHtml(value) {
+                return String(value || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            notifBtn?.addEventListener('click', function () {
+                open = !open;
+                if (open) {
+                    notifPanel.classList.add('is-open');
+                    notifPanel.setAttribute('aria-hidden', 'false');
+                } else {
+                    notifPanel.classList.remove('is-open');
+                    notifPanel.setAttribute('aria-hidden', 'true');
+                }
+            });
+
+            // initial fetch + polling
+            fetchNotifications();
+            setInterval(fetchNotifications, pollInterval);
+        })();
     </script>
 </body>
 </html>
