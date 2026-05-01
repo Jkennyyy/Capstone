@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Models\Notification;
 
 class ScheduleController extends Controller
 {
@@ -75,6 +76,17 @@ class ScheduleController extends Controller
             return Schedule::create($payload);
         })->load(['classroom', 'course.instructor']);
 
+        Notification::create([
+            'type' => 'schedule',
+            'title' => 'Schedule created',
+            'body' => sprintf("%s scheduled in %s from %s to %s", $schedule->course->name ?? 'A course', $schedule->classroom->name ?? 'a room', $schedule->start_at->toDateTimeString(), $schedule->end_at->toDateTimeString()),
+            'data' => [
+                'schedule_id' => $schedule->id,
+                'classroom_id' => $schedule->classroom_id,
+                'course_id' => $schedule->course_id,
+            ],
+        ]);
+
         return new ScheduleResource($schedule);
     }
 
@@ -98,6 +110,8 @@ class ScheduleController extends Controller
             $payload['day_of_week'] = $effectiveStartAt->dayOfWeek;
         }
 
+        $old = $schedule->replicate();
+
         DB::transaction(function () use ($schedule, $payload, $effectiveStartAt, $effectiveEndAt, $availabilityService): void {
             $conflict = $availabilityService->checkOfficialScheduleConflict(
                 (int) ($payload['classroom_id'] ?? $schedule->classroom_id),
@@ -116,14 +130,37 @@ class ScheduleController extends Controller
             $schedule->update($payload);
         });
 
-        return new ScheduleResource($schedule->fresh()->load(['classroom', 'course.instructor']));
+        $schedule = $schedule->fresh()->load(['classroom', 'course.instructor']);
+
+        Notification::create([
+            'type' => 'schedule',
+            'title' => 'Schedule updated',
+            'body' => sprintf("Schedule for %s in %s was updated", $schedule->course->name ?? 'a course', $schedule->classroom->name ?? 'a room'),
+            'data' => [
+                'schedule_id' => $schedule->id,
+                'changes' => [
+                    'before' => $old->toArray(),
+                    'after' => $schedule->toArray(),
+                ],
+            ],
+        ]);
+
+        return new ScheduleResource($schedule);
     }
 
     public function destroy(Schedule $schedule): JsonResponse
     {
         $this->ensureItScheduleScope($schedule);
 
+        $payload = ['schedule_id' => $schedule->id, 'classroom_id' => $schedule->classroom_id, 'course_id' => $schedule->course_id];
         $schedule->delete();
+
+        Notification::create([
+            'type' => 'schedule',
+            'title' => 'Schedule deleted',
+            'body' => sprintf("A schedule was removed from %s", $schedule->classroom?->name ?? 'a room'),
+            'data' => $payload,
+        ]);
 
         return response()->json(['message' => 'Schedule deleted successfully.']);
     }

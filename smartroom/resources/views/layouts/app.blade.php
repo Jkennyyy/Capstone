@@ -238,11 +238,20 @@
 
         /* Notification dropdown */
         .notif-dropdown { position: relative; }
-        .notif-panel { position: absolute; right: 0; top: 44px; width: 320px; background: var(--white); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 6px 30px rgba(11,22,64,0.12); display: none; z-index: 1200; }
+        .notif-panel { position: absolute; right: 0; top: 44px; width: 320px; background: var(--white); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 6px 30px rgba(11,22,64,0.12); display: none; z-index: 1200; max-height: 480px; overflow: auto; }
         .notif-panel.is-open { display: block; }
-        .notif-item { padding: 12px; border-bottom: 1px solid var(--gray-light); font-size: 0.9rem; }
+        .notif-item { padding: 12px; border-bottom: 1px solid var(--gray-light); font-size: 0.9rem; cursor: pointer; }
+        .notif-item.unread { background: linear-gradient(90deg, rgba(245,197,24,0.04), transparent); }
         .notif-item:last-child { border-bottom: none; }
         .notif-item h4 { font-size: 0.9rem; margin-bottom: 4px; }
+
+        /* Notification modal */
+        .notif-modal { position: fixed; left: 0; top: 0; right: 0; bottom: 0; display: none; align-items: center; justify-content: center; background: rgba(11,22,64,0.4); z-index: 1300; }
+        .notif-modal.is-open { display: flex; }
+        .notif-modal .modal-content { width: 520px; background: var(--white); border-radius: 10px; padding: 20px; box-shadow: 0 8px 40px rgba(11,22,64,0.18); }
+        .notif-modal .modal-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:12px }
+        .notif-modal .modal-body { color: var(--text-secondary); font-size: 0.95rem; line-height:1.5 }
+        .notif-modal .close-btn { background:none;border:0;font-size:1.1rem;cursor:pointer;color:var(--text-secondary) }
 
         .page-title {
             font-size: 1.8rem;
@@ -479,6 +488,18 @@
                         <span id="notifBadge" class="notif-badge" style="display:none;"></span>
                     </button>
                     <div id="notifPanel" class="notif-panel" aria-hidden="true"></div>
+                        <div id="notifModal" class="notif-modal" aria-hidden="true">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <strong id="notifModalTitle">Notification</strong>
+                                    <button id="notifModalClose" class="close-btn">×</button>
+                                </div>
+                                <div class="modal-body">
+                                    <div id="notifModalBody"></div>
+                                    <pre id="notifModalData" style="background:#f6f8ff;padding:8px;margin-top:12px;border-radius:6px;display:none;white-space:pre-wrap;font-size:0.85rem;color:var(--text-secondary)"></pre>
+                                </div>
+                            </div>
+                        </div>
                 </div>
             </div>
             @yield('content')
@@ -581,15 +602,53 @@
                 }
             });
 
-            // click handler to mark single item read and allow further actions
+            // click handler to mark single item read and open detail view
+            var notifModal = document.getElementById('notifModal');
+            var notifModalTitle = document.getElementById('notifModalTitle');
+            var notifModalBody = document.getElementById('notifModalBody');
+            var notifModalData = document.getElementById('notifModalData');
+            var notifModalClose = document.getElementById('notifModalClose');
+
+            function showNotificationDetail(item) {
+                if (!item) return;
+                notifModalTitle.textContent = item.title || 'Notification';
+                notifModalBody.textContent = item.body || '';
+                if (item.data) {
+                    try {
+                        notifModalData.style.display = '';
+                        notifModalData.textContent = JSON.stringify(item.data, null, 2);
+                    } catch (e) {
+                        notifModalData.style.display = 'none';
+                    }
+                } else {
+                    notifModalData.style.display = 'none';
+                }
+                notifModal.classList.add('is-open');
+                notifModal.setAttribute('aria-hidden', 'false');
+            }
+
+            function closeNotificationDetail() {
+                notifModal.classList.remove('is-open');
+                notifModal.setAttribute('aria-hidden', 'true');
+            }
+
+            notifModalClose?.addEventListener('click', closeNotificationDetail);
+            notifModal?.addEventListener('click', function (ev) {
+                if (ev.target === notifModal) closeNotificationDetail();
+            });
+
             notifPanel?.addEventListener('click', function (ev) {
                 var el = ev.target;
                 while (el && !el.classList?.contains('notif-item')) el = el.parentElement;
                 if (!el) return;
                 var id = el.getAttribute('data-id');
-                if (id) {
-                    markAsRead(id);
-                }
+                if (!id) return;
+
+                var item = lastItems.find(function (x) { return String(x.id) === String(id); });
+                // mark read then show details
+                markAsRead(id).finally(function () {
+                    showNotificationDetail(item);
+                });
             });
 
             // initial fetch + polling
