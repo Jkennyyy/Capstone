@@ -945,6 +945,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     var response = await fetch('/api/v1/room-statuses?' + query.toString(), {
+      credentials: 'same-origin',
       headers: {
         'X-Requested-With': 'XMLHttpRequest',
         'Accept': 'application/json'
@@ -962,6 +963,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   async function refreshMapBuildings() {
     var response = await fetch('/api/v1/map/buildings', {
+      credentials: 'same-origin',
       headers: {
         'X-Requested-With': 'XMLHttpRequest',
         'Accept': 'application/json'
@@ -1026,6 +1028,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     var response = await fetch('/api/v1/map/buildings/' + encodeURIComponent(building) + '/rooms', {
+      credentials: 'same-origin',
       headers: {
         'X-Requested-With': 'XMLHttpRequest',
         'Accept': 'application/json'
@@ -1084,6 +1087,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     var statusResponse = fetch('/api/v1/map/rooms/' + roomId + '/status', {
+      credentials: 'same-origin',
       headers: {
         'X-Requested-With': 'XMLHttpRequest',
         'Accept': 'application/json'
@@ -1091,6 +1095,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     var schedulesResponse = fetch('/api/v1/map/rooms/' + roomId + '/fixed-schedules?' + scheduleQuery.toString(), {
+      credentials: 'same-origin',
       headers: {
         'X-Requested-With': 'XMLHttpRequest',
         'Accept': 'application/json'
@@ -1165,20 +1170,21 @@ document.addEventListener('DOMContentLoaded', function () {
         var response;
         try {
           response = await fetch('/api/v1/reservations', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRF-TOKEN': csrfToken,
-              'X-Requested-With': 'XMLHttpRequest',
-              'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-              classroom_id: Number(roomId),
-              start_at: startAt,
-              end_at: endAt,
-              notes: notes
-            })
-          });
+              credentials: 'same-origin',
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+              },
+              body: JSON.stringify({
+                classroom_id: Number(roomId),
+                start_at: startAt,
+                end_at: endAt,
+                notes: notes
+              })
+            });
         } catch (fetchErr) {
           reserveError.textContent = 'Network error. Please check your connection and try again.';
           reserveError.classList.add('is-visible');
@@ -1253,6 +1259,7 @@ document.addEventListener('DOMContentLoaded', function () {
       });
 
       var response = await fetch('/api/v1/room-availability/check?' + query.toString(), {
+        credentials: 'same-origin',
         headers: {
           'X-Requested-With': 'XMLHttpRequest',
           'Accept': 'application/json'
