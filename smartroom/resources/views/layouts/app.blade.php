@@ -493,13 +493,14 @@
             }
         });
 
-        // Notifications polling
+        // Notifications polling and mark-read hookup
         (function () {
             var pollInterval = 15000;
             var notifBtn = document.getElementById('notifBtn');
             var notifBadge = document.getElementById('notifBadge');
             var notifPanel = document.getElementById('notifPanel');
             var open = false;
+            var lastItems = [];
 
             async function fetchNotifications() {
                 try {
@@ -507,6 +508,7 @@
                     if (!res.ok) return;
                     var payload = await res.json().catch(()=>({}));
                     var items = Array.isArray(payload.data) ? payload.data : [];
+                    lastItems = items;
                     renderNotifications(items);
                 } catch (e) {
                     console.error('Failed to fetch notifications', e);
@@ -525,16 +527,18 @@
                     var title = String(it.title || 'Notification');
                     var body = String(it.body || '');
                     var time = it.created_at ? new Date(it.created_at).toLocaleString() : '';
-                    return '<div class="notif-item">'<
+                    var unreadClass = it.read_at ? '' : ' unread';
+                    return '<div class="notif-item' + unreadClass + '" data-id="' + (it.id || '') + '">'
                         + '<h4>' + escapeHtml(title) + '</h4>'
                         + '<div style="color:var(--text-secondary);font-size:0.85rem;">' + escapeHtml(body) + '</div>'
                         + '<div style="margin-top:6px;font-size:0.75rem;color:var(--text-secondary);">' + escapeHtml(time) + '</div>'
                         + '</div>';
                 }).join('');
 
-                // show badge if there are any items
-                notifBadge.style.display = items.length ? '' : 'none';
-                notifBadge.textContent = items.length > 9 ? '9+' : String(items.length);
+                // show badge for unread count
+                var unreadCount = items.filter(function (i) { return !i.read_at; }).length;
+                notifBadge.style.display = unreadCount ? '' : 'none';
+                notifBadge.textContent = unreadCount > 9 ? '9+' : String(unreadCount);
             }
 
             function escapeHtml(value) {
@@ -546,14 +550,45 @@
                     .replace(/'/g, '&#039;');
             }
 
+            async function markAsRead(id) {
+                if (!id) return;
+                try {
+                    var res = await fetch('/api/v1/notifications/' + encodeURIComponent(id) + '/read', { method: 'PATCH', credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
+                    if (!res.ok) return;
+                    var payload = await res.json().catch(()=>({}));
+                    // update local copy
+                    var it = lastItems.find(function (x) { return String(x.id) === String(id); });
+                    if (it) {
+                        it.read_at = payload.data?.read_at || new Date().toISOString();
+                        renderNotifications(lastItems);
+                    }
+                } catch (e) {
+                    console.error('Failed to mark notification read', e);
+                }
+            }
+
             notifBtn?.addEventListener('click', function () {
                 open = !open;
                 if (open) {
                     notifPanel.classList.add('is-open');
                     notifPanel.setAttribute('aria-hidden', 'false');
+                    // mark unread items as read when opening the panel
+                    var unread = lastItems.filter(function (i) { return !i.read_at; });
+                    unread.forEach(function (u) { markAsRead(u.id); });
                 } else {
                     notifPanel.classList.remove('is-open');
                     notifPanel.setAttribute('aria-hidden', 'true');
+                }
+            });
+
+            // click handler to mark single item read and allow further actions
+            notifPanel?.addEventListener('click', function (ev) {
+                var el = ev.target;
+                while (el && !el.classList?.contains('notif-item')) el = el.parentElement;
+                if (!el) return;
+                var id = el.getAttribute('data-id');
+                if (id) {
+                    markAsRead(id);
                 }
             });
 
