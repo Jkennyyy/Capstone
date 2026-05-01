@@ -817,12 +817,28 @@ body {
 
     addRoomSubmitBtn.disabled = true;
     try {
-      const res = await fetch("{{ route('admin.classrooms.store') }}", {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json', 'Accept':'application/json', 'X-CSRF-TOKEN':"{{ csrf_token() }}" },
-        body: JSON.stringify({ name, building, floor: floor||null, capacity, status, unavailable_reason: reason||null, current_occupancy: 0 }),
-      });
-      if (!res.ok) { const err = await res.json().catch(()=>({})); showToast(err?.message||'Failed to create room.','error'); return; }
+      console.log('AddRoom submit', { name, building, floor, capacity, status, reason });
+      let res;
+      try {
+        res = await fetch("{{ route('admin.classrooms.store') }}", {
+          credentials: 'same-origin',
+          method: 'POST',
+          headers: { 'Content-Type':'application/json', 'Accept':'application/json', 'X-CSRF-TOKEN':"{{ csrf_token() }}" },
+          body: JSON.stringify({ name, building, floor: floor||null, capacity, status, unavailable_reason: reason||null, current_occupancy: 0 }),
+        });
+      } catch (networkErr) {
+        console.error('Network error while creating room', networkErr);
+        showToast('Network error. Please check your connection and try again.', 'error');
+        return;
+      }
+
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({}));
+        console.error('Create room failed', err);
+        showToast(err?.message||'Failed to create room.','error');
+        return;
+      }
+
       closeModal(); window.location.reload();
     } finally { addRoomSubmitBtn.disabled = false; }
   });
