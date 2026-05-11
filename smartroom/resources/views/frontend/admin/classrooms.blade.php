@@ -207,7 +207,6 @@ body {
   transition: all 0.18s; position: relative;
 }
 .topbar-icon-btn:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
-.notif-dot { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; border-radius: 50%; background: var(--red); border: 2px solid var(--white); }
 
 .topbar-avatar {
   width: 38px; height: 38px; border-radius: 10px; object-fit: cover;
@@ -308,6 +307,7 @@ body {
 .sc-avail   .stat-card-bar-fill { background: linear-gradient(90deg,#059669,#34d399); }
 .sc-occupied .stat-card-bar-fill { background: linear-gradient(90deg,#2563eb,#60a5fa); }
 .sc-issue   .stat-card-bar-fill { background: linear-gradient(90deg,#dc2626,#f87171); }
+.occupancy-bar-fill { height: 100%; border-radius: 999px; transition: width 0.6s ease; background: linear-gradient(90deg,#059669,#34d399); }
 
 /* ── MANAGE TABLE ── */
 .section-block {
@@ -545,10 +545,6 @@ body {
         <i class="fas fa-calendar"></i>
         <span>{{ \Carbon\Carbon::now()->format('M j, Y') }}</span>
       </div>
-      <button class="topbar-icon-btn">
-        <i class="fas fa-bell"></i>
-        <span class="notif-dot"></span>
-      </button>
       <img src="https://randomuser.me/api/portraits/women/44.jpg" class="topbar-avatar" alt="Admin">
     </div>
   </div>
@@ -580,7 +576,7 @@ body {
           <div class="stat-card-val">{{ $classrooms->count() }}</div>
           <div class="stat-card-label">Total Rooms</div>
         </div>
-        <div class="stat-card-bar"><div class="stat-card-bar-fill" style="width:100%"></div></div>
+        <div class="stat-card-bar"><div class="stat-card-bar-fill" data-width="100"></div></div>
       </div>
       <div class="stat-card sc-avail">
         <div class="stat-card-top">
@@ -591,7 +587,7 @@ body {
           <div class="stat-card-val">{{ $classrooms->where('status','available')->count() }}</div>
           <div class="stat-card-label">Available Now</div>
         </div>
-        <div class="stat-card-bar"><div class="stat-card-bar-fill" style="width:{{ $classrooms->count() ? round($classrooms->where('status','available')->count()/$classrooms->count()*100) : 0 }}%"></div></div>
+        <div class="stat-card-bar"><div class="stat-card-bar-fill" data-width="{{ $classrooms->count() ? round($classrooms->where('status','available')->count()/$classrooms->count()*100) : 0 }}"></div></div>
       </div>
       <div class="stat-card sc-occupied">
         <div class="stat-card-top">
@@ -602,7 +598,7 @@ body {
           <div class="stat-card-val">{{ $classrooms->where('status','occupied')->count() }}</div>
           <div class="stat-card-label">In Use</div>
         </div>
-        <div class="stat-card-bar"><div class="stat-card-bar-fill" style="width:{{ $classrooms->count() ? round($classrooms->where('status','occupied')->count()/$classrooms->count()*100) : 0 }}%"></div></div>
+        <div class="stat-card-bar"><div class="stat-card-bar-fill" data-width="{{ $classrooms->count() ? round($classrooms->where('status','occupied')->count()/$classrooms->count()*100) : 0 }}"></div></div>
       </div>
       <div class="stat-card sc-issue">
         <div class="stat-card-top">
@@ -613,7 +609,7 @@ body {
           <div class="stat-card-val">{{ $classrooms->whereIn('status',['reserved','maintenance','unavailable'])->count() }}</div>
           <div class="stat-card-label">Reserved / Maintenance</div>
         </div>
-        <div class="stat-card-bar"><div class="stat-card-bar-fill" style="width:{{ $classrooms->count() ? round($classrooms->whereIn('status',['reserved','maintenance','unavailable'])->count()/$classrooms->count()*100) : 0 }}%"></div></div>
+        <div class="stat-card-bar"><div class="stat-card-bar-fill" data-width="{{ $classrooms->count() ? round($classrooms->whereIn('status',['reserved','maintenance','unavailable'])->count()/$classrooms->count()*100) : 0 }}"></div></div>
       </div>
     </div>
 
@@ -654,7 +650,7 @@ body {
                     <span style="font-family:var(--font-mono);font-weight:800;color:var(--text);">{{ $pct }}%</span>
                   </div>
                   <div style="height:8px;background:var(--bg-alt);border-radius:999px;overflow:hidden;">
-                    <div style="height:100%;background:linear-gradient(90deg,#059669,#34d399);width:{{ $pct }}%;transition:width:0.6s ease;border-radius:999px;"></div>
+                    <div class="occupancy-bar-fill" data-width="{{ $pct }}"></div>
                   </div>
                 </div>
               </td>
@@ -740,6 +736,11 @@ body {
 <div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="true"></div>
 
 <script>
+  document.querySelectorAll('.stat-card-bar-fill[data-width]').forEach((bar) => {
+    const width = Math.max(0, Math.min(100, Number(bar.dataset.width || 0)));
+    bar.style.width = `${width}%`;
+  });
+
   const addRoomModal   = document.getElementById('addRoomModal');
   const addRoomForm    = document.getElementById('addRoomForm');
   const roomStatus     = document.getElementById('roomStatus');

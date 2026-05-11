@@ -41,7 +41,7 @@
 body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; }
 
 /* ══════════════════════════════════════════════
-   SIDEBAR — EXACT COPY FROM CLASSROOMS/DASHBOARD
+   SIDEBAR
 ══════════════════════════════════════════════ */
 .sidebar {
   position: fixed; left: 0; top: 0;
@@ -159,25 +159,6 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
   position: sticky; top: 0; z-index: 50;
 }
-.topbar-search {
-  display: flex; align-items: center; gap: 10px;
-  background: var(--bg); border: 1.5px solid var(--border);
-  border-radius: 24px; padding: 9px 20px; width: 380px;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-.topbar-search:focus-within { border-color: #93c5fd; box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
-.topbar-search i { color: var(--text-light); font-size: 0.88rem; }
-.topbar-search input { border: none; outline: none; background: transparent; font-size: 0.9rem; font-family: 'Inter', sans-serif; color: var(--text); width: 100%; }
-.topbar-search input::placeholder { color: var(--text-light); }
-.topbar-right { display: flex; align-items: center; gap: 18px; }
-.notif-btn { position: relative; background: none; border: none; cursor: pointer; color: var(--text-secondary); font-size: 1.15rem; padding: 7px; border-radius: 9px; transition: background 0.2s; }
-.notif-btn:hover { background: var(--bg); }
-.notif-badge { position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; background: var(--red); border-radius: 50%; border: 1.5px solid var(--white); }
-.topbar-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-.topbar-profile-info { text-align: right; }
-.topbar-profile-name { font-size: 0.88rem; font-weight: 700; color: var(--text); line-height: 1.2; }
-.topbar-profile-role { font-size: 0.76rem; color: var(--text-secondary); }
-.topbar-profile img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2.5px solid var(--border); }
 
 /* ══════════════════════════════════════
    CONTENT
@@ -191,21 +172,6 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
 .page-header-left h1 { font-size: 1.55rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin-bottom: 3px; }
 .page-header-left p { font-size: 0.88rem; color: var(--text-secondary); }
 .page-header-right { display: flex; align-items: center; gap: 10px; }
-.schedule-search {
-  display: flex; align-items: center; gap: 8px;
-  width: 270px;
-  padding: 9px 14px; border-radius: 10px;
-  background: var(--white); border: 1.5px solid var(--border);
-  box-shadow: var(--shadow);
-  transition: border-color 0.18s, box-shadow 0.18s;
-}
-.schedule-search:focus-within { border-color: #93c5fd; box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
-.schedule-search i { color: var(--text-light); font-size: 0.82rem; }
-.schedule-search input {
-  border: none; outline: none; background: transparent;
-  width: 100%; color: var(--text); font-size: 0.84rem; font-family: 'Inter', sans-serif;
-}
-.schedule-search input::placeholder { color: var(--text-light); }
 .btn-filter {
   display: flex; align-items: center; gap: 7px;
   padding: 10px 16px; border-radius: 11px;
@@ -233,10 +199,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
   border-color: #991b1b;
   color: #fff;
 }
-.btn-filter[disabled] {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+.btn-filter[disabled] { opacity: 0.6; cursor: not-allowed; }
 .btn-add {
   display: flex; align-items: center; gap: 8px;
   padding: 10px 18px; border-radius: 11px;
@@ -252,294 +215,301 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
   box-shadow: 0 10px 24px rgba(11,22,64,0.34);
 }
 
-/* CALENDAR NAV */
-.calendar-nav {
-  background: var(--white); border-radius: var(--radius);
-  border: 1.5px solid var(--border); box-shadow: var(--shadow-card);
-  padding: 14px 20px;
-  display: flex; align-items: center; gap: 12px;
-  animation: fadeIn 0.35s both 0.06s;
+/* FACULTY LIST */
+.faculty-section { animation: fadeIn 0.35s both 0.06s; }
+.faculty-list { display: flex; flex-direction: column; gap: 10px; }
+.faculty-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  text-align: left;
+  width: 100%;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
-.cal-arrow { width: 32px; height: 32px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--white); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 0.85rem; transition: all 0.18s; }
-.cal-arrow:hover { border-color: #93c5fd; color: var(--text); background: var(--bg); }
-.cal-month { font-size: 1rem; font-weight: 700; color: var(--text); margin-right: 4px; min-width: 130px; }
-.cal-today-btn { padding: 6px 14px; border-radius: 8px; border: 1.5px solid var(--blue-border); background: var(--blue-bg); color: var(--blue-text); font-size: 0.8rem; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.18s; }
-.cal-today-btn:hover { background: #bfdbfe; }
-.cal-days { display: flex; gap: 4px; margin-left: 4px; }
-.cal-day { padding: 7px 16px; border-radius: 9px; font-size: 0.86rem; font-weight: 600; color: var(--text-secondary); cursor: pointer; transition: all 0.18s; border: 1.5px solid transparent; background: transparent; }
-.cal-day:hover { background: var(--bg); color: var(--text); }
-.cal-day.active { background: var(--navy); color: #fff; border-color: var(--navy); font-weight: 700; }
-.cal-day.short { padding: 7px 10px; }
-.cal-spacer { flex: 1; }
-.cal-icon-btn { width: 34px; height: 34px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--white); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 0.85rem; transition: all 0.18s; }
-.cal-icon-btn:hover { border-color: #93c5fd; color: var(--text); }
+.faculty-card:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(0,0,0,0.08); border-color: #bfdbfe; }
+.faculty-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--blue-bg);
+  border: 1.5px solid var(--blue-border);
+  color: var(--navy-mid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.92rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.faculty-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.faculty-name { font-size: 0.92rem; font-weight: 700; color: var(--text); }
+.faculty-meta { margin-top: 4px; font-size: 0.78rem; color: var(--text-secondary); display: flex; gap: 12px; flex-wrap: wrap; }
+.faculty-action {
+  padding: 7px 14px;
+  border-radius: 9px;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  margin-left: auto;
+}
+.faculty-action:hover { border-color: #93c5fd; color: var(--text); }
+.faculty-delete {
+  padding: 7px 14px;
+  border-radius: 9px;
+  border: 1.5px solid #fecaca;
+  background: #fef2f2;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #b91c1c;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  margin-left: 8px;
+}
+.faculty-delete:hover { border-color: #fca5a5; color: #991b1b; }
 
-/* SCHEDULE LIST */
-.schedule-section { animation: fadeIn 0.35s both 0.12s; }
-.schedule-day-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-.schedule-day-label { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary); }
-.schedule-day-label::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--navy-mid); }
-.schedule-count { font-size: 0.82rem; color: var(--text-secondary); font-weight: 500; }
+/* FACULTY MODAL */
+.faculty-overlay {
+  position: fixed; inset: 0; z-index: 2800;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(11, 22, 64, 0.46); backdrop-filter: blur(3px); padding: 18px;
+}
+.faculty-overlay.is-open { display: flex; }
+.faculty-dialog {
+  width: min(680px, 100%); max-height: calc(100vh - 36px); overflow: auto;
+  border-radius: 14px; border: 1.5px solid var(--border);
+  background: var(--white); box-shadow: 0 16px 42px rgba(11, 22, 64, 0.22);
+}
+.faculty-head {
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.faculty-title { font-size: 0.96rem; font-weight: 800; color: var(--text); }
+.faculty-sub { margin-top: 3px; font-size: 0.78rem; color: var(--text-secondary); }
+.faculty-close {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1.5px solid var(--border); background: var(--white); color: var(--text-secondary); cursor: pointer;
+}
+.faculty-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+.faculty-summary { font-size: 0.8rem; color: var(--text-secondary); display: flex; gap: 14px; flex-wrap: wrap; }
+.faculty-class-list { display: flex; flex-direction: column; gap: 10px; }
+.faculty-group {
+  border: 1px solid var(--border); border-radius: 12px;
+  background: #f8fafc; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;
+}
+.faculty-group-head { display: flex; flex-direction: column; gap: 4px; }
+.faculty-group-instructor { font-size: 0.78rem; font-weight: 800; color: var(--navy-mid); text-transform: uppercase; letter-spacing: 0.08em; }
+.faculty-group-subject { font-size: 0.86rem; font-weight: 700; color: var(--text); }
+.faculty-group-head { display: flex; flex-direction: column; gap: 4px; }
+.faculty-group-instructor { font-size: 0.78rem; font-weight: 800; color: var(--navy-mid); text-transform: uppercase; letter-spacing: 0.08em; }
+.faculty-group-subject { font-size: 0.86rem; font-weight: 700; color: var(--text); }
+.js-unassign-course-btn {
+  padding: 6px 12px;
+  background: #b45309 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+.js-unassign-course-btn:hover {
+  background: #92400e !important;
+}
+.js-unassign-course-btn:active {
+  background: #78350f !important;
+}
+.faculty-group-items { display: flex; flex-direction: column; gap: 8px; }
+.faculty-class-item {
+  border: 1px solid var(--border); border-radius: 10px;
+  background: #f8fafc; padding: 10px 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.faculty-class-main { display: flex; flex-direction: column; gap: 4px; }
+.faculty-class-title { font-size: 0.84rem; font-weight: 700; color: var(--text); }
+.faculty-class-meta { font-size: 0.76rem; color: var(--text-secondary); }
+.faculty-class-time { font-size: 0.75rem; font-weight: 700; color: var(--navy-mid); white-space: nowrap; }
 
-.schedule-list { display: flex; flex-direction: column; gap: 12px; }
+/* FACULTY DELETE MODAL */
+.faculty-delete-overlay {
+  position: fixed; inset: 0; z-index: 2850;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(11, 22, 64, 0.46); backdrop-filter: blur(3px); padding: 18px;
+}
+.faculty-delete-overlay.is-open { display: flex; }
+.faculty-delete-dialog {
+  width: min(520px, 100%); max-height: calc(100vh - 36px); overflow: auto;
+  border-radius: 14px; border: 1.5px solid var(--border);
+  background: var(--white); box-shadow: 0 16px 42px rgba(11, 22, 64, 0.22);
+}
+.faculty-delete-head {
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.faculty-delete-title { font-size: 0.96rem; font-weight: 800; color: var(--text); }
+.faculty-delete-sub { margin-top: 3px; font-size: 0.78rem; color: var(--text-secondary); }
+.faculty-delete-close {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1.5px solid var(--border); background: var(--white); color: var(--text-secondary); cursor: pointer;
+}
+.faculty-delete-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+.faculty-delete-summary { font-size: 0.8rem; color: var(--text-secondary); display: flex; gap: 12px; flex-wrap: wrap; }
+.faculty-delete-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary); }
+.faculty-delete-select {
+  height: 38px; border-radius: 9px; border: 1.5px solid var(--border);
+  padding: 0 10px; font-size: 0.84rem; font-family: 'Inter', sans-serif;
+  color: var(--text); background: var(--bg);
+}
+.faculty-delete-error {
+  display: none; padding: 10px 12px; border-radius: 9px;
+  border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; font-size: 0.78rem;
+}
+.faculty-delete-error.is-visible { display: block; }
+.faculty-delete-actions { display: flex; gap: 8px; align-items: center; }
+.faculty-delete-btn {
+  height: 38px; border-radius: 9px; border: 1.5px solid var(--border);
+  padding: 0 14px; font-size: 0.82rem; font-weight: 700;
+  font-family: 'Inter', sans-serif; cursor: pointer;
+  background: var(--white); color: var(--text-secondary);
+}
+.faculty-delete-btn.primary { border-color: #b91c1c; background: #b91c1c; color: #fff; }
 
 /* SCHEDULE CARD */
 .schedule-card {
   background: var(--white); border-radius: var(--radius);
   border: 1.5px solid var(--border); box-shadow: var(--shadow-card);
-  display: flex; align-items: center; gap: 0;
-  overflow: hidden;
+  display: flex; align-items: center; gap: 0; overflow: hidden;
   transition: transform 0.22s cubic-bezier(0.16,1,0.3,1), box-shadow 0.22s, border-color 0.22s;
   cursor: pointer; text-decoration: none; color: inherit;
 }
 .schedule-card:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.1); border-color: #bfdbfe; }
 .schedule-card:active { transform: translateY(0); }
-
-/* left time column */
-.sc-time {
-  width: 96px; flex-shrink: 0;
-  padding: 20px 0 20px 20px;
-  display: flex; flex-direction: column; gap: 2px;
-}
-.sc-time-start { font-size: 0.9rem; font-weight: 700; color: var(--text); }
-.sc-time-end   { font-size: 0.78rem; color: var(--text-secondary); }
-
-/* left accent bar */
-.sc-bar { width: 4px; background: var(--navy-mid); border-radius: 0; flex-shrink: 0; align-self: stretch; margin-right: 18px; }
-.sc-bar.bar-blue   { background: linear-gradient(180deg, #1d4ed8, #60a5fa); }
-.sc-bar.bar-green  { background: linear-gradient(180deg, #16a34a, #4ade80); }
-.sc-bar.bar-orange { background: linear-gradient(180deg, #d97706, #fbbf24); }
-.sc-bar.bar-purple { background: linear-gradient(180deg, #7c3aed, #a78bfa); }
-
-/* room badge */
-.sc-room-badge {
-  width: 52px; height: 52px; border-radius: 12px;
-  background: var(--bg); border: 1.5px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1rem; font-weight: 800; color: var(--navy-mid); flex-shrink: 0;
-  margin-right: 16px;
-}
-
-/* main info */
-.sc-info { flex: 1; padding: 18px 0; }
-.sc-title-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-.sc-subject { font-size: 1rem; font-weight: 700; color: var(--text); }
-.sc-code { padding: 2px 9px; border-radius: 6px; background: var(--blue-bg); color: var(--blue-text); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; border: 1px solid var(--blue-border); }
-.sc-meta { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.sc-meta-item { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; color: var(--text-secondary); }
-.sc-meta-item i { font-size: 0.72rem; color: var(--text-light); }
-.sc-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 600; color: var(--green); margin-top: 6px; }
-.sc-tag i { font-size: 0.68rem; }
-
-/* avatars */
-.sc-avatars { display: flex; align-items: center; margin-right: 12px; flex-shrink: 0; }
-.sc-avatar { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--white); object-fit: cover; margin-left: -8px; background: #d1d5db; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; color: #fff; overflow: hidden; }
-.sc-avatar:first-child { margin-left: 0; }
-.sc-avatar-more { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--white); background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; color: var(--text-secondary); margin-left: -8px; }
-
-/* right actions */
-.sc-actions { display: flex; align-items: center; gap: 8px; padding: 0 18px 0 8px; flex-shrink: 0; }
-.sc-more-btn { width: 32px; height: 32px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--white); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 0.85rem; transition: all 0.18s; }
-.sc-more-btn:hover { border-color: #93c5fd; color: var(--text); }
-.sc-edit-btn { padding: 8px 18px; border-radius: 9px; background: var(--navy); color: #fff; font-size: 0.82rem; font-weight: 700; font-family: 'Inter', sans-serif; border: none; cursor: pointer; transition: all 0.18s; }
-.sc-edit-btn:hover { background: var(--navy-mid); }
 .sc-select-wrap {
-  display: none;
-  align-items: center;
-  gap: 7px;
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1.5px solid var(--border);
-  background: #fff;
-  color: var(--text-secondary);
-  font-size: 0.76rem;
-  font-weight: 600;
-  cursor: pointer;
+  display: none; align-items: center; gap: 7px;
+  padding: 6px 10px; border-radius: 8px; border: 1.5px solid var(--border);
+  background: #fff; color: var(--text-secondary); font-size: 0.76rem; font-weight: 600; cursor: pointer;
 }
-.sc-select-wrap input {
-  width: 14px;
-  height: 14px;
-  accent-color: var(--navy-mid);
-}
-.schedule-list.selection-mode .sc-select-wrap {
-  display: inline-flex;
-}
+.sc-select-wrap input { width: 14px; height: 14px; accent-color: var(--navy-mid); }
+.schedule-list.selection-mode .sc-select-wrap { display: inline-flex; }
 .schedule-card.is-selected {
   border-color: #60a5fa;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.12), var(--shadow-card);
 }
 
-/* AI ADVISOR */
-.ai-advisor {
-  background: var(--orange-bg); border: 1.5px solid var(--orange-border);
-  border-radius: var(--radius); padding: 20px 24px;
-  display: flex; gap: 16px; align-items: flex-start;
-  animation: fadeIn 0.35s both 0.2s;
+/* SCHEDULE HEADER + SEARCH */
+.schedule-day-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.schedule-day-label { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary); }
+.schedule-day-label::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--navy-mid); }
+.schedule-count { font-size: 0.82rem; color: var(--text-secondary); font-weight: 500; }
+.schedule-search {
+  display: flex; align-items: center; gap: 8px;
+  width: 270px; padding: 9px 14px; border-radius: 10px;
+  background: var(--white); border: 1.5px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: border-color 0.18s, box-shadow 0.18s;
 }
-.ai-icon { width: 42px; height: 42px; border-radius: 11px; background: rgba(245,197,24,0.2); border: 1px solid rgba(245,197,24,0.35); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: #b45309; flex-shrink: 0; }
-.ai-title { font-size: 0.92rem; font-weight: 700; color: var(--orange-text); margin-bottom: 5px; }
-.ai-text { font-size: 0.84rem; color: #78350f; line-height: 1.65; margin-bottom: 10px; }
-.ai-action { font-size: 0.84rem; font-weight: 700; color: var(--orange-text); text-decoration: none; cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; padding: 0; }
-.ai-action:hover { text-decoration: underline; }
+.schedule-search:focus-within { border-color: #93c5fd; box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
+.schedule-search i { color: var(--text-light); font-size: 0.82rem; }
+.schedule-search input {
+  border: none; outline: none; background: transparent;
+  width: 100%; color: var(--text); font-size: 0.84rem; font-family: 'Inter', sans-serif;
+}
+.schedule-search input::placeholder { color: var(--text-light); }
 
-/* AVATAR COLORS */
-.av-1 { background: #1d4ed8; }
-.av-2 { background: #7c3aed; }
-.av-3 { background: #0f766e; }
+/* ROOM SCHEDULE ITEMS */
+.room-schedule-empty { font-size: 0.78rem; color: var(--text-secondary); }
 
-/* ANIMATIONS */
-@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-
-/* RESPONSIVE */
-@media (max-width:900px) { :root { --sidebar-w: 0px; } .sidebar { display: none; } .content { padding: 20px 16px 40px; } .topbar { padding: 0 16px; } .topbar-search { width: 220px; } }
-
-/* IMPORT OVERLAY */
+/* MODALS — IMPORT */
 .import-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 2600;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: rgba(11, 22, 64, 0.48);
-  backdrop-filter: blur(3px);
-  padding: 18px;
+  position: fixed; inset: 0; z-index: 2600;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(11, 22, 64, 0.48); backdrop-filter: blur(3px); padding: 18px;
 }
 .import-overlay.is-open { display: flex; }
 .import-dialog {
-  width: min(980px, 100%);
-  max-height: calc(100vh - 36px);
-  overflow: auto;
-  border-radius: 14px;
-  border: 1.5px solid var(--border);
-  background: var(--white);
-  box-shadow: 0 16px 42px rgba(11, 22, 64, 0.26);
+  width: min(980px, 100%); max-height: calc(100vh - 36px); overflow: auto;
+  border-radius: 14px; border: 1.5px solid var(--border);
+  background: var(--white); box-shadow: 0 16px 42px rgba(11, 22, 64, 0.26);
 }
 .import-head {
-  padding: 16px 18px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  padding: 16px 18px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
 .import-title { font-size: 1rem; font-weight: 800; color: var(--text); }
 .import-sub { margin-top: 3px; font-size: 0.8rem; color: var(--text-secondary); }
 .import-close {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  border: 1.5px solid var(--border);
-  background: var(--white);
-  color: var(--text-secondary);
-  cursor: pointer;
+  width: 34px; height: 34px; border-radius: 8px;
+  border: 1.5px solid var(--border); background: var(--white); color: var(--text-secondary); cursor: pointer;
 }
 .import-body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 12px; }
 .import-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .import-field { display: flex; flex-direction: column; gap: 5px; }
 .import-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary); }
 .import-input, .import-select {
-  height: 38px;
-  border-radius: 9px;
-  border: 1.5px solid var(--border);
-  padding: 0 10px;
-  font-size: 0.84rem;
-  font-family: 'Inter', sans-serif;
-  color: var(--text);
-  background: var(--bg);
+  height: 38px; border-radius: 9px; border: 1.5px solid var(--border);
+  padding: 0 10px; font-size: 0.84rem; font-family: 'Inter', sans-serif;
+  color: var(--text); background: var(--bg);
 }
 .import-file { grid-column: 1 / -1; }
 .import-actions { display: flex; gap: 8px; align-items: center; }
 .import-btn {
-  height: 38px;
-  border-radius: 9px;
-  border: 1.5px solid var(--border);
-  padding: 0 14px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  font-family: 'Inter', sans-serif;
-  cursor: pointer;
-  background: var(--white);
-  color: var(--text-secondary);
+  height: 38px; border-radius: 9px; border: 1.5px solid var(--border);
+  padding: 0 14px; font-size: 0.82rem; font-weight: 700;
+  font-family: 'Inter', sans-serif; cursor: pointer;
+  background: var(--white); color: var(--text-secondary);
 }
-.import-btn.primary {
-  border-color: var(--navy);
-  background: var(--navy);
-  color: #fff;
-}
-.import-btn.primary:disabled,
-.import-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+.import-btn.primary { border-color: var(--navy); background: var(--navy); color: #fff; }
+.import-btn.primary:disabled, .import-btn:disabled { opacity: 0.7; cursor: not-allowed; }
 .import-summary { font-size: 0.82rem; color: var(--text-secondary); }
 .import-error {
-  display: none;
-  padding: 10px 12px;
-  border-radius: 9px;
-  border: 1px solid #fecaca;
-  background: #fef2f2;
-  color: #991b1b;
-  font-size: 0.8rem;
+  display: none; padding: 10px 12px; border-radius: 9px;
+  border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; font-size: 0.8rem;
 }
 .import-error.is-visible { display: block; }
-.import-preview-wrap {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
-}
-.import-preview-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.import-preview-table th,
-.import-preview-table td {
-  font-size: 0.78rem;
-  text-align: left;
-  padding: 8px 10px;
-  border-bottom: 1px solid var(--border);
-  vertical-align: top;
+.import-preview-wrap { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.import-preview-table { width: 100%; border-collapse: collapse; }
+.import-preview-table th, .import-preview-table td {
+  font-size: 0.78rem; text-align: left; padding: 8px 10px;
+  border-bottom: 1px solid var(--border); vertical-align: top;
 }
 .import-preview-table th { background: #f8fafc; color: var(--text-secondary); font-weight: 700; }
 .import-row-valid { color: #166534; }
 .import-row-error { color: #991b1b; }
 
+/* MODAL — CREATE */
 .create-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 2700;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: rgba(11, 22, 64, 0.5);
-  backdrop-filter: blur(3px);
-  padding: 18px;
+  position: fixed; inset: 0; z-index: 2700;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(11, 22, 64, 0.5); backdrop-filter: blur(3px); padding: 18px;
 }
 .create-overlay.is-open { display: flex; }
 .create-dialog {
-  width: min(980px, 100%);
-  max-height: calc(100vh - 36px);
-  overflow: auto;
-  border-radius: 14px;
-  border: 1.5px solid var(--border);
-  background: var(--white);
-  box-shadow: 0 16px 42px rgba(11, 22, 64, 0.26);
+  width: min(980px, 100%); max-height: calc(100vh - 36px); overflow: auto;
+  border-radius: 14px; border: 1.5px solid var(--border);
+  background: var(--white); box-shadow: 0 16px 42px rgba(11, 22, 64, 0.26);
 }
 .create-head {
-  padding: 16px 18px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  padding: 16px 18px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
 .create-title { font-size: 1rem; font-weight: 800; color: var(--text); }
 .create-sub { margin-top: 3px; font-size: 0.8rem; color: var(--text-secondary); }
 .create-close {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  border: 1.5px solid var(--border);
-  background: var(--white);
-  color: var(--text-secondary);
-  cursor: pointer;
+  width: 34px; height: 34px; border-radius: 8px;
+  border: 1.5px solid var(--border); background: var(--white); color: var(--text-secondary); cursor: pointer;
 }
 .create-body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 12px; }
 .create-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -547,107 +517,52 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
 .create-field.full { grid-column: 1 / -1; }
 .create-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary); }
 .create-input, .create-select {
-  height: 38px;
-  border-radius: 9px;
-  border: 1.5px solid var(--border);
-  padding: 0 10px;
-  font-size: 0.84rem;
-  font-family: 'Inter', sans-serif;
-  color: var(--text);
-  background: var(--bg);
+  height: 38px; border-radius: 9px; border: 1.5px solid var(--border);
+  padding: 0 10px; font-size: 0.84rem; font-family: 'Inter', sans-serif;
+  color: var(--text); background: var(--bg);
 }
-.create-context-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-.create-room-summary {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: #f8fafc;
-  padding: 12px;
-}
-.create-room-summary-title {
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: var(--text);
-  margin-bottom: 8px;
-  letter-spacing: 0.02em;
-}
+.create-context-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.create-room-summary { border: 1px solid var(--border); border-radius: 10px; background: #f8fafc; padding: 12px; }
+.create-room-summary-title { font-size: 0.78rem; font-weight: 800; color: var(--text); margin-bottom: 8px; letter-spacing: 0.02em; }
 .room-schedule-list { display: flex; flex-direction: column; gap: 8px; }
 .room-schedule-item {
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  background: var(--white);
-  padding: 8px 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  border: 1px solid var(--border); border-radius: 9px; background: var(--white);
+  padding: 8px 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
 }
 .room-schedule-main { display: flex; flex-direction: column; gap: 3px; }
 .room-schedule-subject { font-size: 0.8rem; font-weight: 700; color: var(--text); }
 .room-schedule-meta { font-size: 0.75rem; color: var(--text-secondary); }
 .room-schedule-time { font-size: 0.74rem; font-weight: 700; color: var(--navy-mid); white-space: nowrap; }
-.room-schedule-empty { font-size: 0.78rem; color: var(--text-secondary); }
 .create-actions { display: flex; gap: 8px; align-items: center; }
 .create-btn {
-  height: 38px;
-  border-radius: 9px;
-  border: 1.5px solid var(--border);
-  padding: 0 14px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  font-family: 'Inter', sans-serif;
-  cursor: pointer;
-  background: var(--white);
-  color: var(--text-secondary);
+  height: 38px; border-radius: 9px; border: 1.5px solid var(--border);
+  padding: 0 14px; font-size: 0.82rem; font-weight: 700;
+  font-family: 'Inter', sans-serif; cursor: pointer;
+  background: var(--white); color: var(--text-secondary);
 }
-.create-btn.primary {
-  border-color: var(--navy);
-  background: var(--navy);
-  color: #fff;
-}
+.create-btn.primary { border-color: var(--navy); background: var(--navy); color: #fff; }
 
+/* MODAL — EDIT */
 .edit-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 2750;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: rgba(11, 22, 64, 0.46);
-  backdrop-filter: blur(3px);
-  padding: 18px;
+  position: fixed; inset: 0; z-index: 2750;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(11, 22, 64, 0.46); backdrop-filter: blur(3px); padding: 18px;
 }
 .edit-overlay.is-open { display: flex; }
 .edit-dialog {
-  width: min(560px, 100%);
-  max-height: calc(100vh - 36px);
-  overflow: auto;
-  border-radius: 14px;
-  border: 1.5px solid var(--border);
-  background: var(--white);
-  box-shadow: 0 16px 42px rgba(11, 22, 64, 0.22);
+  width: min(560px, 100%); max-height: calc(100vh - 36px); overflow: auto;
+  border-radius: 14px; border: 1.5px solid var(--border);
+  background: var(--white); box-shadow: 0 16px 42px rgba(11, 22, 64, 0.22);
 }
 .edit-head {
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
 .edit-title { font-size: 0.96rem; font-weight: 800; color: var(--text); }
 .edit-sub { margin-top: 3px; font-size: 0.78rem; color: var(--text-secondary); }
 .edit-close {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  border: 1.5px solid var(--border);
-  background: var(--white);
-  color: var(--text-secondary);
-  cursor: pointer;
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1.5px solid var(--border); background: var(--white); color: var(--text-secondary); cursor: pointer;
 }
 .edit-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 10px; }
 .edit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -655,45 +570,33 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
 .edit-field.full { grid-column: 1 / -1; }
 .edit-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary); }
 .edit-input, .edit-select {
-  height: 38px;
-  border-radius: 9px;
-  border: 1.5px solid var(--border);
-  padding: 0 10px;
-  font-size: 0.84rem;
-  font-family: 'Inter', sans-serif;
-  color: var(--text);
-  background: var(--bg);
+  height: 38px; border-radius: 9px; border: 1.5px solid var(--border);
+  padding: 0 10px; font-size: 0.84rem; font-family: 'Inter', sans-serif;
+  color: var(--text); background: var(--bg);
 }
 .edit-error {
-  display: none;
-  padding: 10px 12px;
-  border-radius: 9px;
-  border: 1px solid #fecaca;
-  background: #fef2f2;
-  color: #991b1b;
-  font-size: 0.78rem;
+  display: none; padding: 10px 12px; border-radius: 9px;
+  border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; font-size: 0.78rem;
 }
 .edit-error.is-visible { display: block; }
 .edit-actions { display: flex; gap: 8px; align-items: center; }
 .edit-btn {
-  height: 38px;
-  border-radius: 9px;
-  border: 1.5px solid var(--border);
-  padding: 0 14px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  font-family: 'Inter', sans-serif;
-  cursor: pointer;
-  background: var(--white);
-  color: var(--text-secondary);
+  height: 38px; border-radius: 9px; border: 1.5px solid var(--border);
+  padding: 0 14px; font-size: 0.82rem; font-weight: 700;
+  font-family: 'Inter', sans-serif; cursor: pointer;
+  background: var(--white); color: var(--text-secondary);
 }
-.edit-btn.primary {
-  border-color: var(--navy);
-  background: var(--navy);
-  color: #fff;
-}
+.edit-btn.primary { border-color: var(--navy); background: var(--navy); color: #fff; }
 
+/* ANIMATIONS */
+@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+/* RESPONSIVE */
 @media (max-width:900px) {
+  :root { --sidebar-w: 0px; }
+  .sidebar { display: none; }
+  .content { padding: 20px 16px 40px; }
+  .topbar { padding: 0 16px; }
   .import-grid { grid-template-columns: 1fr; }
   .create-grid { grid-template-columns: 1fr; }
   .edit-grid { grid-template-columns: 1fr; }
@@ -704,7 +607,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
 </head>
 <body>
 
-<!-- ══════════════════════════ SIDEBAR — EXACT COPY FROM CLASSROOMS ══════════════════════════ -->
+<!-- ══════════════════════════ SIDEBAR ══════════════════════════ -->
 <div class="sidebar">
   <a href="#" class="sidebar-logo">
     <div class="logo-mark"><i class="fas fa-door-open"></i></div>
@@ -784,11 +687,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
         </div>
       </div>
       <div class="page-header-right">
-        <div class="schedule-search">
-          <i class="fas fa-magnifying-glass"></i>
-          <input type="text" id="scheduleSearchInput" placeholder="Search schedules...">
-        </div>
-        <button class="btn-filter" id="openImportBtn">
+        <button class="btn-filter" id="openImportBtn" type="button">
           <i class="fas fa-file-import"></i> Import
         </button>
         <button class="btn-filter" id="selectDeleteBtn" type="button">
@@ -797,99 +696,131 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
         <button class="btn-filter btn-danger" id="deleteSelectedBtn" type="button" style="display:none;" disabled>
           <i class="fas fa-trash"></i> Delete Selected (0)
         </button>
-        <button class="btn-add" id="addScheduleBtn">
+        <button class="btn-add" id="addScheduleBtn" type="button">
           <i class="fas fa-plus"></i> Add Schedule
         </button>
       </div>
     </div>
 
-    <!-- Calendar Nav -->
-    <div class="calendar-nav">
-      <button class="cal-arrow" id="calPrevBtn" type="button" aria-label="Previous week"><i class="fas fa-chevron-left"></i></button>
-      <span class="cal-month" id="calMonthLabel"></span>
-      <button class="cal-arrow" id="calNextBtn" type="button" aria-label="Next week"><i class="fas fa-chevron-right"></i></button>
+    @php
+      $facultySummaries = collect($schedules ?? [])
+        ->groupBy(function ($schedule) {
+          $instructorId = (int) ($schedule->course?->instructor_user_id ?? 0);
+          return $instructorId > 0 ? $instructorId : 'unassigned';
+        })
+        ->map(function ($group, $instructorId) {
+          $primary = $group->first();
+          $instructor = $primary?->course?->instructor;
 
-      <button class="cal-today-btn" id="calTodayBtn" type="button">Today</button>
+          if ($instructorId === 'unassigned') {
+            return [
+              'id' => 0,
+              'name' => 'Unassigned Instructor',
+              'department' => 'Not Assigned',
+              'email' => '',
+              'class_count' => (int) $group->count(),
+              'course_count' => (int) $group->pluck('course_id')->unique()->count(),
+              'classes' => $group
+                ->sortBy('start_at')
+                ->map(function ($schedule) {
+                  return [
+                    'course_id' => (int) ($schedule->course_id ?? 0),
+                    'code' => (string) ($schedule->course?->code ?? 'N/A'),
+                    'subject' => (string) ($schedule->course?->title ?? 'Untitled Subject'),
+                    'room' => (string) ($schedule->classroom?->name ?? 'Room N/A'),
+                    'building' => (string) ($schedule->classroom?->building ?? ''),
+                    'status' => (string) ($schedule->status ?? 'scheduled'),
+                    'start_at' => optional($schedule->start_at)->toIso8601String(),
+                    'end_at' => optional($schedule->end_at)->toIso8601String(),
+                  ];
+                })
+                ->values(),
+            ];
+          }
 
-      <div class="cal-days" id="calDaysContainer"></div>
+          return [
+            'id' => (int) $instructorId,
+            'name' => (string) ($instructor?->name ?? 'Faculty'),
+            'department' => (string) ($instructor?->department ?? 'Faculty'),
+            'email' => (string) ($instructor?->email ?? ''),
+            'class_count' => (int) $group->count(),
+            'course_count' => (int) $group->pluck('course_id')->unique()->count(),
+            'classes' => $group
+              ->sortBy('start_at')
+              ->map(function ($schedule) {
+                return [
+                  'course_id' => (int) ($schedule->course_id ?? 0),
+                  'code' => (string) ($schedule->course?->code ?? 'N/A'),
+                  'subject' => (string) ($schedule->course?->title ?? 'Untitled Subject'),
+                  'room' => (string) ($schedule->classroom?->name ?? 'Room N/A'),
+                  'building' => (string) ($schedule->classroom?->building ?? ''),
+                  'status' => (string) ($schedule->status ?? 'scheduled'),
+                  'start_at' => optional($schedule->start_at)->toIso8601String(),
+                  'end_at' => optional($schedule->end_at)->toIso8601String(),
+                ];
+              })
+              ->values(),
+          ];
+        })
+        ->sortBy(function ($summary) {
+          return $summary['id'] === 0 ? 'zzzzz' : $summary['name'];
+        })
+        ->values();
+    @endphp
 
-      <div class="cal-spacer"></div>
-      <button class="cal-icon-btn"><i class="fas fa-search"></i></button>
-      <button class="cal-icon-btn"><i class="fas fa-calendar"></i></button>
-    </div>
-
-    <!-- Schedule List -->
-    <div class="schedule-section">
-      @php
-        $scheduleRows = collect($schedules ?? []);
-      @endphp
+    <!-- Faculty / Schedule List -->
+    <div class="faculty-section">
       <div class="schedule-day-header">
-        <div class="schedule-day-label">Official Schedules</div>
-        <div class="schedule-count" id="scheduleCountLabel">{{ $scheduleRows->count() }} Session(s)</div>
+        <div class="schedule-day-label">Faculty / Schedule List</div>
+        <div class="schedule-count" id="facultyCountLabel">{{ $facultySummaries->count() }} Faculty</div>
       </div>
 
-      <div class="schedule-list" id="scheduleListContainer">
-        @foreach ($scheduleRows as $schedule)
+      <div class="schedule-search" style="margin-bottom:12px;max-width:360px;">
+        <i class="fas fa-magnifying-glass"></i>
+        <input type="text" id="facultySearchInput" placeholder="Search faculty...">
+      </div>
+
+      <div class="faculty-list" id="facultyListContainer">
+        @forelse ($facultySummaries as $faculty)
           @php
-            $badge = $schedule->classroom?->name ?? 'N/A';
-            $badge = strlen($badge) > 3 ? strtoupper(substr($badge, 0, 3)) : strtoupper($badge);
+            $initials = collect(explode(' ', $faculty['name']))
+              ->filter()
+              ->map(fn($part) => strtoupper(substr($part, 0, 1)))
+              ->take(2)
+              ->implode('');
           @endphp
-          <a href="{{ route('admin.schedule.show', $schedule->id) }}" class="schedule-card" data-start-date="{{ optional($schedule->start_at)->format('Y-m-d') }}">
-            <div class="sc-time">
-              <div class="sc-time-start">{{ optional($schedule->start_at)->format('h:i A') }}</div>
-              <div class="sc-time-end">{{ optional($schedule->end_at)->format('h:i A') }}</div>
-            </div>
-            <div class="sc-bar bar-blue"></div>
-            <div class="sc-room-badge">{{ $badge }}</div>
-            <div class="sc-info">
-              <div class="sc-title-row">
-                <span class="sc-subject">{{ $schedule->course?->title ?? 'Untitled Subject' }}</span>
-                <span class="sc-code">{{ $schedule->course?->code ?? 'N/A' }}</span>
-              </div>
-              <div class="sc-meta">
-                <span class="sc-meta-item"><i class="fas fa-user"></i> {{ $schedule->course?->instructor?->name ?? 'Unassigned Faculty' }}</span>
-                <span class="sc-meta-item"><i class="fas fa-location-dot"></i> {{ $schedule->classroom?->name ?? 'Room N/A' }}, {{ $schedule->classroom?->building ?? '-' }}</span>
-              </div>
-              <div class="sc-tag">
-                <i class="fas fa-circle-check"></i> {{ ucfirst((string) ($schedule->status ?? 'scheduled')) }}
+          <div class="faculty-card js-faculty-card" role="button" tabindex="0" data-faculty-id="{{ $faculty['id'] }}">
+            <div class="faculty-avatar">{{ $initials !== '' ? $initials : 'F' }}</div>
+            <div class="faculty-info">
+              <div class="faculty-name">{{ $faculty['name'] }}</div>
+              <div class="faculty-meta">
+                <span>{{ $faculty['department'] }}</span>
+                <span>{{ $faculty['course_count'] }} Subject(s)</span>
+                <span>{{ $faculty['class_count'] }} Session(s)</span>
               </div>
             </div>
-            <div class="sc-actions">
-              <label class="sc-select-wrap" onclick="event.preventDefault();event.stopPropagation();">
-                <input
-                  type="checkbox"
-                  class="schedule-select-checkbox"
-                  value="{{ $schedule->id }}"
-                  aria-label="Select schedule {{ $schedule->id }} for deletion"
-                >
-                <span>Select</span>
-              </label>
-              <button
-                class="sc-edit-btn js-edit-schedule"
-                data-schedule-id="{{ $schedule->id }}"
-                data-schedule-classroom-id="{{ (int) ($schedule->classroom_id ?? 0) }}"
-                data-schedule-course-id="{{ (int) ($schedule->course_id ?? 0) }}"
-                data-schedule-status="{{ (string) ($schedule->status ?? 'scheduled') }}"
-                data-schedule-start="{{ optional($schedule->start_at)->toIso8601String() }}"
-                data-schedule-end="{{ optional($schedule->end_at)->toIso8601String() }}"
-                data-schedule-enrolled="{{ (int) ($schedule->enrolled ?? 0) }}"
-                data-schedule-subject="{{ (string) ($schedule->course?->title ?? 'Untitled Subject') }}"
-                data-schedule-room="{{ (string) ($schedule->classroom?->name ?? 'Room N/A') }}"
-                onclick="event.preventDefault();event.stopPropagation();"
-              >Edit</button>
-            </div>
-          </a>
-        @endforeach
-
-        <div class="room-schedule-empty" id="scheduleEmptyAll" @if($scheduleRows->isNotEmpty()) style="display:none;" @endif>No schedules found yet.</div>
-        <div class="room-schedule-empty" id="scheduleFilteredEmpty" style="display:none;">No schedules found for selected day.</div>
-
+            <span class="faculty-action">View Classes</span>
+            @if ($faculty['id'] > 0)
+            <button
+              type="button"
+              class="faculty-delete js-faculty-delete"
+              data-faculty-id="{{ $faculty['id'] }}"
+              data-faculty-name="{{ $faculty['name'] }}"
+              data-faculty-courses="{{ $faculty['course_count'] }}"
+              data-faculty-classes="{{ $faculty['class_count'] }}"
+            >Delete</button>
+            @endif
+          </div>
+        @empty
+          <div class="room-schedule-empty">No faculty schedules found yet.</div>
+        @endforelse
       </div>
     </div>
 
-  </div>
-</div>
+  </div><!-- /.content -->
+</div><!-- /.main -->
 
+<!-- ══════════════════════════ EDIT OVERLAY ══════════════════════════ -->
 <div class="edit-overlay" id="editScheduleOverlay" aria-hidden="true">
   <div class="edit-dialog" role="dialog" aria-modal="true" aria-labelledby="editScheduleTitle">
     <div class="edit-head">
@@ -904,6 +835,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
 
     <form class="edit-body" id="editScheduleForm">
       <input type="hidden" id="editScheduleId">
+      <input type="hidden" id="editScheduleSeriesId">
 
       <div class="edit-grid">
         <div class="edit-field">
@@ -932,6 +864,16 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
         </div>
 
         <div class="edit-field">
+          <label class="edit-label" for="editScheduleStatus">Status</label>
+          <select class="edit-select" id="editScheduleStatus">
+            <option value="scheduled">Scheduled</option>
+            <option value="ongoing">Ongoing</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <div class="edit-field">
           <label class="edit-label" for="editScheduleStart">Start</label>
           <input class="edit-input" id="editScheduleStart" type="datetime-local" required>
         </div>
@@ -944,6 +886,13 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
         <div class="edit-field">
           <label class="edit-label" for="editScheduleRepeatUntil">Repeat Until (Semester End)</label>
           <input class="edit-input" id="editScheduleRepeatUntil" type="date">
+        </div>
+
+        <div class="edit-field full">
+          <label class="edit-label" style="text-transform:none;letter-spacing:0;">
+            <input type="checkbox" id="editScheduleApplySeries" style="margin-right:6px;">Apply updates to entire series
+          </label>
+          <div style="font-size:0.72rem;color:var(--text-light);">Series update applies room, subject, status, enrolled, and block section. Times stay per occurrence.</div>
         </div>
       </div>
 
@@ -959,20 +908,140 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
   </div>
 </div>
 
+<!-- ══════════════════════════ FACULTY MODAL ══════════════════════════ -->
+<div class="faculty-overlay" id="facultyOverlay" aria-hidden="true">
+  <div class="faculty-dialog" role="dialog" aria-modal="true" aria-labelledby="facultyModalTitle">
+    <div class="faculty-head">
+      <div>
+        <div class="faculty-title" id="facultyModalTitle">Faculty Classes</div>
+        <div class="faculty-sub" id="facultyModalSub">Select a faculty member to view details.</div>
+      </div>
+      <button class="faculty-close" id="facultyModalClose" type="button" aria-label="Close faculty classes dialog">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+    <div class="faculty-body">
+      <div class="faculty-summary" id="facultyModalSummary"></div>
+      <div class="faculty-class-list" id="facultyModalClassList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ FACULTY DELETE MODAL ══════════════════════════ -->
+<div class="faculty-delete-overlay" id="facultyDeleteOverlay" aria-hidden="true">
+  <div class="faculty-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="facultyDeleteTitle">
+    <div class="faculty-delete-head">
+      <div>
+        <div class="faculty-delete-title" id="facultyDeleteTitle">Delete Faculty</div>
+        <div class="faculty-delete-sub" id="facultyDeleteSub">Reassign schedules before deleting this instructor.</div>
+      </div>
+      <button class="faculty-delete-close" id="facultyDeleteClose" type="button" aria-label="Close delete faculty dialog">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+    <div class="faculty-delete-body">
+      <div class="faculty-delete-summary" id="facultyDeleteSummary"></div>
+      <div class="faculty-delete-label">Replacement Instructor</div>
+      <select class="faculty-delete-select" id="facultyDeleteReplacement">
+        <option value="">Select replacement...</option>
+      </select>
+      <div class="faculty-delete-error" id="facultyDeleteError"></div>
+      <div class="faculty-delete-actions">
+        <button class="faculty-delete-btn primary" id="facultyDeleteConfirm" type="button">Reassign & Delete</button>
+        <button class="faculty-delete-btn" id="facultyDeleteCancel" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 @php
   $instructors = collect($facultyUsers ?? [])->filter()->unique('id')->sortBy('name')->values();
 
   if ($instructors->isEmpty()) {
     $instructors = collect($courses ?? [])->pluck('instructor')->filter()->unique('id')->sortBy('name')->values();
   }
+
+  $bsitCatalog = [
+    ['code' => 'A_CC 101', 'title' => 'Introduction to Computing', 'units' => 3.0],
+    ['code' => 'A_CC 102', 'title' => 'Fundamentals of Programming', 'units' => 3.0],
+    ['code' => 'A_GE 5', 'title' => 'The Contemporary World', 'units' => 3.0],
+    ['code' => 'A_GE 6', 'title' => 'Science, Technology and Society', 'units' => 3.0],
+    ['code' => 'A_GE 7', 'title' => 'Mathematics in the Modern World', 'units' => 3.0],
+    ['code' => 'A_NSTP 1', 'title' => 'ROTC/CWTS 1', 'units' => 3.0],
+    ['code' => 'A_PE1', 'title' => 'PATH-FIT I (Movement Patterns; Exercise based)', 'units' => 2.0],
+    ['code' => 'A_CC 103', 'title' => 'Intermediate Programming', 'units' => 3.0],
+    ['code' => 'A_CO 101', 'title' => 'Computer Organization', 'units' => 3.0],
+    ['code' => 'A_GE 1', 'title' => 'Understanding the Self', 'units' => 3.0],
+    ['code' => 'A_GE 2', 'title' => 'Readings in Philippine History', 'units' => 3.0],
+    ['code' => 'A_GE 3', 'title' => 'Art Appreciation', 'units' => 3.0],
+    ['code' => 'A_GEE 3', 'title' => 'Reading Visual Art', 'units' => 3.0],
+    ['code' => 'A_MS 101', 'title' => 'Discrete Mathematics', 'units' => 3.0],
+    ['code' => 'A_NSTP 2', 'title' => 'ROTC / CWTS 2', 'units' => 3.0],
+    ['code' => 'A_PE2', 'title' => 'PATH-FIT II (Exercise Program based)', 'units' => 2.0],
+    ['code' => 'A_CC 104', 'title' => 'Data Structures and Algorithms', 'units' => 3.0],
+    ['code' => 'A_GE 4', 'title' => 'Purposive Communication', 'units' => 3.0],
+    ['code' => 'A_GEE 1', 'title' => 'Living in the IT Era', 'units' => 3.0],
+    ['code' => 'A_GEE 4', 'title' => 'Global Citizenship', 'units' => 3.0],
+    ['code' => 'A_HCI 101', 'title' => 'Human Computer Interaction 1', 'units' => 3.0],
+    ['code' => 'A_OOP 101', 'title' => 'Object Oriented Programming', 'units' => 3.0],
+    ['code' => 'A_PE3', 'title' => 'PATH-FIT III (Dance)', 'units' => 2.0],
+    ['code' => 'A_CC 105', 'title' => 'Information Management 1 (Fund. Of Database)', 'units' => 3.0],
+    ['code' => 'A_GE_9', 'title' => 'The Life and Works of Rizal', 'units' => 3.0],
+    ['code' => 'A_HCI 102', 'title' => 'Human Computer Interaction 2', 'units' => 3.0],
+    ['code' => 'A_MT 101', 'title' => 'Multimedia Technologies', 'units' => 3.0],
+    ['code' => 'A_NET 101', 'title' => 'Network 1 (Fundamentals of Networking)', 'units' => 3.0],
+    ['code' => 'A_PE4', 'title' => 'PATH-FIT IV (Sports)', 'units' => 2.0],
+    ['code' => 'A_SAD 101', 'title' => 'System Analysis and Design', 'units' => 3.0],
+    ['code' => 'A_WD 101', 'title' => 'Web Development', 'units' => 3.0],
+    ['code' => 'A_CC 106', 'title' => 'Application Development and Emerging Technologies', 'units' => 3.0],
+    ['code' => 'A_GEE 2', 'title' => 'The Entrepreneurial Mind', 'units' => 3.0],
+    ['code' => 'A_IM 102', 'title' => 'Information Management 2 (Advance Database Systems)', 'units' => 3.0],
+    ['code' => 'A_MD 101', 'title' => 'Mobile Application Development 1', 'units' => 3.0],
+    ['code' => 'A_MS 102', 'title' => 'Quantitative Methods', 'units' => 3.0],
+    ['code' => 'A_NET 102', 'title' => 'Networking 2 (Advance Networking)', 'units' => 3.0],
+    ['code' => 'A_SP 101', 'title' => 'Social and Professional Issues', 'units' => 3.0],
+    ['code' => 'A_WS 101', 'title' => 'Web Systems and Technologies 1', 'units' => 3.0],
+    ['code' => 'A_CAP 101', 'title' => 'Capstone Project 1', 'units' => 3.0],
+    ['code' => 'A_ELEC1', 'title' => 'Elective 1 (Web Systems and Technologies 2)', 'units' => 3.0],
+    ['code' => 'A_ELEC2', 'title' => 'Elective 2 (Mobile Application Development 2)', 'units' => 3.0],
+    ['code' => 'A_GE_8', 'title' => 'Ethics', 'units' => 3.0],
+    ['code' => 'A_IAS 101', 'title' => 'Information Assurance and Security 1', 'units' => 3.0],
+    ['code' => 'A_IC 1', 'title' => 'Personality Development', 'units' => 3.0],
+    ['code' => 'A_IPT 101', 'title' => 'Integrative Programming and Technologies', 'units' => 3.0],
+    ['code' => 'A_TECH 101', 'title' => 'Technopreneurship', 'units' => 3.0],
+    ['code' => 'A_CAP 102', 'title' => 'Capstone Project 2', 'units' => 3.0],
+    ['code' => 'A_ELEC3', 'title' => 'Elective 3 (Special Topics on Web and Mobile 1)', 'units' => 3.0],
+    ['code' => 'A_ELEC4', 'title' => 'Elective 4 (Special Topics on Web and Mobile 2)', 'units' => 3.0],
+    ['code' => 'A_IAS 102', 'title' => 'Information Assurance and Security 2', 'units' => 3.0],
+    ['code' => 'A_OS 101', 'title' => 'Operating System Applications', 'units' => 3.0],
+    ['code' => 'A_SA 101', 'title' => 'System Administration and Maintenance', 'units' => 3.0],
+    ['code' => 'A_SIA 101', 'title' => 'Systems Integration and Architecture', 'units' => 3.0],
+  ];
+
+  $bsitCodes = collect($bsitCatalog)->pluck('code')->all();
+  $courseLookup = collect($courses ?? [])->filter()->keyBy(fn($c) => (string) ($c->code ?? ''));
+  $bsitOptions = collect($bsitCatalog)->map(function (array $item) use ($courseLookup) {
+    $code = (string) $item['code'];
+    return [
+      'code'   => $code,
+      'title'  => (string) $item['title'],
+      'units'  => (float) $item['units'],
+      'course' => $courseLookup->get($code),
+    ];
+  });
+  $remainingCourses = collect($courses ?? [])
+    ->filter()
+    ->reject(fn($c) => in_array((string) ($c->code ?? ''), $bsitCodes, true))
+    ->values();
 @endphp
 
+<!-- ══════════════════════════ CREATE OVERLAY ══════════════════════════ -->
 <div class="create-overlay" id="createScheduleOverlay" aria-hidden="true">
   <div class="create-dialog" role="dialog" aria-modal="true" aria-labelledby="createScheduleTitle">
     <div class="create-head">
       <div>
         <div class="create-title" id="createScheduleTitle">Add Schedule Per Room</div>
-        <div class="create-sub">Choose a room and save a weekly class schedule that repeats until semester end.</div>
+        <div class="create-sub">Create a twice-a-week schedule with different times for the whole semester.</div>
       </div>
       <button class="create-close" id="createScheduleClose" type="button" aria-label="Close create schedule dialog">
         <i class="fas fa-xmark"></i>
@@ -984,7 +1053,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
       <div class="create-grid">
         <div class="create-field">
           <label class="create-label" for="createInstructorId">Instructor / Faculty</label>
-          <select class="create-select" id="createInstructorId">
+          <select class="create-select" id="createInstructorId" name="instructor_user_id">
             <option value="">All instructors</option>
             @foreach ($instructors as $instructor)
               <option value="{{ $instructor->id }}">{{ $instructor->name }}</option>
@@ -1003,35 +1072,101 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
         </div>
 
         <div class="create-field">
-          <label class="create-label" for="createCourseId">Subject</label>
-          <select class="create-select" id="createCourseId" name="course_id" required>
-            <option value="">Select subject...</option>
-            @foreach (collect($courses ?? [])->filter() as $course)
-              <option value="{{ $course->id }}" data-instructor-id="{{ $course->instructor_user_id }}">
-                {{ $course->code }} - {{ $course->title }} @if($course->instructor) ({{ $course->instructor->name }}) @endif
-              </option>
-            @endforeach
+          <label class="create-label" for="createBlockSection">Block Section</label>
+          <select class="create-select" id="createBlockSection" name="block_section">
+            <option value="">Select block...</option>
+            <option value="Block A">Block A</option>
+            <option value="Block B">Block B</option>
+            <option value="Block C">Block C</option>
+            <option value="Block D">Block D</option>
           </select>
         </div>
 
         <div class="create-field">
-          <label class="create-label" for="createStartAt">Start Time</label>
-          <input class="create-input" id="createStartAt" name="start_at" type="datetime-local" required>
-        </div>
-
-        <div class="create-field">
-          <label class="create-label" for="createEndAt">End Time</label>
-          <input class="create-input" id="createEndAt" name="end_at" type="datetime-local" required>
-        </div>
-
-        <div class="create-field">
-          <label class="create-label" for="createRepeatUntil">Repeat Until (Semester End)</label>
-          <input class="create-input" id="createRepeatUntil" name="repeat_until" type="date" required>
+          <label class="create-label" for="createCourseId">Subject</label>
+          <select class="create-select" id="createCourseId" name="course_id" required>
+            <option value="">Select subject...</option>
+            @foreach ($bsitOptions as $option)
+              @php
+                $course = $option['course'];
+                $selected = $course && (string) old('course_id') === (string) $course->id ? 'selected' : '';
+              @endphp
+              @if ($course)
+                <option value="{{ $course->id }}" data-instructor-id="{{ $course->instructor_user_id }}" {{ $selected }}>
+                  {{ $option['code'] }} - {{ $course->title }}
+                </option>
+              @else
+                <option value="" disabled>{{ $option['code'] }} - {{ $option['title'] }} (Not in system)</option>
+              @endif
+            @endforeach
+            @if ($remainingCourses->isNotEmpty())
+              <option value="" disabled>— Other Subjects —</option>
+              @foreach ($remainingCourses as $course)
+                <option value="{{ $course->id }}" data-instructor-id="{{ $course->instructor_user_id }}" {{ (string) old('course_id') === (string) $course->id ? 'selected' : '' }}>
+                  {{ $course->code }} - {{ $course->title }}
+                </option>
+              @endforeach
+            @endif
+          </select>
         </div>
 
         <div class="create-field">
           <label class="create-label" for="createEnrolled">Expected Enrolled</label>
           <input class="create-input" id="createEnrolled" name="enrolled" type="number" min="0" value="0">
+        </div>
+
+        <div class="create-field">
+          <label class="create-label" for="createSemesterStart">Semester Start</label>
+          <input class="create-input" id="createSemesterStart" name="semester_start" type="date" required>
+        </div>
+
+        <div class="create-field">
+          <label class="create-label" for="createSemesterEnd">Semester End</label>
+          <input class="create-input" id="createSemesterEnd" name="semester_end" type="date" required>
+        </div>
+
+        <div class="create-field">
+          <label class="create-label" for="createDay1">Day 1</label>
+          <select class="create-select" id="createDay1" name="day1" required>
+            <option value="">Select day...</option>
+            <option value="1">Monday</option>
+            <option value="2">Tuesday</option>
+            <option value="3">Wednesday</option>
+            <option value="4">Thursday</option>
+            <option value="5">Friday</option>
+          </select>
+        </div>
+
+        <div class="create-field">
+          <label class="create-label" for="createDay1Start">Day 1 Start</label>
+          <input class="create-input" id="createDay1Start" name="day1_start" type="time" required>
+        </div>
+
+        <div class="create-field">
+          <label class="create-label" for="createDay1End">Day 1 End</label>
+          <input class="create-input" id="createDay1End" name="day1_end" type="time" required>
+        </div>
+
+        <div class="create-field">
+          <label class="create-label" for="createDay2">Day 2</label>
+          <select class="create-select" id="createDay2" name="day2" required>
+            <option value="">Select day...</option>
+            <option value="1">Monday</option>
+            <option value="2">Tuesday</option>
+            <option value="3">Wednesday</option>
+            <option value="4">Thursday</option>
+            <option value="5">Friday</option>
+          </select>
+        </div>
+
+        <div class="create-field">
+          <label class="create-label" for="createDay2Start">Day 2 Start</label>
+          <input class="create-input" id="createDay2Start" name="day2_start" type="time" required>
+        </div>
+
+        <div class="create-field">
+          <label class="create-label" for="createDay2End">Day 2 End</label>
+          <input class="create-input" id="createDay2End" name="day2_end" type="time" required>
         </div>
       </div>
 
@@ -1061,6 +1196,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
   </div>
 </div>
 
+<!-- ══════════════════════════ IMPORT OVERLAY ══════════════════════════ -->
 <div class="import-overlay" id="scheduleImportOverlay" aria-hidden="true">
   <div class="import-dialog" role="dialog" aria-modal="true" aria-labelledby="scheduleImportTitle">
     <div class="import-head">
@@ -1112,12 +1248,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
         <table class="import-preview-table">
           <thead>
             <tr>
-              <th>Row</th>
-              <th>Room</th>
-              <th>Instructor</th>
-              <th>Start</th>
-              <th>End</th>
-              <th>Result</th>
+              <th>Row</th><th>Room</th><th>Instructor</th><th>Start</th><th>End</th><th>Result</th>
             </tr>
           </thead>
           <tbody id="scheduleImportPreviewBody">
@@ -1129,43 +1260,30 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
   </div>
 </div>
 
-<!-- ══════════════════════════ DETAIL VIEW (hidden by default) ══════════════════════════ -->
-<div id="detailView" style="display:none; position:fixed; inset:0; z-index:200; background:var(--bg); overflow-y:auto; margin-left:var(--sidebar-w);">
-  <div style="background:var(--white);border-bottom:1px solid var(--border);padding:0 36px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;">
-    <div style="display:flex;align-items:center;gap:14px;">
-      <button onclick="closeDetail()" style="display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:9px;border:1.5px solid var(--border);background:var(--white);font-size:0.84rem;font-weight:600;color:var(--text-secondary);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.18s;" onmouseover="this.style.borderColor='#93c5fd';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
-        <i class="fas fa-arrow-left"></i> Back to Schedule
-      </button>
-      <div style="font-size:0.85rem;color:var(--text-secondary);display:flex;align-items:center;gap:7px;">
-        <a href="#" onclick="closeDetail();return false;" style="color:var(--text-secondary);text-decoration:none;">Schedule</a>
-        <span style="color:var(--text-light);">›</span>
-        <span style="color:var(--text);font-weight:600;">IT 301 – Data Structures</span>
-      </div>
-    </div>
-    <div></div>
-  </div>
-  <div id="detailContent" style="padding:32px 36px 64px;"></div>
-</div>
-
 @php
   $roomSchedulesData = collect($schedules ?? [])->map(function ($schedule) {
-      return [
-          'classroom_id' => $schedule->classroom_id,
-          'classroom_name' => (string) ($schedule->classroom?->name ?? 'Unknown Room'),
-          'instructor_user_id' => $schedule->course?->instructor_user_id,
-          'course_code' => (string) ($schedule->course?->code ?? 'N/A'),
-          'subject' => (string) ($schedule->course?->title ?? 'Untitled Subject'),
-          'faculty' => (string) ($schedule->course?->instructor?->name ?? 'Unassigned Faculty'),
-          'start_at' => optional($schedule->start_at)->toIso8601String(),
-          'end_at' => optional($schedule->end_at)->toIso8601String(),
-          'status' => (string) ($schedule->status ?? 'scheduled'),
-      ];
+    return [
+      'id'                  => (int) $schedule->id,
+      'classroom_id'        => $schedule->classroom_id,
+      'classroom_name'      => (string) ($schedule->classroom?->name ?? 'Unknown Room'),
+      'classroom_building'  => (string) ($schedule->classroom?->building ?? ''),
+      'instructor_user_id'  => $schedule->course?->instructor_user_id,
+      'course_code'         => (string) ($schedule->course?->code ?? 'N/A'),
+      'subject'             => (string) ($schedule->course?->title ?? 'Untitled Subject'),
+      'faculty'             => (string) ($schedule->course?->instructor?->name ?? 'Unassigned Faculty'),
+      'start_at'            => optional($schedule->start_at)->toIso8601String(),
+      'end_at'              => optional($schedule->end_at)->toIso8601String(),
+      'status'              => (string) ($schedule->status ?? 'scheduled'),
+    ];
   })->values();
 @endphp
 
 <script type="application/json" id="roomSchedulesData">@json($roomSchedulesData)</script>
+<script type="application/json" id="facultyScheduleData">@json($facultySummaries)</script>
+<script type="application/json" id="facultyUsersData">@json($facultyUsers ?? [])</script>
 
 <script>
+/* ── TOAST ── */
 const toastWrap = (() => {
   let wrap = document.getElementById('toastWrap');
   if (!wrap) {
@@ -1179,274 +1297,309 @@ const toastWrap = (() => {
 
 function showToast(message, type = 'info') {
   if (!message) return;
-
-  let background = '#eff6ff';
-  let border = '#bfdbfe';
-  let color = '#1d4ed8';
-
-  if (type === 'error') {
-    background = '#fef2f2';
-    border = '#fecaca';
-    color = '#991b1b';
-  }
-
-  if (type === 'success') {
-    background = '#ecfdf5';
-    border = '#86efac';
-    color = '#166534';
-  }
-
+  const colors = {
+    error:   { bg: '#fef2f2', border: '#fecaca', color: '#991b1b' },
+    success: { bg: '#ecfdf5', border: '#86efac', color: '#166534' },
+    info:    { bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8' },
+  };
+  const { bg, border, color } = colors[type] || colors.info;
   const toast = document.createElement('div');
   toast.textContent = message;
-  toast.style.cssText = `min-width:240px;max-width:360px;padding:10px 12px;border-radius:10px;border:1px solid ${border};box-shadow:0 10px 28px rgba(11,22,64,.2);font-size:.8rem;font-weight:600;opacity:0;transform:translateY(10px);transition:opacity .2s,transform .2s;background:${background};color:${color};`;
+  toast.style.cssText = `min-width:240px;max-width:360px;padding:10px 12px;border-radius:10px;border:1px solid ${border};box-shadow:0 10px 28px rgba(11,22,64,.2);font-size:.8rem;font-weight:600;opacity:0;transform:translateY(10px);transition:opacity .2s,transform .2s;background:${bg};color:${color};`;
   toastWrap.appendChild(toast);
-
-  requestAnimationFrame(() => {
-    toast.style.opacity = '1';
-    toast.style.transform = 'translateY(0)';
-  });
-
+  requestAnimationFrame(() => { toast.style.opacity = '1'; toast.style.transform = 'translateY(0)'; });
   setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(10px)';
+    toast.style.opacity = '0'; toast.style.transform = 'translateY(10px)';
     setTimeout(() => toast.remove(), 220);
   }, 2600);
 }
 
-/* ── NAVIGATE TO DETAIL VIEW ── */
-function goToDetail(e) {
-  e.preventDefault();
-  document.getElementById('detailView').style.display = 'block';
-  document.body.style.overflow = 'hidden';
-  renderDetail();
+/* ── DATA ── */
+const roomSchedulesData    = JSON.parse(document.getElementById('roomSchedulesData')?.textContent || '[]');
+const facultyScheduleData  = JSON.parse(document.getElementById('facultyScheduleData')?.textContent || '[]');
+const facultyUsersData     = JSON.parse(document.getElementById('facultyUsersData')?.textContent || '[]');
+
+/* ── ELEMENT REFS ── */
+const importOverlay              = document.getElementById('scheduleImportOverlay');
+const createOverlay              = document.getElementById('createScheduleOverlay');
+const editOverlay                = document.getElementById('editScheduleOverlay');
+const createCloseBtn             = document.getElementById('createScheduleClose');
+const createCancelBtn            = document.getElementById('createScheduleCancel');
+const editCloseBtn               = document.getElementById('editScheduleClose');
+const editCancelBtn              = document.getElementById('editScheduleCancel');
+const editForm                   = document.getElementById('editScheduleForm');
+const editScheduleIdInput        = document.getElementById('editScheduleId');
+const editScheduleSeriesIdInput  = document.getElementById('editScheduleSeriesId');
+const editScheduleClassroomInput = document.getElementById('editScheduleClassroom');
+const editScheduleCourseInput    = document.getElementById('editScheduleCourse');
+const editScheduleEnrolledInput  = document.getElementById('editScheduleEnrolled');
+const editScheduleStatusInput    = document.getElementById('editScheduleStatus');
+const editScheduleApplySeriesInput = document.getElementById('editScheduleApplySeries');
+const editScheduleStartInput     = document.getElementById('editScheduleStart');
+const editScheduleEndInput       = document.getElementById('editScheduleEnd');
+const editScheduleRepeatUntilInput = document.getElementById('editScheduleRepeatUntil');
+const editScheduleErrorBox       = document.getElementById('editScheduleError');
+const editScheduleSub            = document.getElementById('editScheduleSub');
+const editScheduleSaveBtn        = document.getElementById('editScheduleSave');
+const createInstructorSelect     = document.getElementById('createInstructorId');
+const createClassroomSelect      = document.getElementById('createClassroomId');
+const createCourseSelect         = document.getElementById('createCourseId');
+const createSemesterStartInput   = document.getElementById('createSemesterStart');
+const createSemesterEndInput     = document.getElementById('createSemesterEnd');
+const createScheduleForm         = document.querySelector('form[action="{{ route("admin.schedule.store") }}"]');
+const roomScheduleList           = document.getElementById('roomScheduleList');
+const instructorScheduleList     = document.getElementById('instructorScheduleList');
+
+function updateCreateCourseOptionsForYear(yearLevel) {
+  if (!createCourseSelect) return;
+  
+  // Simply enable the select and show all options
+  const options = Array.from(createCourseSelect.options);
+  options.forEach((option, index) => {
+    if (index === 0) {
+      option.hidden = false;
+      option.disabled = false;
+      return;
+    }
+    // Show all options except empty-value disabled ones
+    if (option.value === '') {
+      option.hidden = true;  // Hide placeholder options with no value
+    } else {
+      option.hidden = false;
+      option.disabled = false;
+    }
+  });
+  
+  // Enable the select so it can be submitted
+  createCourseSelect.disabled = false;
 }
 
-function closeDetail() {
-  document.getElementById('detailView').style.display = 'none';
+function resetCreateCourseSelect() {
+  if (!createCourseSelect) return;
+  const options = Array.from(createCourseSelect.options);
+  options.forEach((option, index) => {
+    if (index === 0) {
+      option.textContent = 'Select subject...';
+      option.hidden = false;
+      option.disabled = false;
+      return;
+    }
+    option.hidden = option.value === '';
+    option.disabled = false;
+  });
+  createCourseSelect.disabled = false;
+  createCourseSelect.selectedIndex = 0;
+}
+const openImportBtn              = document.getElementById('openImportBtn');
+const importCloseBtn             = document.getElementById('scheduleImportClose');
+const importCancelBtn            = document.getElementById('scheduleImportCancelBtn');
+const importFileInput            = document.getElementById('scheduleImportFile');
+const importPreviewBtn           = document.getElementById('schedulePreviewBtn');
+const importSaveBtn              = document.getElementById('scheduleImportSaveBtn');
+const importPreviewBody          = document.getElementById('scheduleImportPreviewBody');
+const importErrorBox             = document.getElementById('importErrorBox');
+const importSummaryText          = document.getElementById('importSummaryText');
+const importDefaultRoom          = document.getElementById('importDefaultRoom');
+const facultyOverlay             = document.getElementById('facultyOverlay');
+const facultyModalClose          = document.getElementById('facultyModalClose');
+const facultyModalTitle          = document.getElementById('facultyModalTitle');
+const facultyModalSub            = document.getElementById('facultyModalSub');
+const facultyModalSummary        = document.getElementById('facultyModalSummary');
+const facultyModalClassList      = document.getElementById('facultyModalClassList');
+const facultyDeleteOverlay       = document.getElementById('facultyDeleteOverlay');
+const facultyDeleteClose         = document.getElementById('facultyDeleteClose');
+const facultyDeleteCancel        = document.getElementById('facultyDeleteCancel');
+const facultyDeleteConfirm       = document.getElementById('facultyDeleteConfirm');
+const facultyDeleteSummary       = document.getElementById('facultyDeleteSummary');
+const facultyDeleteSub           = document.getElementById('facultyDeleteSub');
+const facultyDeleteReplacement   = document.getElementById('facultyDeleteReplacement');
+const facultyDeleteError         = document.getElementById('facultyDeleteError');
+const facultySearchInput         = document.getElementById('facultySearchInput');
+const facultyCountLabel          = document.getElementById('facultyCountLabel');
+const selectDeleteBtn            = document.getElementById('selectDeleteBtn');
+const deleteSelectedBtn          = document.getElementById('deleteSelectedBtn');
+
+const previewEndpoint    = "{{ route('admin.schedule.import.preview') }}";
+const importEndpoint     = "{{ route('admin.schedule.import.store') }}";
+const bulkDeleteEndpoint = "{{ route('admin.schedule.bulk-destroy') }}";
+const deleteFacultyEndpoint = "{{ route('admin.users.destroy.reassign', ['user' => '__USER__']) }}";
+
+let selectionModeEnabled = false;
+let deleteFacultyTarget  = null;
+
+/* ── FACULTY MODAL ── */
+function formatFacultyTime(value) {
+  if (!value) return '-';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+function formatFacultyDay(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString([], { weekday: 'short' });
+}
+
+function openFacultyModal(facultyId) {
+  const faculty = facultyScheduleData.find((e) => String(e.id) === String(facultyId));
+  if (!faculty || !facultyOverlay) return;
+
+  if (facultyModalTitle) facultyModalTitle.textContent = faculty.name || 'Faculty Classes';
+  if (facultyModalSub)   facultyModalSub.textContent   = faculty.department || 'Faculty';
+
+  if (facultyModalSummary) {
+    const parts = [
+      `<span><i class="fas fa-layer-group"></i> ${faculty.class_count || 0} Session(s)</span>`,
+      `<span><i class="fas fa-book"></i> ${faculty.course_count || 0} Subject(s)</span>`,
+    ];
+    if (faculty.department) parts.unshift(`<span><i class="fas fa-building"></i> ${faculty.department}</span>`);
+    if (faculty.email)      parts.push(`<span><i class="fas fa-envelope"></i> ${faculty.email}</span>`);
+    facultyModalSummary.innerHTML = parts.join('');
+  }
+
+  if (facultyModalClassList) {
+    const rows = Array.isArray(faculty.classes) ? faculty.classes : [];
+    if (rows.length === 0) {
+      facultyModalClassList.innerHTML = '<div class="room-schedule-empty">No classes assigned yet.</div>';
+    } else {
+      const grouped = rows.reduce((acc, row) => {
+        const key = `${row.code}||${row.subject}`;
+        if (!acc[key]) acc[key] = { code: row.code || 'N/A', subject: row.subject || 'Untitled', items: [] };
+        acc[key].items.push(row);
+        return acc;
+      }, {});
+
+      facultyModalClassList.innerHTML = Object.values(grouped).map((group) => {
+        const sessionLabel = group.items.length === 1 ? '1 Session' : `${group.items.length} Sessions`;
+        const courseId = group.items[0]?.course_id || 0;
+        const items = group.items.map((row) => {
+          const day   = formatFacultyDay(row.start_at);
+          const start = formatFacultyTime(row.start_at);
+          const end   = formatFacultyTime(row.end_at);
+          const time  = day ? `${day} ${start}${end !== '-' ? ` - ${end}` : ''}` : `${start}${end !== '-' ? ` - ${end}` : ''}`;
+          const loc   = row.building ? `${row.room}, ${row.building}` : row.room;
+          return `<div class="faculty-class-item">
+            <div class="faculty-class-main"><div class="faculty-class-meta">${loc} • ${row.status}</div></div>
+            <div class="faculty-class-time">${time}</div>
+          </div>`;
+        }).join('');
+
+        return `<div class="faculty-group">
+          <div class="faculty-group-head">
+            <div style="display:flex;align-items:center;gap:8px;flex:1;">
+              <div style="flex:1;">
+                <div class="faculty-group-instructor">${faculty.name || 'Faculty'}</div>
+                <div class="faculty-group-subject">${group.code} - ${group.subject} • ${sessionLabel}</div>
+              </div>
+              <button class="js-unassign-course-btn" type="button" data-course-id="${courseId}" data-course-code="${group.code}" title="Unassign subject from instructor">
+                <i class="fas fa-unlink"></i> Unassign
+              </button>
+            </div>
+          </div>
+          <div class="faculty-group-items">${items}</div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  facultyOverlay.classList.add('is-open');
+  facultyOverlay.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeFacultyModal() {
+  if (!facultyOverlay) return;
+  facultyOverlay.classList.remove('is-open');
+  facultyOverlay.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
 }
 
-function renderDetail() {
-  document.getElementById('detailContent').innerHTML = `
-    <!-- HERO HEADER -->
-    <div style="background:linear-gradient(135deg,#0b1640 0%,#1a2f80 100%);border-radius:18px;padding:32px 36px;display:flex;align-items:center;justify-content:space-between;gap:24px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(11,22,64,0.18);margin-bottom:24px;">
-      <div style="position:absolute;top:-60px;right:-60px;width:260px;height:260px;border-radius:50%;border:1px solid rgba(245,197,24,0.1);pointer-events:none;"></div>
-      <div style="display:flex;align-items:center;gap:20px;flex:1;position:relative;z-index:1;">
-        <div style="width:64px;height:64px;border-radius:16px;background:rgba(245,197,24,0.15);border:1.5px solid rgba(245,197,24,0.3);display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;">📚</div>
-        <div>
-          <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(245,197,24,0.8);margin-bottom:5px;">IT 301 · BSIT 3rd Year</div>
-          <div style="font-size:1.55rem;font-weight:800;color:#fff;letter-spacing:-0.02em;line-height:1.2;margin-bottom:6px;">Data Structures & Algorithms</div>
-          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-            <span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:rgba(255,255,255,0.55);"><i class="fas fa-location-dot" style="color:rgba(245,197,24,0.6);font-size:0.75rem;"></i> Room 15 – CIT Laboratory</span>
-            <span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:rgba(255,255,255,0.55);"><i class="fas fa-clock" style="color:rgba(245,197,24,0.6);font-size:0.75rem;"></i> MWF · 7:30–9:00 AM</span>
-            <span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:rgba(255,255,255,0.55);"><i class="fas fa-building" style="color:rgba(245,197,24,0.6);font-size:0.75rem;"></i> Main Building · Ground Floor</span>
-          </div>
-        </div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px;position:relative;z-index:1;flex-shrink:0;">
-        <span style="display:inline-flex;align-items:center;gap:7px;padding:7px 16px;border-radius:100px;font-size:0.78rem;font-weight:700;letter-spacing:0.04em;background:rgba(245,197,24,0.15);color:#f5c518;border:1px solid rgba(245,197,24,0.3);">
-          <span style="width:6px;height:6px;border-radius:50%;background:#f5c518;box-shadow:0 0 6px rgba(245,197,24,0.6);"></span>
-          ONGOING
-        </span>
-        <div style="display:flex;gap:8px;">
-          <button style="display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:9px;font-size:0.84rem;font-weight:600;font-family:'Inter',sans-serif;border:1.5px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.07);cursor:pointer;"><i class="fas fa-pen"></i> Edit</button>
-          <button onclick="window.location.href='{{ route('admin.schedule.export.csv') }}'" style="display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:9px;font-size:0.84rem;font-weight:700;font-family:'Inter',sans-serif;background:#f5c518;color:#0b1640;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(245,197,24,0.35);"><i class="fas fa-print"></i> Export</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- QUICK STATS -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;">
-      ${[
-        {icon:'fas fa-users',     bg:'#dbeafe', co:'#1d4ed8', val:'38',  label:'Enrolled Students'},
-        {icon:'fas fa-circle-check', bg:'#dcfce7', co:'#16a34a', val:'35', label:'Present Today'},
-        {icon:'fas fa-calendar-days', bg:'#fff8e1', co:'#b45309', val:'14', label:'Sessions Done'},
-        {icon:'fas fa-star',      bg:'#ede9fe', co:'#7c3aed', val:'92%', label:'Avg. Attendance'},
-      ].map(s=>`
-        <div style="background:#fff;border-radius:14px;border:1.5px solid #e8ecf3;padding:18px 20px;box-shadow:0 2px 8px rgba(0,0,0,0.06);display:flex;align-items:center;gap:14px;">
-          <div style="width:40px;height:40px;border-radius:10px;background:${s.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <i class="${s.icon}" style="color:${s.co};font-size:1rem;"></i>
-          </div>
-          <div>
-            <div style="font-size:1.5rem;font-weight:800;color:#111827;letter-spacing:-0.03em;line-height:1;">${s.val}</div>
-            <div style="font-size:0.76rem;color:#6b7280;font-weight:500;margin-top:3px;">${s.label}</div>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-
-    <!-- TWO COL -->
-    <div style="display:grid;grid-template-columns:1.1fr 0.9fr;gap:20px;margin-bottom:24px;">
-      <!-- Course Info -->
-      <div style="background:#fff;border-radius:14px;border:1.5px solid #e8ecf3;box-shadow:0 2px 8px rgba(0,0,0,0.06);overflow:hidden;">
-        <div style="padding:18px 24px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e8ecf3;font-size:0.95rem;font-weight:700;color:#111827;">
-          <div style="width:30px;height:30px;border-radius:8px;background:#dbeafe;display:flex;align-items:center;justify-content:center;"><i class="fas fa-book-open" style="color:#1d4ed8;font-size:0.8rem;"></i></div>
-          Course Information
-        </div>
-        <div style="padding:16px 24px;">
-          ${[
-            ['Course Code','IT 301'],
-            ['Section','BSIT 3-A'],
-            ['Time','7:30 AM – 9:00 AM'],
-            ['Room','Room 15 – CIT Laboratory'],
-            ['Building','Main Building · Ground Floor'],
-            ['Capacity','40 Students'],
-          ].map(([l,v])=>`
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f3f4f6;">
-              <span style="font-size:0.78rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;">${l}</span>
-              <span style="font-size:0.88rem;color:#111827;font-weight:500;">${v}</span>
-            </div>
-          `).join('')}
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;">
-            <span style="font-size:0.78rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;">Meeting Days</span>
-            <div style="display:flex;gap:4px;">
-              ${['Mon','Tue','Wed','Thu','Fri'].map((d,i)=>`<span style="padding:3px 9px;border-radius:6px;font-size:0.72rem;font-weight:700;background:${[0,2,4].includes(i)?'#0b1640':'#f4f6f9'};color:${[0,2,4].includes(i)?'#fff':'#9ca3af'};">${d}</span>`).join('')}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Instructor + Enrollment -->
-      <div style="display:flex;flex-direction:column;gap:16px;">
-        <div style="background:#fff;border-radius:14px;border:1.5px solid #e8ecf3;box-shadow:0 2px 8px rgba(0,0,0,0.06);overflow:hidden;">
-          <div style="padding:18px 24px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e8ecf3;font-size:0.95rem;font-weight:700;color:#111827;">
-            <div style="width:30px;height:30px;border-radius:8px;background:#fff8e1;display:flex;align-items:center;justify-content:center;"><i class="fas fa-user-tie" style="color:#b45309;font-size:0.8rem;"></i></div>
-            Instructor
-          </div>
-          <div style="padding:16px 24px;">
-            <div style="background:rgba(11,22,64,0.03);border:1px solid rgba(11,22,64,0.08);border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-              <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#0b1640,#1a2f80);display:flex;align-items:center;justify-content:center;font-size:0.88rem;font-weight:700;color:#fff;border:2px solid rgba(245,197,24,0.3);flex-shrink:0;">ES</div>
-              <div>
-                <div style="font-size:0.92rem;font-weight:700;color:#111827;margin-bottom:2px;">Prof. Elena Santos</div>
-                <div style="font-size:0.76rem;color:#6b7280;"><i class="fas fa-envelope" style="font-size:0.68rem;margin-right:4px;"></i>e.santos@psu.edu.ph</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div style="background:#fff;border-radius:14px;border:1.5px solid #e8ecf3;box-shadow:0 2px 8px rgba(0,0,0,0.06);overflow:hidden;">
-          <div style="padding:18px 24px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e8ecf3;font-size:0.95rem;font-weight:700;color:#111827;">
-            <div style="width:30px;height:30px;border-radius:8px;background:#dcfce7;display:flex;align-items:center;justify-content:center;"><i class="fas fa-chart-pie" style="color:#16a34a;font-size:0.8rem;"></i></div>
-            Enrollment
-          </div>
-          <div style="padding:16px 24px;">
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
-              ${[['38','Enrolled'],['2','Available'],['95%','Fill Rate']].map(([v,l])=>`<div style="text-align:center;padding:10px 8px;background:#f4f6f9;border-radius:10px;border:1px solid #e8ecf3;"><div style="font-size:1.3rem;font-weight:800;color:#111827;">${v}</div><div style="font-size:0.7rem;color:#6b7280;margin-top:2px;">${l}</div></div>`).join('')}
-            </div>
-            <div style="font-size:0.75rem;color:#6b7280;display:flex;justify-content:space-between;margin-bottom:5px;"><span>Enrollment Progress</span><span>38/40</span></div>
-            <div style="height:7px;background:#e8ecf3;border-radius:99px;overflow:hidden;"><div style="width:95%;height:100%;background:linear-gradient(90deg,#d97706,#fbbf24);border-radius:99px;"></div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- UPCOMING SESSIONS -->
-    <div style="background:#fff;border-radius:14px;border:1.5px solid #e8ecf3;box-shadow:0 2px 8px rgba(0,0,0,0.06);overflow:hidden;margin-bottom:24px;">
-      <div style="padding:18px 24px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e8ecf3;">
-        <div style="display:flex;align-items:center;gap:10px;font-size:0.95rem;font-weight:700;color:#111827;">
-          <div style="width:30px;height:30px;border-radius:8px;background:#fff8e1;display:flex;align-items:center;justify-content:center;"><i class="fas fa-calendar-check" style="color:#b45309;font-size:0.8rem;"></i></div>
-          Upcoming Sessions
-        </div>
-        <a href="#" style="font-size:0.82rem;font-weight:600;color:#1a2f80;text-decoration:none;">Full Calendar</a>
-      </div>
-      <div style="padding:16px 24px;display:flex;flex-direction:column;gap:8px;">
-        ${[
-          {day:'Today',num:'23',subj:'Session 15 – Trees & Graphs',time:'7:30–9:00 AM',room:'Room 15',today:true},
-          {day:'Wed',  num:'25',subj:'Session 16 – Sorting Algorithms',time:'7:30–9:00 AM',room:'Room 16',today:false},
-          {day:'Fri',  num:'27',subj:'Session 17 – Dynamic Programming',time:'7:30–9:00 AM',room:'Room 17',today:false},
-          {day:'Mon',  num:'30',subj:'Session 18 – Graph Traversal',time:'7:30–9:00 AM',room:'Room 15',today:false},
-        ].map(s=>`
-          <div style="display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:10px;border:1.5px solid ${s.today?'rgba(245,197,24,0.35)':'#e8ecf3'};background:#f4f6f9;transition:all 0.18s;">
-            <div style="width:44px;text-align:center;flex-shrink:0;background:${s.today?'#b45309':'#0b1640'};border-radius:9px;padding:6px 4px;">
-              <div style="font-size:0.6rem;font-weight:700;color:rgba(245,197,24,0.8);text-transform:uppercase;letter-spacing:0.08em;">${s.day}</div>
-              <div style="font-size:1.05rem;font-weight:800;color:#fff;line-height:1;margin-top:1px;">${s.num}</div>
-            </div>
-            <div style="flex:1;">
-              <div style="font-size:0.86rem;font-weight:600;color:#111827;margin-bottom:2px;">${s.subj}</div>
-              <div style="font-size:0.74rem;color:#6b7280;display:flex;gap:10px;">
-                <span><i class="fas fa-clock" style="font-size:0.65rem;margin-right:3px;"></i>${s.time}</span>
-                <span><i class="fas fa-door-open" style="font-size:0.65rem;margin-right:3px;"></i>${s.room}</span>
-              </div>
-            </div>
-            <span style="font-size:0.68rem;font-weight:700;padding:3px 9px;border-radius:6px;background:${s.today?'#fff8e1':'#dbeafe'};color:${s.today?'#b45309':'#1d4ed8'};">${s.today?'TODAY':'UPCOMING'}</span>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
+/* ── FACULTY DELETE MODAL ── */
+function setFacultyDeleteError(msg) {
+  if (!facultyDeleteError) return;
+  facultyDeleteError.textContent = msg;
+  facultyDeleteError.classList.add('is-visible');
+}
+function clearFacultyDeleteError() {
+  if (!facultyDeleteError) return;
+  facultyDeleteError.textContent = '';
+  facultyDeleteError.classList.remove('is-visible');
 }
 
-const importOverlay = document.getElementById('scheduleImportOverlay');
-const createOverlay = document.getElementById('createScheduleOverlay');
-const editOverlay = document.getElementById('editScheduleOverlay');
-const createCloseBtn = document.getElementById('createScheduleClose');
-const createCancelBtn = document.getElementById('createScheduleCancel');
-const editCloseBtn = document.getElementById('editScheduleClose');
-const editCancelBtn = document.getElementById('editScheduleCancel');
-const editForm = document.getElementById('editScheduleForm');
-const editScheduleIdInput = document.getElementById('editScheduleId');
-const editScheduleClassroomInput = document.getElementById('editScheduleClassroom');
-const editScheduleCourseInput = document.getElementById('editScheduleCourse');
-const editScheduleEnrolledInput = document.getElementById('editScheduleEnrolled');
-const editScheduleStartInput = document.getElementById('editScheduleStart');
-const editScheduleEndInput = document.getElementById('editScheduleEnd');
-const editScheduleRepeatUntilInput = document.getElementById('editScheduleRepeatUntil');
-const editScheduleErrorBox = document.getElementById('editScheduleError');
-const editScheduleSub = document.getElementById('editScheduleSub');
-const editScheduleSaveBtn = document.getElementById('editScheduleSave');
-const createInstructorSelect = document.getElementById('createInstructorId');
-const createClassroomSelect = document.getElementById('createClassroomId');
-const createCourseSelect = document.getElementById('createCourseId');
-const createStartAtInput = document.getElementById('createStartAt');
-const createRepeatUntilInput = document.getElementById('createRepeatUntil');
-const roomScheduleList = document.getElementById('roomScheduleList');
-const instructorScheduleList = document.getElementById('instructorScheduleList');
-const openImportBtn = document.getElementById('openImportBtn');
-const importCloseBtn = document.getElementById('scheduleImportClose');
-const importCancelBtn = document.getElementById('scheduleImportCancelBtn');
-const importFileInput = document.getElementById('scheduleImportFile');
-const importPreviewBtn = document.getElementById('schedulePreviewBtn');
-const importSaveBtn = document.getElementById('scheduleImportSaveBtn');
-const importPreviewBody = document.getElementById('scheduleImportPreviewBody');
-const importErrorBox = document.getElementById('importErrorBox');
-const importSummaryText = document.getElementById('importSummaryText');
-const importDefaultRoom = document.getElementById('importDefaultRoom');
-
-const previewEndpoint = "{{ route('admin.schedule.import.preview') }}";
-const importEndpoint = "{{ route('admin.schedule.import.store') }}";
-const roomSchedulesData = JSON.parse(document.getElementById('roomSchedulesData')?.textContent || '[]');
-const calMonthLabel = document.getElementById('calMonthLabel');
-const calDaysContainer = document.getElementById('calDaysContainer');
-const calPrevBtn = document.getElementById('calPrevBtn');
-const calNextBtn = document.getElementById('calNextBtn');
-const calTodayBtn = document.getElementById('calTodayBtn');
-const scheduleListContainer = document.getElementById('scheduleListContainer');
-const scheduleCountLabel = document.getElementById('scheduleCountLabel');
-const scheduleEmptyAll = document.getElementById('scheduleEmptyAll');
-const scheduleFilteredEmpty = document.getElementById('scheduleFilteredEmpty');
-const scheduleSearchInput = document.getElementById('scheduleSearchInput');
-const selectDeleteBtn = document.getElementById('selectDeleteBtn');
-const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
-const bulkDeleteEndpoint = "{{ route('admin.schedule.bulk-destroy') }}";
-
-let calendarAnchorDate = new Date();
-let selectedCalendarDate = new Date();
-let selectionModeEnabled = false;
-
-function getScheduleCheckboxes() {
-  return Array.from(document.querySelectorAll('.schedule-select-checkbox'));
+function openFacultyDeleteModal(payload) {
+  if (!facultyDeleteOverlay || !facultyDeleteReplacement) return;
+  deleteFacultyTarget = payload;
+  clearFacultyDeleteError();
+  if (facultyDeleteSub) facultyDeleteSub.textContent = `Reassign ${payload.name}'s schedules before deletion.`;
+  if (facultyDeleteSummary) {
+    facultyDeleteSummary.innerHTML = [
+      `<span><i class="fas fa-user"></i> ${payload.name}</span>`,
+      `<span><i class="fas fa-book"></i> ${payload.courses} Subject(s)</span>`,
+      `<span><i class="fas fa-layer-group"></i> ${payload.classes} Session(s)</span>`,
+    ].join('');
+  }
+  const options = facultyUsersData
+    .filter((u) => String(u.id) !== String(payload.id))
+    .map((u) => `<option value="${u.id}">${u.name}${u.email ? ` (${u.email})` : ''}</option>`);
+  facultyDeleteReplacement.innerHTML = ['<option value="">Select replacement...</option>', ...options].join('');
+  if (options.length === 0) {
+    setFacultyDeleteError('Add another faculty account before deleting this instructor.');
+    if (facultyDeleteConfirm) facultyDeleteConfirm.disabled = true;
+  } else if (facultyDeleteConfirm) {
+    facultyDeleteConfirm.disabled = false;
+  }
+  facultyDeleteOverlay.classList.add('is-open');
+  facultyDeleteOverlay.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
 }
+
+function closeFacultyDeleteModal() {
+  if (!facultyDeleteOverlay) return;
+  facultyDeleteOverlay.classList.remove('is-open');
+  facultyDeleteOverlay.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  deleteFacultyTarget = null;
+  clearFacultyDeleteError();
+}
+
+async function confirmFacultyDelete() {
+  if (!deleteFacultyTarget || !facultyDeleteReplacement) return;
+  const replacementId = facultyDeleteReplacement.value;
+  if (!replacementId) { setFacultyDeleteError('Select a replacement instructor first.'); return; }
+  clearFacultyDeleteError();
+  if (facultyDeleteConfirm) facultyDeleteConfirm.disabled = true;
+  try {
+    const response = await fetch(deleteFacultyEndpoint.replace('__USER__', deleteFacultyTarget.id), {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+      body: JSON.stringify({ replacement_user_id: Number(replacementId) }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) { setFacultyDeleteError(data?.message || 'Unable to delete faculty right now.'); if (facultyDeleteConfirm) facultyDeleteConfirm.disabled = false; return; }
+    showToast(data?.message || 'Faculty deleted successfully.', 'success');
+    window.location.reload();
+  } catch { setFacultyDeleteError('Unable to delete faculty right now.'); if (facultyDeleteConfirm) facultyDeleteConfirm.disabled = false; }
+}
+
+/* ── FACULTY SEARCH ── */
+function applyFacultyFilter() {
+  const cards = Array.from(document.querySelectorAll('.js-faculty-card'));
+  const term  = String(facultySearchInput?.value || '').trim().toLowerCase();
+  let count   = 0;
+  cards.forEach((card) => {
+    const visible = term === '' || card.textContent.toLowerCase().includes(term);
+    card.style.display = visible ? '' : 'none';
+    if (visible) count++;
+  });
+  if (facultyCountLabel) facultyCountLabel.textContent = `${count} Faculty`;
+}
+
+/* ── SELECTION MODE ── */
+function getScheduleCheckboxes() { return Array.from(document.querySelectorAll('.schedule-select-checkbox')); }
 
 function updateSelectionState() {
   const checkboxes = getScheduleCheckboxes();
-  const selected = checkboxes.filter((checkbox) => checkbox.checked);
-  const selectedCount = selected.length;
-
-  checkboxes.forEach((checkbox) => {
-    const card = checkbox.closest('.schedule-card');
-    if (!(card instanceof HTMLElement)) return;
-    card.classList.toggle('is-selected', checkbox.checked);
-  });
-
+  const selectedCount = checkboxes.filter((c) => c.checked).length;
+  checkboxes.forEach((c) => c.closest('.schedule-card')?.classList.toggle('is-selected', c.checked));
   if (deleteSelectedBtn) {
     deleteSelectedBtn.disabled = selectedCount === 0;
     deleteSelectedBtn.innerHTML = `<i class="fas fa-trash"></i> Delete Selected (${selectedCount})`;
@@ -1455,370 +1608,127 @@ function updateSelectionState() {
 
 function setSelectionMode(enabled) {
   selectionModeEnabled = enabled;
-
-  if (scheduleListContainer) {
-    scheduleListContainer.classList.toggle('selection-mode', enabled);
-  }
-
-  if (selectDeleteBtn) {
-    selectDeleteBtn.innerHTML = enabled
-      ? '<i class="fas fa-xmark"></i> Cancel Selection'
-      : '<i class="fas fa-check-square"></i> Select to Delete';
-  }
-
-  if (deleteSelectedBtn) {
-    deleteSelectedBtn.style.display = enabled ? '' : 'none';
-  }
-
-  if (!enabled) {
-    getScheduleCheckboxes().forEach((checkbox) => {
-      checkbox.checked = false;
-    });
-  }
-
+  document.getElementById('scheduleListContainer')?.classList.toggle('selection-mode', enabled);
+  if (selectDeleteBtn) selectDeleteBtn.innerHTML = enabled ? '<i class="fas fa-xmark"></i> Cancel Selection' : '<i class="fas fa-check-square"></i> Select to Delete';
+  if (deleteSelectedBtn) deleteSelectedBtn.style.display = enabled ? '' : 'none';
+  if (!enabled) getScheduleCheckboxes().forEach((c) => { c.checked = false; });
   updateSelectionState();
 }
 
 async function deleteSelectedSchedules() {
   const selectedIds = getScheduleCheckboxes()
-    .filter((checkbox) => checkbox.checked)
-    .map((checkbox) => Number(checkbox.value))
-    .filter((value) => Number.isInteger(value) && value > 0);
-
-  if (selectedIds.length === 0) {
-    showToast('Select at least one schedule to delete.', 'error');
-    return;
-  }
-
-  const confirmed = window.confirm(`Delete ${selectedIds.length} selected schedule(s)? This cannot be undone.`);
-  if (!confirmed) return;
-
-  if (deleteSelectedBtn) {
-    deleteSelectedBtn.disabled = true;
-  }
-
+    .filter((c) => c.checked)
+    .flatMap((c) => {
+      const card = c.closest('.schedule-card');
+      const seriesIds = card?.getAttribute('data-series-ids');
+      if (seriesIds) return seriesIds.split(',').map(Number).filter((v) => Number.isInteger(v) && v > 0);
+      return [Number(c.value)].filter((v) => Number.isInteger(v) && v > 0);
+    });
+  if (selectedIds.length === 0) { showToast('Select at least one schedule to delete.', 'error'); return; }
+  if (!window.confirm(`Delete ${selectedIds.length} selected schedule(s)? This cannot be undone.`)) return;
+  if (deleteSelectedBtn) deleteSelectedBtn.disabled = true;
   try {
     const response = await fetch(bulkDeleteEndpoint, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': "{{ csrf_token() }}",
-      },
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
       body: JSON.stringify({ schedule_ids: selectedIds }),
     });
-
-    const payload = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      const errors = payload?.errors ? Object.values(payload.errors).flat().join(' ') : '';
-      showToast(errors || payload?.message || 'Failed to delete selected schedules.', 'error');
-      updateSelectionState();
-      return;
-    }
-
-    showToast(payload?.message || 'Selected schedules deleted successfully.', 'success');
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) { showToast(data?.message || 'Failed to delete selected schedules.', 'error'); updateSelectionState(); return; }
+    showToast(data?.message || 'Selected schedules deleted successfully.', 'success');
     window.location.reload();
-  } catch (error) {
-    showToast('Unable to delete selected schedules right now.', 'error');
-    updateSelectionState();
-  }
+  } catch { showToast('Unable to delete selected schedules right now.', 'error'); updateSelectionState(); }
 }
 
-function startOfWeekMonday(date) {
-  const cursor = new Date(date);
-  cursor.setHours(0, 0, 0, 0);
-  const day = cursor.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  cursor.setDate(cursor.getDate() + diff);
-  return cursor;
-}
-
-function addDays(date, days) {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
-}
-
-function toLocalDateKey(date) {
-  return [
-    date.getFullYear(),
-    String(date.getMonth() + 1).padStart(2, '0'),
-    String(date.getDate()).padStart(2, '0'),
-  ].join('-');
-}
-
-function renderCalendarNav() {
-  if (!calMonthLabel || !calDaysContainer) return;
-
-  calMonthLabel.textContent = calendarAnchorDate.toLocaleDateString([], {
-    month: 'long',
-    year: 'numeric',
-  });
-
-  const weekStart = startOfWeekMonday(calendarAnchorDate);
-  const activeKey = toLocalDateKey(selectedCalendarDate);
-  const labels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-  calDaysContainer.innerHTML = labels
-    .map((label, index) => {
-      const date = addDays(weekStart, index);
-      const dateKey = toLocalDateKey(date);
-      const isActive = dateKey === activeKey;
-
-      return `<button type="button" class="cal-day ${isActive ? 'active' : ''}" data-date="${dateKey}">${label}</button>`;
-    })
-    .join('');
-}
-
-renderCalendarNav();
-
-function applyScheduleDayFilter() {
-  if (!scheduleListContainer) return;
-
-  const cards = Array.from(scheduleListContainer.querySelectorAll('.schedule-card'));
-  const activeDate = toLocalDateKey(selectedCalendarDate);
-  const searchTerm = String(scheduleSearchInput?.value || '').trim().toLowerCase();
-  let visibleCount = 0;
-
-  cards.forEach((card) => {
-    const cardDate = card.getAttribute('data-start-date') || '';
-    const matchesDate = cardDate === activeDate;
-    const matchesSearch = searchTerm === '' || String(card.textContent || '').toLowerCase().includes(searchTerm);
-    const isVisible = matchesDate && matchesSearch;
-    card.style.display = isVisible ? '' : 'none';
-    if (isVisible) visibleCount += 1;
-  });
-
-  if (scheduleCountLabel) {
-    scheduleCountLabel.textContent = `${visibleCount} Session(s)`;
-  }
-
-  if (scheduleEmptyAll) {
-    scheduleEmptyAll.style.display = cards.length === 0 ? '' : 'none';
-  }
-
-  if (scheduleFilteredEmpty) {
-    scheduleFilteredEmpty.style.display = cards.length > 0 && visibleCount === 0 ? '' : 'none';
-  }
-}
-
-calDaysContainer?.addEventListener('click', (event) => {
-  const target = event.target;
-  if (!(target instanceof HTMLElement)) return;
-
-  const dayBtn = target.closest('.cal-day');
-  if (!(dayBtn instanceof HTMLElement)) return;
-
-  const dateKey = dayBtn.getAttribute('data-date');
-  if (!dateKey) return;
-
-  selectedCalendarDate = new Date(`${dateKey}T00:00:00`);
-  renderCalendarNav();
-  applyScheduleDayFilter();
-});
-
-calPrevBtn?.addEventListener('click', () => {
-  calendarAnchorDate = addDays(calendarAnchorDate, -7);
-  selectedCalendarDate = startOfWeekMonday(calendarAnchorDate);
-  renderCalendarNav();
-  applyScheduleDayFilter();
-});
-
-calNextBtn?.addEventListener('click', () => {
-  calendarAnchorDate = addDays(calendarAnchorDate, 7);
-  selectedCalendarDate = startOfWeekMonday(calendarAnchorDate);
-  renderCalendarNav();
-  applyScheduleDayFilter();
-});
-
-calTodayBtn?.addEventListener('click', () => {
-  calendarAnchorDate = new Date();
-  selectedCalendarDate = new Date();
-  renderCalendarNav();
-  applyScheduleDayFilter();
-});
-
-scheduleSearchInput?.addEventListener('input', () => {
-  applyScheduleDayFilter();
-});
-
-selectDeleteBtn?.addEventListener('click', (event) => {
-  event.preventDefault();
-  setSelectionMode(!selectionModeEnabled);
-});
-
-deleteSelectedBtn?.addEventListener('click', (event) => {
-  event.preventDefault();
-  deleteSelectedSchedules();
-});
-
-getScheduleCheckboxes().forEach((checkbox) => {
-  checkbox.addEventListener('click', (event) => {
-    event.stopPropagation();
-  });
-
-  checkbox.addEventListener('change', (event) => {
-    event.stopPropagation();
-    updateSelectionState();
-  });
-});
-
-document.querySelectorAll('.schedule-card').forEach((card) => {
-  card.addEventListener('click', (event) => {
-    if (!selectionModeEnabled) return;
-
-    const target = event.target;
-    if (target instanceof HTMLElement && target.closest('.js-edit-schedule')) {
-      return;
-    }
-
-    event.preventDefault();
-    const checkbox = card.querySelector('.schedule-select-checkbox');
-    if (!(checkbox instanceof HTMLInputElement)) return;
-    checkbox.checked = !checkbox.checked;
-    updateSelectionState();
-  });
-});
-
+/* ── CONTEXT SCHEDULE HELPERS ── */
 function formatRoomTime(value) {
   if (!value) return '-';
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '-';
-
-  return date.toLocaleString([], {
-    month: 'short',
-    day: '2-digit',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString([], { month: 'short', day: '2-digit', hour: 'numeric', minute: '2-digit' });
 }
 
 function renderRoomSchedules(classroomId) {
   if (!roomScheduleList) return;
-
-  if (!classroomId) {
-    roomScheduleList.innerHTML = '<div class="room-schedule-empty">Select a room to view its current faculty subjects and time blocks.</div>';
-    return;
-  }
-
+  if (!classroomId) { roomScheduleList.innerHTML = '<div class="room-schedule-empty">Select a room to view its current faculty subjects and time blocks.</div>'; return; }
   const selectedInstructorId = createInstructorSelect?.value || '';
-
   const rows = roomSchedulesData
-    .filter((row) => String(row.classroom_id) === String(classroomId))
-    .filter((row) => !selectedInstructorId || String(row.instructor_user_id) === String(selectedInstructorId))
-    .sort((a, b) => new Date(a.start_at || 0).getTime() - new Date(b.start_at || 0).getTime());
-
-  if (rows.length === 0) {
-    roomScheduleList.innerHTML = '<div class="room-schedule-empty">No schedule yet for this room.</div>';
-    return;
-  }
-
-  roomScheduleList.innerHTML = rows.map((row) => {
-    return `
-      <div class="room-schedule-item">
-        <div class="room-schedule-main">
-          <div class="room-schedule-subject">${row.course_code} - ${row.subject}</div>
-          <div class="room-schedule-meta">${row.faculty} • ${row.status}</div>
-        </div>
-        <div class="room-schedule-time">${formatRoomTime(row.start_at)} - ${formatRoomTime(row.end_at)}</div>
+    .filter((r) => String(r.classroom_id) === String(classroomId))
+    .filter((r) => !selectedInstructorId || String(r.instructor_user_id) === String(selectedInstructorId))
+    .sort((a, b) => new Date(a.start_at || 0) - new Date(b.start_at || 0));
+  if (rows.length === 0) { roomScheduleList.innerHTML = '<div class="room-schedule-empty">No schedule yet for this room.</div>'; return; }
+  roomScheduleList.innerHTML = rows.map((r) => `
+    <div class="room-schedule-item">
+      <div class="room-schedule-main">
+        <div class="room-schedule-subject">${r.course_code} - ${r.subject}</div>
+        <div class="room-schedule-meta">${r.faculty} • ${r.status}</div>
       </div>
-    `;
-  }).join('');
+      <div class="room-schedule-time">${formatRoomTime(r.start_at)} - ${formatRoomTime(r.end_at)}</div>
+    </div>`).join('');
 }
 
 function renderInstructorSchedules(instructorId) {
   if (!instructorScheduleList) return;
-
-  if (!instructorId) {
-    instructorScheduleList.innerHTML = '<div class="room-schedule-empty">Select an instructor to view assigned subjects and schedule time blocks.</div>';
-    return;
-  }
-
+  if (!instructorId) { instructorScheduleList.innerHTML = '<div class="room-schedule-empty">Select an instructor to view assigned subjects and schedule time blocks.</div>'; return; }
   const rows = roomSchedulesData
-    .filter((row) => String(row.instructor_user_id) === String(instructorId))
-    .sort((a, b) => new Date(a.start_at || 0).getTime() - new Date(b.start_at || 0).getTime());
-
-  if (rows.length === 0) {
-    instructorScheduleList.innerHTML = '<div class="room-schedule-empty">No schedule yet for this instructor.</div>';
-    return;
-  }
-
-  instructorScheduleList.innerHTML = rows.map((row) => {
-    return `
-      <div class="room-schedule-item">
-        <div class="room-schedule-main">
-          <div class="room-schedule-subject">${row.course_code} - ${row.subject}</div>
-          <div class="room-schedule-meta">${row.classroom_name || 'No room'} • ${row.status}</div>
-        </div>
-        <div class="room-schedule-time">${formatRoomTime(row.start_at)} - ${formatRoomTime(row.end_at)}</div>
+    .filter((r) => String(r.instructor_user_id) === String(instructorId))
+    .sort((a, b) => new Date(a.start_at || 0) - new Date(b.start_at || 0));
+  if (rows.length === 0) { instructorScheduleList.innerHTML = '<div class="room-schedule-empty">No schedule yet for this instructor.</div>'; return; }
+  instructorScheduleList.innerHTML = rows.map((r) => `
+    <div class="room-schedule-item">
+      <div class="room-schedule-main">
+        <div class="room-schedule-subject">${r.course_code} - ${r.subject}</div>
+        <div class="room-schedule-meta">${r.classroom_name || 'No room'} • ${r.status}</div>
       </div>
-    `;
-  }).join('');
+      <div class="room-schedule-time">${formatRoomTime(r.start_at)} - ${formatRoomTime(r.end_at)}</div>
+    </div>`).join('');
 }
 
 function filterCoursesByInstructor(instructorId) {
   if (!createCourseSelect) return;
-
-  const options = Array.from(createCourseSelect.options);
   let hasVisibleSelected = false;
-
-  options.forEach((option, index) => {
-    if (index === 0) {
-      option.hidden = false;
-      option.disabled = false;
-      return;
-    }
-
-    const optionInstructorId = option.getAttribute('data-instructor-id') || '';
-    const visible = !instructorId || optionInstructorId === String(instructorId);
-    option.hidden = !visible;
-    option.disabled = !visible;
-
-    if (visible && option.selected) {
-      hasVisibleSelected = true;
-    }
+  Array.from(createCourseSelect.options).forEach((option, i) => {
+    if (i === 0) { option.hidden = false; option.disabled = false; return; }
+    const visible = !instructorId || (option.getAttribute('data-instructor-id') || '') === String(instructorId);
+    option.hidden = !visible; option.disabled = !visible;
+    if (visible && option.selected) hasVisibleSelected = true;
   });
-
-  if (!hasVisibleSelected) {
-    createCourseSelect.value = '';
-  }
+  if (!hasVisibleSelected) createCourseSelect.value = '';
 }
 
+function refreshCreateSubjects() {
+  if (!createCourseSelect) return;
+
+  updateCreateCourseOptionsForYear('');
+}
+
+/* ── DATE HELPERS ── */
 function toLocalDateInputValue(date) {
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 10);
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+function getSemesterEndDate(ref) {
+  return (ref.getMonth() + 1) <= 5 ? new Date(ref.getFullYear(), 4, 31) : new Date(ref.getFullYear(), 11, 31);
+}
+function toDateTimeLocalValue(value) {
+  if (!value) return '';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return new Date(parsed.getTime() - parsed.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 }
 
-function getSemesterEndDate(referenceDate) {
-  const month = referenceDate.getMonth() + 1;
-
-  // Align defaults to common university terms: Jan-May and Jun-Dec.
-  if (month <= 5) {
-    return new Date(referenceDate.getFullYear(), 4, 31);
-  }
-
-  return new Date(referenceDate.getFullYear(), 11, 31);
-}
-
+/* ── CREATE OVERLAY ── */
 function openCreateOverlay() {
   if (!createOverlay) return;
   createOverlay.classList.add('is-open');
   createOverlay.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
-
-  if (createRepeatUntilInput && !createRepeatUntilInput.value) {
-    const startReference = createStartAtInput?.value ? new Date(createStartAtInput.value) : new Date();
-    const semesterEnd = getSemesterEndDate(startReference);
-    createRepeatUntilInput.value = toLocalDateInputValue(semesterEnd);
+  if (createSemesterEndInput && !createSemesterEndInput.value) {
+    const ref = createSemesterStartInput?.value ? new Date(`${createSemesterStartInput.value}T00:00:00`) : new Date();
+    createSemesterEndInput.value = toLocalDateInputValue(getSemesterEndDate(ref));
   }
-
-  filterCoursesByInstructor(createInstructorSelect?.value || '');
+  refreshCreateSubjects();
   renderInstructorSchedules(createInstructorSelect?.value || '');
   renderRoomSchedules(createClassroomSelect?.value || '');
 }
-
 function closeCreateOverlay() {
   if (!createOverlay) return;
   createOverlay.classList.remove('is-open');
@@ -1826,49 +1736,31 @@ function closeCreateOverlay() {
   document.body.style.overflow = '';
 }
 
-function toDateTimeLocalValue(value) {
-  if (!value) return '';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return '';
-
-  const local = new Date(parsed.getTime() - parsed.getTimezoneOffset() * 60000);
-  return local.toISOString().slice(0, 16);
-}
-
-function clearEditError() {
-  if (!editScheduleErrorBox) return;
-  editScheduleErrorBox.textContent = '';
-  editScheduleErrorBox.classList.remove('is-visible');
-}
-
-function setEditError(message) {
-  if (!editScheduleErrorBox) return;
-  editScheduleErrorBox.textContent = message;
-  editScheduleErrorBox.classList.add('is-visible');
-}
+/* ── EDIT OVERLAY ── */
+function clearEditError() { if (editScheduleErrorBox) { editScheduleErrorBox.textContent = ''; editScheduleErrorBox.classList.remove('is-visible'); } }
+function setEditError(msg) { if (editScheduleErrorBox) { editScheduleErrorBox.textContent = msg; editScheduleErrorBox.classList.add('is-visible'); } }
 
 function openEditOverlay(payload) {
   if (!editOverlay) return;
-
-  editScheduleIdInput.value = payload.id || '';
-  editScheduleClassroomInput.value = payload.classroomId || '';
-  editScheduleCourseInput.value = payload.courseId || '';
-  editScheduleEnrolledInput.value = String(payload.enrolled ?? 0);
-  editScheduleStartInput.value = toDateTimeLocalValue(payload.startAt);
-  editScheduleEndInput.value = toDateTimeLocalValue(payload.endAt);
+  editScheduleIdInput.value              = payload.id || '';
+  if (editScheduleSeriesIdInput)          editScheduleSeriesIdInput.value = payload.seriesId || '';
+  editScheduleClassroomInput.value       = payload.classroomId || '';
+  editScheduleCourseInput.value          = payload.courseId || '';
+  editScheduleEnrolledInput.value        = String(payload.enrolled ?? 0);
+  if (editScheduleStatusInput)            editScheduleStatusInput.value = payload.status || 'scheduled';
+  if (editScheduleApplySeriesInput)       editScheduleApplySeriesInput.checked = false;
+  editScheduleStartInput.value           = toDateTimeLocalValue(payload.startAt);
+  editScheduleEndInput.value             = toDateTimeLocalValue(payload.endAt);
   if (editScheduleRepeatUntilInput) {
-    const startReference = payload.startAt ? new Date(payload.startAt) : new Date();
-    const semesterEnd = getSemesterEndDate(startReference);
-    editScheduleRepeatUntilInput.value = toLocalDateInputValue(semesterEnd);
+    const ref = payload.startAt ? new Date(payload.startAt) : new Date();
+    editScheduleRepeatUntilInput.value = toLocalDateInputValue(getSemesterEndDate(ref));
   }
   editScheduleSub.textContent = `${payload.subject || 'Schedule'} • ${payload.room || 'Room'}`;
   clearEditError();
-
   editOverlay.classList.add('is-open');
   editOverlay.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
 }
-
 function closeEditOverlay() {
   if (!editOverlay) return;
   editOverlay.classList.remove('is-open');
@@ -1877,222 +1769,132 @@ function closeEditOverlay() {
   clearEditError();
 }
 
-function openImportOverlay() {
-  if (!importOverlay) return;
-  importOverlay.classList.add('is-open');
-  importOverlay.setAttribute('aria-hidden', 'false');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeImportOverlay() {
-  if (!importOverlay) return;
-  importOverlay.classList.remove('is-open');
-  importOverlay.setAttribute('aria-hidden', 'true');
-  document.body.style.overflow = '';
-}
-
-function clearImportError() {
-  if (!importErrorBox) return;
-  importErrorBox.textContent = '';
-  importErrorBox.classList.remove('is-visible');
-}
-
-function setImportError(message) {
-  if (!importErrorBox) return;
-  importErrorBox.textContent = message;
-  importErrorBox.classList.add('is-visible');
-}
+/* ── IMPORT OVERLAY ── */
+function openImportOverlay()  { if (!importOverlay) return; importOverlay.classList.add('is-open'); importOverlay.setAttribute('aria-hidden', 'false'); document.body.style.overflow = 'hidden'; }
+function closeImportOverlay() { if (!importOverlay) return; importOverlay.classList.remove('is-open'); importOverlay.setAttribute('aria-hidden', 'true'); document.body.style.overflow = ''; }
+function clearImportError() { if (importErrorBox) { importErrorBox.textContent = ''; importErrorBox.classList.remove('is-visible'); } }
+function setImportError(msg) { if (importErrorBox) { importErrorBox.textContent = msg; importErrorBox.classList.add('is-visible'); } }
 
 function renderImportPreview(rows) {
   if (!importPreviewBody) return;
-
-  if (!Array.isArray(rows) || rows.length === 0) {
-    importPreviewBody.innerHTML = '<tr><td colspan="6" style="color:var(--text-light);">No rows found in file.</td></tr>';
-    return;
-  }
-
+  if (!Array.isArray(rows) || rows.length === 0) { importPreviewBody.innerHTML = '<tr><td colspan="6" style="color:var(--text-light);">No rows found in file.</td></tr>'; return; }
   importPreviewBody.innerHTML = rows.map((row) => {
-    const statusClass = row.is_valid ? 'import-row-valid' : 'import-row-error';
-    const resultText = row.is_valid ? 'Valid' : (row.errors || []).join(' | ');
-
-    return `
-      <tr>
-        <td>${row.row_number ?? '-'}</td>
-        <td>${row.room ?? '-'}</td>
-        <td>${row.instructor ?? '-'}</td>
-        <td>${row.start_at ?? '-'}</td>
-        <td>${row.end_at ?? '-'}</td>
-        <td class="${statusClass}">${resultText}</td>
-      </tr>
-    `;
+    const cls = row.is_valid ? 'import-row-valid' : 'import-row-error';
+    const result = row.is_valid ? 'Valid' : (row.errors || []).join(' | ');
+    return `<tr><td>${row.row_number ?? '-'}</td><td>${row.room ?? '-'}</td><td>${row.instructor ?? '-'}</td><td>${row.start_at ?? '-'}</td><td>${row.end_at ?? '-'}</td><td class="${cls}">${result}</td></tr>`;
   }).join('');
 }
 
 async function requestImportPreview() {
   clearImportError();
-
   const file = importFileInput?.files?.[0];
-  if (!file) {
-    setImportError('Select a CSV/XLS/XLSX file first.');
-    return;
-  }
-
+  if (!file) { setImportError('Select a CSV/XLS/XLSX file first.'); return; }
   const formData = new FormData();
   formData.append('file', file);
   if (importDefaultRoom?.value) formData.append('default_classroom_id', importDefaultRoom.value);
-
-  importPreviewBtn.disabled = true;
-  importSaveBtn.disabled = true;
+  importPreviewBtn.disabled = true; importSaveBtn.disabled = true;
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
-
+  const tid = setTimeout(() => controller.abort(), 30000);
   try {
-    const response = await fetch(previewEndpoint, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': "{{ csrf_token() }}",
-      },
-      body: formData,
-      signal: controller.signal,
-    });
-
-    const payload = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      setImportError(payload?.message || 'Failed to preview import file.');
-      return;
-    }
-
-    const rows = payload?.data?.rows || [];
-    const validCount = Number(payload?.data?.valid_count || 0);
-    const errorCount = Number(payload?.data?.error_count || 0);
-
+    const response = await fetch(previewEndpoint, { method: 'POST', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" }, body: formData, signal: controller.signal });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) { setImportError(data?.message || 'Failed to preview import file.'); return; }
+    const rows = data?.data?.rows || [];
+    const valid = Number(data?.data?.valid_count || 0), errors = Number(data?.data?.error_count || 0);
     renderImportPreview(rows);
-    importSummaryText.textContent = `${rows.length} row(s): ${validCount} valid, ${errorCount} with errors.`;
-    importSaveBtn.disabled = rows.length === 0 || errorCount > 0;
-  } catch (error) {
-    if (error?.name === 'AbortError') {
-      setImportError('Preview timed out. Try a smaller file or try again.');
-    } else {
-      setImportError('Unable to reach server for preview.');
-    }
-  } finally {
-    clearTimeout(timeoutId);
-    importPreviewBtn.disabled = false;
-  }
+    importSummaryText.textContent = `${rows.length} row(s): ${valid} valid, ${errors} with errors.`;
+    importSaveBtn.disabled = rows.length === 0 || errors > 0;
+  } catch (e) { setImportError(e?.name === 'AbortError' ? 'Preview timed out.' : 'Unable to reach server for preview.'); }
+  finally { clearTimeout(tid); importPreviewBtn.disabled = false; }
 }
 
 async function submitImportRows() {
   clearImportError();
-
   const file = importFileInput?.files?.[0];
-  if (!file) {
-    setImportError('Select a CSV/XLS/XLSX file first.');
-    return;
-  }
-
+  if (!file) { setImportError('Select a CSV/XLS/XLSX file first.'); return; }
   const formData = new FormData();
   formData.append('file', file);
   if (importDefaultRoom?.value) formData.append('default_classroom_id', importDefaultRoom.value);
-
   importSaveBtn.disabled = true;
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 45000);
-
+  const tid = setTimeout(() => controller.abort(), 45000);
   try {
-    const response = await fetch(importEndpoint, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': "{{ csrf_token() }}",
-      },
-      body: formData,
-      signal: controller.signal,
-    });
-
-    const payload = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      setImportError(payload?.message || 'Import failed.');
-      if (payload?.data?.rows) {
-        renderImportPreview(payload.data.rows);
-        importSummaryText.textContent = `${payload?.data?.rows?.length || 0} row(s): ${payload?.data?.valid_count || 0} valid, ${payload?.data?.error_count || 0} with errors.`;
-      }
-      return;
-    }
-
-    showToast(payload?.message || 'Schedule import completed successfully.', 'success');
+    const response = await fetch(importEndpoint, { method: 'POST', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" }, body: formData, signal: controller.signal });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) { setImportError(data?.message || 'Import failed.'); if (data?.data?.rows) { renderImportPreview(data.data.rows); importSummaryText.textContent = `${data.data.rows.length} row(s): ${data.data.valid_count || 0} valid, ${data.data.error_count || 0} with errors.`; } return; }
+    showToast(data?.message || 'Schedule import completed successfully.', 'success');
     window.location.reload();
-  } catch (error) {
-    if (error?.name === 'AbortError') {
-      setImportError('Import timed out. Try importing fewer rows per batch.');
-    } else {
-      setImportError('Unable to reach server for import.');
-    }
-  } finally {
-    clearTimeout(timeoutId);
-    importSaveBtn.disabled = false;
-  }
+  } catch (e) { setImportError(e?.name === 'AbortError' ? 'Import timed out.' : 'Unable to reach server for import.'); }
+  finally { clearTimeout(tid); importSaveBtn.disabled = false; }
 }
 
-document.getElementById('addScheduleBtn')?.addEventListener('click', (event) => {
-  event.preventDefault();
-  openCreateOverlay();
-});
+/* ── EVENT LISTENERS ── */
+document.getElementById('addScheduleBtn')?.addEventListener('click', (e) => { e.preventDefault(); openCreateOverlay(); });
+openImportBtn?.addEventListener('click', (e) => { e.preventDefault(); openImportOverlay(); });
 
-openImportBtn?.addEventListener('click', (event) => {
-  event.preventDefault();
-  openImportOverlay();
+// Form submission validation
+createScheduleForm?.addEventListener('submit', (e) => {
+  const courseId = createCourseSelect?.value;
+  const classroomId = createClassroomSelect?.value;
+  const semesterStart = createSemesterStartInput?.value;
+  const semesterEnd = createSemesterEndInput?.value;
+  const day1 = document.getElementById('createDay1')?.value;
+  const day1Start = document.getElementById('createDay1Start')?.value;
+  const day1End = document.getElementById('createDay1End')?.value;
+  const day2 = document.getElementById('createDay2')?.value;
+  const day2Start = document.getElementById('createDay2Start')?.value;
+  const day2End = document.getElementById('createDay2End')?.value;
+
+  const errors = [];
+  if (!classroomId) errors.push('Please select a room');
+  if (!courseId) errors.push('Please select a subject');
+  if (!semesterStart) errors.push('Please enter semester start date');
+  if (!semesterEnd) errors.push('Please enter semester end date');
+  if (!day1) errors.push('Please select Day 1');
+  if (!day1Start) errors.push('Please enter Day 1 start time');
+  if (!day1End) errors.push('Please enter Day 1 end time');
+  if (!day2) errors.push('Please select Day 2');
+  if (!day2Start) errors.push('Please enter Day 2 start time');
+  if (!day2End) errors.push('Please enter Day 2 end time');
+
+  if (errors.length > 0) {
+    e.preventDefault();
+    alert('Please complete all required fields:\n\n' + errors.join('\n'));
+    return false;
+  }
+
+  // Ensure course select is enabled before form submission
+  if (createCourseSelect && createCourseSelect.disabled) {
+    createCourseSelect.disabled = false;
+  }
 });
 
 createCloseBtn?.addEventListener('click', closeCreateOverlay);
 createCancelBtn?.addEventListener('click', closeCreateOverlay);
-createInstructorSelect?.addEventListener('change', (event) => {
-  const instructorId = event.target.value;
-  filterCoursesByInstructor(instructorId);
-  renderInstructorSchedules(instructorId);
+createInstructorSelect?.addEventListener('change', (e) => {
+  refreshCreateSubjects();
+  renderInstructorSchedules(e.target.value);
   renderRoomSchedules(createClassroomSelect?.value || '');
 });
-createClassroomSelect?.addEventListener('change', (event) => {
-  renderRoomSchedules(event.target.value);
-});
+createClassroomSelect?.addEventListener('change', (e) => renderRoomSchedules(e.target.value));
 
-createStartAtInput?.addEventListener('change', () => {
-  if (!createRepeatUntilInput || !createStartAtInput?.value) return;
-
-  const startDate = new Date(createStartAtInput.value);
-  if (Number.isNaN(startDate.getTime())) return;
-
-  const minDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-  const localMinDate = toLocalDateInputValue(minDate);
-
-  createRepeatUntilInput.min = localMinDate;
-
-  const currentRepeat = createRepeatUntilInput.value ? new Date(`${createRepeatUntilInput.value}T00:00:00`) : null;
-  if (!currentRepeat || currentRepeat < minDate) {
-    const semesterEnd = getSemesterEndDate(startDate);
-    const chosen = semesterEnd < minDate ? minDate : semesterEnd;
-    createRepeatUntilInput.value = toLocalDateInputValue(chosen);
-  }
+createSemesterStartInput?.addEventListener('change', () => {
+  if (!createSemesterEndInput || !createSemesterStartInput?.value) return;
+  const start = new Date(`${createSemesterStartInput.value}T00:00:00`);
+  if (Number.isNaN(start.getTime())) return;
+  createSemesterEndInput.min = toLocalDateInputValue(start);
+  const current = createSemesterEndInput.value ? new Date(`${createSemesterEndInput.value}T00:00:00`) : null;
+  if (!current || current < start) createSemesterEndInput.value = toLocalDateInputValue(getSemesterEndDate(start));
 });
 
 editScheduleStartInput?.addEventListener('change', () => {
   if (!editScheduleRepeatUntilInput || !editScheduleStartInput?.value) return;
-
-  const startDate = new Date(editScheduleStartInput.value);
-  if (Number.isNaN(startDate.getTime())) return;
-
-  const minDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-  const localMinDate = toLocalDateInputValue(minDate);
-  editScheduleRepeatUntilInput.min = localMinDate;
-
-  const currentRepeat = editScheduleRepeatUntilInput.value ? new Date(`${editScheduleRepeatUntilInput.value}T00:00:00`) : null;
-  if (!currentRepeat || currentRepeat < minDate) {
-    const semesterEnd = getSemesterEndDate(startDate);
-    const chosen = semesterEnd < minDate ? minDate : semesterEnd;
-    editScheduleRepeatUntilInput.value = toLocalDateInputValue(chosen);
-  }
+  const start = new Date(editScheduleStartInput.value);
+  if (Number.isNaN(start.getTime())) return;
+  const min = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  editScheduleRepeatUntilInput.min = toLocalDateInputValue(min);
+  const current = editScheduleRepeatUntilInput.value ? new Date(`${editScheduleRepeatUntilInput.value}T00:00:00`) : null;
+  if (!current || current < min) editScheduleRepeatUntilInput.value = toLocalDateInputValue(getSemesterEndDate(start));
 });
 
 importCloseBtn?.addEventListener('click', closeImportOverlay);
@@ -2100,131 +1902,165 @@ importCancelBtn?.addEventListener('click', closeImportOverlay);
 importPreviewBtn?.addEventListener('click', requestImportPreview);
 importSaveBtn?.addEventListener('click', submitImportRows);
 
-importOverlay?.addEventListener('click', (event) => {
-  if (event.target === importOverlay) {
-    closeImportOverlay();
-  }
-});
-
-createOverlay?.addEventListener('click', (event) => {
-  if (event.target === createOverlay) {
-    closeCreateOverlay();
-  }
-});
-
-editOverlay?.addEventListener('click', (event) => {
-  if (event.target === editOverlay) {
-    closeEditOverlay();
-  }
-});
-
-document.addEventListener('keydown', (event) => {
-  if (event.key !== 'Escape') return;
-
-  if (createOverlay?.classList.contains('is-open')) {
-    closeCreateOverlay();
-    return;
-  }
-
-  if (editOverlay?.classList.contains('is-open')) {
-    closeEditOverlay();
-    return;
-  }
-
-  if (importOverlay?.classList.contains('is-open')) {
-    closeImportOverlay();
-  }
-});
+importOverlay?.addEventListener('click', (e) => { if (e.target === importOverlay) closeImportOverlay(); });
+createOverlay?.addEventListener('click', (e) => { if (e.target === createOverlay) closeCreateOverlay(); });
+editOverlay?.addEventListener('click', (e) => { if (e.target === editOverlay) closeEditOverlay(); });
+facultyOverlay?.addEventListener('click', (e) => { if (e.target === facultyOverlay) closeFacultyModal(); });
+facultyDeleteOverlay?.addEventListener('click', (e) => { if (e.target === facultyDeleteOverlay) closeFacultyDeleteModal(); });
 
 editCloseBtn?.addEventListener('click', closeEditOverlay);
 editCancelBtn?.addEventListener('click', closeEditOverlay);
+facultyModalClose?.addEventListener('click', (e) => { e.preventDefault(); closeFacultyModal(); });
+facultyDeleteClose?.addEventListener('click', (e) => { e.preventDefault(); closeFacultyDeleteModal(); });
+facultyDeleteCancel?.addEventListener('click', (e) => { e.preventDefault(); closeFacultyDeleteModal(); });
+facultyDeleteConfirm?.addEventListener('click', (e) => { e.preventDefault(); confirmFacultyDelete(); });
 
-editForm?.addEventListener('submit', async (event) => {
-  event.preventDefault();
+selectDeleteBtn?.addEventListener('click', (e) => { e.preventDefault(); setSelectionMode(!selectionModeEnabled); });
+deleteSelectedBtn?.addEventListener('click', (e) => { e.preventDefault(); deleteSelectedSchedules(); });
 
-  clearEditError();
+getScheduleCheckboxes().forEach((c) => {
+  c.addEventListener('click', (e) => e.stopPropagation());
+  c.addEventListener('change', (e) => { e.stopPropagation(); updateSelectionState(); });
+});
 
-  const scheduleId = editScheduleIdInput?.value;
-  if (!scheduleId) {
-    setEditError('Missing schedule id.');
-    return;
-  }
+document.addEventListener('click', (e) => {
+  const btn = e.target instanceof HTMLElement ? e.target.closest('.js-unassign-course-btn') : null;
+  if (!btn) return;
 
-  const classroomId = (editScheduleClassroomInput?.value || '').trim();
-  const courseId = (editScheduleCourseInput?.value || '').trim();
-  const startAt = editScheduleStartInput?.value || '';
-  const endAt = editScheduleEndInput?.value || '';
-  const repeatUntil = editScheduleRepeatUntilInput?.value || '';
-  const enrolledRaw = editScheduleEnrolledInput?.value || '0';
-  const enrolled = Number.isNaN(Number(enrolledRaw)) ? 0 : Math.max(0, parseInt(enrolledRaw, 10));
+  const courseId = btn.getAttribute('data-course-id');
+  const courseCode = btn.getAttribute('data-course-code') || 'this subject';
+  if (!courseId) return;
 
-  if (!classroomId || !courseId || !startAt || !endAt) {
-    setEditError('Room, subject, start, and end are required.');
-    return;
-  }
+  if (!confirm(`Unassign "${courseCode}" from this instructor?`)) return;
+  unassignCourse(courseId);
+});
 
-  if (new Date(endAt).getTime() <= new Date(startAt).getTime()) {
-    setEditError('End time must be after start time.');
-    return;
-  }
-
-  editScheduleSaveBtn.disabled = true;
-
+async function unassignCourse(courseId) {
   try {
-    const response = await fetch(`/admin/schedule/${scheduleId}`, {
+    const response = await fetch(`/admin/courses/${courseId}/unassign`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'X-CSRF-TOKEN': "{{ csrf_token() }}",
       },
-      body: JSON.stringify({
-        classroom_id: Number(classroomId),
-        course_id: Number(courseId),
-        start_at: startAt,
-        end_at: endAt,
-        repeat_until: repeatUntil || null,
-        enrolled,
-      }),
+      body: JSON.stringify({}),
     });
 
-    const payload = await response.json().catch(() => ({}));
-
+    const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      const errors = payload?.errors ? Object.values(payload.errors).flat().join(' ') : '';
-      setEditError(errors || payload?.message || 'Failed to update schedule.');
+      alert(data?.message || 'Failed to unassign subject.');
       return;
     }
 
-    closeEditOverlay();
+    alert('Subject unassigned successfully.');
     window.location.reload();
-  } catch (error) {
-    setEditError('Unable to update schedule right now.');
-  } finally {
-    editScheduleSaveBtn.disabled = false;
+  } catch {
+    alert('Unable to unassign subject right now.');
   }
+}
+
+document.querySelectorAll('.schedule-card').forEach((card) => {
+  card.addEventListener('click', (e) => {
+    if (!selectionModeEnabled) return;
+    if (e.target instanceof HTMLElement && e.target.closest('.js-edit-schedule')) return;
+    e.preventDefault();
+    const checkbox = card.querySelector('.schedule-select-checkbox');
+    if (!(checkbox instanceof HTMLInputElement)) return;
+    checkbox.checked = !checkbox.checked;
+    updateSelectionState();
+  });
 });
 
-document.querySelectorAll('.js-edit-schedule').forEach((button) => {
-  button.addEventListener('click', (event) => {
-    event.preventDefault();
-    event.stopPropagation();
+document.querySelectorAll('.js-faculty-card').forEach((card) => {
+  card.addEventListener('click', (e) => {
+    if (e.target instanceof HTMLElement && e.target.closest('.js-faculty-delete')) return;
+    const id = card.getAttribute('data-faculty-id');
+    if (id) openFacultyModal(id);
+  });
+  card.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    const id = card.getAttribute('data-faculty-id');
+    if (id) openFacultyModal(id);
+  });
+});
 
-    const scheduleId = button.getAttribute('data-schedule-id');
-    if (!scheduleId) return;
-
-    openEditOverlay({
-      id: scheduleId,
-      classroomId: button.getAttribute('data-schedule-classroom-id') || '',
-      courseId: button.getAttribute('data-schedule-course-id') || '',
-      startAt: button.getAttribute('data-schedule-start') || '',
-      endAt: button.getAttribute('data-schedule-end') || '',
-      enrolled: button.getAttribute('data-schedule-enrolled') || '0',
-      subject: button.getAttribute('data-schedule-subject') || 'Schedule',
-      room: button.getAttribute('data-schedule-room') || 'Room',
+document.querySelectorAll('.js-faculty-delete').forEach((btn) => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    const id = btn.getAttribute('data-faculty-id');
+    if (!id) return;
+    openFacultyDeleteModal({
+      id,
+      name:    btn.getAttribute('data-faculty-name') || 'Faculty',
+      courses: Number(btn.getAttribute('data-faculty-courses') || 0),
+      classes: Number(btn.getAttribute('data-faculty-classes') || 0),
     });
   });
 });
+
+document.querySelectorAll('.js-edit-schedule').forEach((btn) => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    const id = btn.getAttribute('data-schedule-id');
+    if (!id) return;
+    openEditOverlay({
+      id,
+      seriesId:    btn.getAttribute('data-schedule-series-id') || '',
+      classroomId: btn.getAttribute('data-schedule-classroom-id') || '',
+      courseId:    btn.getAttribute('data-schedule-course-id') || '',
+      status:      btn.getAttribute('data-schedule-status') || 'scheduled',
+      startAt:     btn.getAttribute('data-schedule-start') || '',
+      endAt:       btn.getAttribute('data-schedule-end') || '',
+      enrolled:    btn.getAttribute('data-schedule-enrolled') || '0',
+      subject:     btn.getAttribute('data-schedule-subject') || 'Schedule',
+      room:        btn.getAttribute('data-schedule-room') || 'Room',
+    });
+  });
+});
+
+editForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearEditError();
+  const scheduleId    = editScheduleIdInput?.value;
+  if (!scheduleId) { setEditError('Missing schedule id.'); return; }
+  const classroomId   = (editScheduleClassroomInput?.value || '').trim();
+  const courseId      = (editScheduleCourseInput?.value || '').trim();
+  const startAt       = editScheduleStartInput?.value || '';
+  const endAt         = editScheduleEndInput?.value || '';
+  const repeatUntil   = editScheduleRepeatUntilInput?.value || '';
+  const status        = editScheduleStatusInput?.value || 'scheduled';
+  const applyToSeries = !!editScheduleApplySeriesInput?.checked;
+  const enrolled      = Math.max(0, parseInt(editScheduleEnrolledInput?.value || '0', 10) || 0);
+  if (!classroomId || !courseId || !startAt || !endAt) { setEditError('Room, subject, start, and end are required.'); return; }
+  if (new Date(endAt) <= new Date(startAt)) { setEditError('End time must be after start time.'); return; }
+  editScheduleSaveBtn.disabled = true;
+  try {
+    const response = await fetch(`/admin/schedule/${scheduleId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+      body: JSON.stringify({ classroom_id: Number(classroomId), course_id: Number(courseId), start_at: startAt, end_at: endAt, repeat_until: repeatUntil || null, status, apply_to_series: applyToSeries, enrolled }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) { const errs = data?.errors ? Object.values(data.errors).flat().join(' ') : ''; setEditError(errs || data?.message || 'Failed to update schedule.'); return; }
+    closeEditOverlay();
+    window.location.reload();
+  } catch { setEditError('Unable to update schedule right now.'); }
+  finally { editScheduleSaveBtn.disabled = false; }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (facultyOverlay?.classList.contains('is-open'))       { closeFacultyModal(); return; }
+  if (facultyDeleteOverlay?.classList.contains('is-open')) { closeFacultyDeleteModal(); return; }
+  if (createOverlay?.classList.contains('is-open'))        { closeCreateOverlay(); return; }
+  if (editOverlay?.classList.contains('is-open'))          { closeEditOverlay(); return; }
+  if (importOverlay?.classList.contains('is-open'))        { closeImportOverlay(); }
+});
+
+facultySearchInput?.addEventListener('input', applyFacultyFilter);
+applyFacultyFilter();
 </script>
 
 </body>

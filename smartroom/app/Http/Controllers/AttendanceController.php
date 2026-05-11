@@ -5,17 +5,25 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 use App\Models\Course;
 use App\Models\Schedule;
 use App\Models\AttendanceSession;
 use App\Models\AttendanceRecord;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 
 class AttendanceController extends Controller
 {
     public function index(Request $request)
     {
-        $courses = Course::with('schedules.classroom')->get();
+        // Fetch only courses assigned to the current instructor
+        $courses = Course::with('schedules.classroom')
+            ->where('instructor_user_id', Auth::id())
+            ->orderBy('code')
+            ->get();
 
         $filterCourse = $request->query('course_id');
         $filterStatus = $request->query('status');
@@ -63,32 +71,122 @@ class AttendanceController extends Controller
             'courses' => $coursesCount,
         ];
 
+        // Build assigned attendance cards from schedules
+        $now = now();
+        $facultyScheduleQuery = Schedule::whereHas('course', function ($q) {
+            $q->where('instructor_user_id', Auth::id());
+        });
+        
+        $attendanceCards = (clone $facultyScheduleQuery)
+            ->with(['classroom', 'course'])
+            ->orderBy('start_at')
+            ->get()
+            ->groupBy(function (Schedule $schedule): string {
+                return implode('|', [
+                    (string) ($schedule->course_id ?? 0),
+                    (string) ($schedule->block_section ?? ''),
+                    (string) ($schedule->classroom_id ?? 0),
+                    (string) optional($schedule->start_at)->format('H:i'),
+                ]);
+            })
+            ->map(function ($items) use ($now): array {
+                $sorted = $items->sortBy('start_at')->values();
+                $current = $sorted->first(function (Schedule $schedule) use ($now): bool {
+                    return $schedule->start_at
+                        && $schedule->start_at->lte($now)
+                        && ($schedule->end_at === null || $schedule->end_at->gte($now));
+                });
+                $upcoming = $sorted->first(function (Schedule $schedule) use ($now): bool {
+                    return $schedule->start_at && $schedule->start_at->gte($now);
+                });
+                $primary = $current ?? $upcoming ?? $sorted->last();
+
+                if (! $primary) {
+                    return [];
+                }
+
+                $status = 'finished';
+                if ($current) {
+                    $status = 'ongoing';
+                } elseif ($upcoming) {
+                    $status = 'upcoming';
+                }
+
+                $courseCode = (string) ($primary->course?->code ?? 'N/A');
+                $courseTitle = (string) ($primary->course?->title ?? 'Untitled Subject');
+                $roomName = (string) ($primary->classroom?->name ?? 'Room N/A');
+                $building = (string) ($primary->classroom?->building ?? '');
+                $section = (string) ($primary->block_section ?? '—');
+
+                return [
+                    'schedule_id' => (int) $primary->id,
+                    'course_code' => $courseCode,
+                    'subject' => $courseTitle,
+                    'section' => $section,
+                    'room' => trim($roomName . ($building !== '' ? ', ' . $building : '')),
+                    'time' => $primary->start_at
+                        ? $primary->start_at->format('g:i A') . ($primary->end_at ? ' - ' . $primary->end_at->format('g:i A') : '')
+                        : 'TBA',
+                    'status' => $status,
+                    'search' => strtolower(trim($courseCode . ' ' . $courseTitle . ' ' . $section . ' ' . $roomName . ' ' . $building)),
+                ];
+            })
+            ->filter()
+            ->values();
+
         // Render the attendance index view
-        return view('frontend.faculty.attendance', compact('courses', 'sessions', 'stats', 'filterCourse', 'filterStatus', 'filterMonth'));
+        return view('frontend.faculty.attendance', compact('courses', 'sessions', 'stats', 'attendanceCards', 'filterCourse', 'filterStatus', 'filterMonth'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'schedule_id' => 'required',
+            'schedule_id' => 'sometimes|nullable|integer|exists:schedules,id',
             'session_date' => 'required|date',
         ]);
-        $schedule = Schedule::find($request->input('schedule_id'));
-        if (!$schedule) {
-            return redirect()->route('faculty.attendance')->with('error', 'Schedule not found.');
+
+        $schedule = null;
+        $scheduleId = $request->input('schedule_id');
+        if ($scheduleId) {
+            $schedule = Schedule::find($scheduleId);
+            if (! $schedule) {
+                return redirect()->route('faculty.attendance')->with('error', 'Schedule not found.');
+            }
+
+            if (($schedule->course?->instructor_user_id ?? null) !== Auth::id()) {
+                return redirect()->route('faculty.attendance')->with('error', 'You are not allowed to open this schedule.');
+            }
         }
+
+        // Accept optional course selection for ad-hoc sessions
+        $courseId = $request->input('course_id');
 
         $sessionDate = $request->input('session_date');
 
+        if ($schedule) {
+            [$session, $message] = $this->openOrResumeScheduleSession($schedule, (string) $request->input('remarks'));
+
+            return redirect()
+                ->route('faculty.attendance.session', $session->id)
+                ->with('success', $message);
+        }
+
+        $token = Str::upper(Str::random(8));
+
         $session = AttendanceSession::create([
-            'schedule_id' => $schedule->id,
-            'course_id' => $schedule->course_id ?? null,
-            'room' => $schedule->classroom?->name ?? $request->input('room') ?? null,
+            'schedule_id' => null,
+            'classroom_id' => $request->input('classroom_id') ?? null,
+            'room' => $request->input('room') ?? null,
+            'session_date' => $sessionDate,
             'date' => $sessionDate,
-            'started_at' => now()->format('H:i:s'),
+            'started_at' => $request->input('started_at') ? date('H:i:s', strtotime($request->input('started_at'))) : now()->format('H:i:s'),
             'status' => 'open',
             'remarks' => $request->input('remarks'),
             'created_by' => Auth::id(),
+            'faculty_user_id' => Auth::id(),
+            'token' => $token,
+            'expires_at' => now()->addMinutes(60),
+            'course_id' => Schema::hasColumn('attendance_sessions', 'course_id') ? ($courseId ?? null) : null,
         ]);
 
         return redirect()->route('faculty.attendance.session', $session->id)->with('success', 'Attendance session opened.');
@@ -96,12 +194,79 @@ class AttendanceController extends Controller
 
     public function showSession($id)
     {
-        $session = AttendanceSession::with('records')->find($id);
+        $session = AttendanceSession::with([
+            'records' => fn ($query) => $query->orderBy('student_name'),
+            'schedule.course',
+            'schedule.classroom',
+            'course',
+        ])->find($id);
         if (!$session) {
             return redirect()->route('faculty.attendance')->with('error', 'Session not found.');
         }
 
-        return view('frontend.faculty.attendance-session', ['session' => $session]);
+        if ((int) ($session->created_by ?? 0) !== (int) Auth::id()) {
+            abort(403, 'You are not allowed to view this session.');
+        }
+
+        $course = $session->course ?: $session->schedule?->course;
+        $classroom = $session->schedule?->classroom;
+
+        $records = $session->records ?? collect();
+        $stats = [
+            'total' => $records->count(),
+            'present' => $records->where('status', 'present')->count(),
+            'absent' => $records->where('status', 'absent')->count(),
+            'excused' => $records->where('status', 'excused')->count(),
+            'rate' => $records->count() > 0
+                ? round(100 * ($records->where('present', true)->count() / $records->count()), 1)
+                : 0,
+        ];
+
+        $sessionView = array_merge($session->toArray(), [
+            'course_code' => $course?->code ?? $course?->subject_code ?? $course?->title ?? 'Session',
+            'course_title' => $course?->title ?? $course?->name ?? '',
+            'date_short' => $session->date ? Carbon::parse((string) $session->date)->format('M j, Y') : '',
+            'room' => $session->room ?: ($classroom?->name ?? null),
+            'building' => $classroom?->building ?? null,
+        ]);
+
+        if (request()->query('modal') === '1') {
+            return view('frontend.faculty._attendance-session-content', [
+                'session' => $sessionView,
+                'records' => $records,
+                'stats' => $stats,
+            ]);
+        }
+
+        return view('frontend.faculty.attendance-session', [
+            'session' => $sessionView,
+            'records' => $records,
+            'stats' => $stats,
+        ]);
+    }
+
+    /**
+     * Show a QR/checkin view for faculty to display the session QR
+     */
+    public function showQr($id)
+    {
+        $session = AttendanceSession::find($id);
+        if (! $session) return redirect()->route('faculty.attendance')->with('error', 'Session not found');
+
+        $checkinUrl = route('attendance.checkin.show', $session->token);
+        return view('frontend.faculty.attendance-qr', compact('session', 'checkinUrl'));
+    }
+
+    /**
+     * Show student-facing checkin page (GET). Students must be authenticated.
+     */
+    public function showCheckin(Request $request, $token)
+    {
+        $session = AttendanceSession::where('token', $token)->where('status', 'open')->first();
+        if (! $session) {
+            abort(404, 'Session not found or closed');
+        }
+        return view('frontend.student.checkin', compact('session'));
     }
 
     /**
@@ -167,7 +332,7 @@ class AttendanceController extends Controller
         }
 
         // Replace existing records for the session with provided ones
-        \DB::transaction(function () use ($payload, $session) {
+        DB::transaction(function () use ($payload, $session) {
             AttendanceRecord::where('attendance_session_id', $session->id)->delete();
             foreach ($payload as $r) {
                 $name = trim($r['student_name'] ?? '');
@@ -230,5 +395,385 @@ class AttendanceController extends Controller
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ]);
+    }
+
+    /**
+     * Student check-in using session token (QR or link).
+     */
+    public function studentCheckin(Request $request, $token)
+    {
+        $session = AttendanceSession::where('token', $token)
+            ->where('status', 'open')
+            ->first();
+
+        if (! $session) {
+            return response()->json(['message' => 'Session not found or closed'], 404);
+        }
+
+        // check expiry if column exists
+        if (isset($session->expires_at) && $session->expires_at && now()->greaterThan($session->expires_at)) {
+            return response()->json(['message' => 'Session expired'], 410);
+        }
+
+        $user = Auth::user();
+        $student = $user->student ?? null;
+        if (! $student) {
+            return response()->json(['message' => 'Student profile not found'], 403);
+        }
+
+        // Only enrolled students should be able to check in.
+        $courseId = $session->course_id ?: optional($session->schedule)->course_id;
+        if ($courseId) {
+            $isEnrolled = \App\Models\Enrollment::where('student_id', $student->id)
+                ->where('course_id', $courseId)
+                ->where('status', 'enrolled')
+                ->exists();
+
+            if (! $isEnrolled) {
+                return response()->json(['message' => 'You are not enrolled in this class'], 403);
+            }
+        }
+
+        // prevent duplicate
+        $exists = AttendanceRecord::where('attendance_session_id', $session->id)
+            ->where(function ($q) use ($student) {
+                $q->where('student_id', $student->id)->orWhere('student_id_number', $student->student_id);
+            })->first();
+        if ($exists) {
+            return response()->json(['message' => 'Already checked in'], 200);
+        }
+
+        $startReference = $session->started_at
+            ? \Carbon\Carbon::parse(($session->date ?? now()->toDateString()) . ' ' . $session->started_at)
+            : $session->created_at;
+        $minutesLate = $startReference ? $startReference->diffInMinutes(now(), false) : 0;
+        $status = $minutesLate <= 5 ? 'present' : ($minutesLate <= 20 ? 'late' : 'absent');
+
+        AttendanceRecord::create([
+            'attendance_session_id' => $session->id,
+            'student_name' => $student->name,
+            'student_id' => $student->id,
+            'student_id_number' => $student->student_id,
+            'status' => $status,
+            'time_in' => now(),
+            'present' => in_array($status, ['present', 'late'], true),
+        ]);
+
+        return response()->json(['message' => 'Checked in', 'status' => $status], 201);
+    }
+
+    /**
+     * Get instructor's assigned courses with real-time status and upcoming schedules
+     */
+    public function getInstructorCourses(Request $request)
+    {
+        $userId = Auth::id();
+        $now = \Carbon\Carbon::now();
+
+        // Get all courses assigned to this instructor
+        $courses = Course::where('instructor_user_id', $userId)
+            ->with(['schedules' => function ($query) use ($now) {
+                // Get schedules for today and upcoming
+                $query->where('start_at', '>=', $now->copy()->startOfDay())
+                    ->orderBy('start_at', 'asc');
+            }, 'schedules.classroom'])
+            ->orderBy('title')
+            ->get();
+
+        $coursesData = $courses->map(function ($course) use ($now) {
+            // Get the next upcoming schedule for this course
+            $nextSchedule = $course->schedules->first();
+
+            if (!$nextSchedule) {
+                return null;
+            }
+
+            // Determine status: Ongoing, Upcoming, Finished
+            $startTime = $nextSchedule->start_at;
+            $endTime = $nextSchedule->end_at;
+            $status = 'upcoming';
+
+            if ($startTime && $startTime <= $now && ($endTime === null || $endTime > $now)) {
+                $status = 'ongoing';
+            } elseif ($endTime && $endTime <= $now) {
+                $status = 'finished';
+            }
+
+            // Check if session already exists for this schedule today
+            $existingSession = AttendanceSession::where('schedule_id', $nextSchedule->id)
+                ->whereDate('date', $nextSchedule->start_at->toDateString())
+                ->where('status', 'open')
+                ->first();
+
+            return [
+                'id' => $course->id,
+                'code' => $course->code,
+                'title' => $course->title,
+                'section' => $nextSchedule->block_section ?? 'N/A',
+                'room' => $nextSchedule->classroom?->name ?? 'TBA',
+                'building' => $nextSchedule->classroom?->building ?? null,
+                'schedule_id' => $nextSchedule->id,
+                'schedule_start' => $startTime ? $startTime->format('g:i A') : 'TBA',
+                'schedule_time' => $startTime && $endTime
+                    ? $startTime->format('g:i A') . ' - ' . $endTime->format('g:i A')
+                    : 'TBA',
+                'status' => $status,
+                'enrolled' => $nextSchedule->enrolled ?? 0,
+                'has_session' => (bool) $existingSession,
+                'session_id' => $existingSession?->id,
+            ];
+        })->filter()->values();
+
+        return response()->json([
+            'success' => true,
+            'courses' => $coursesData,
+            'count' => $coursesData->count(),
+        ]);
+    }
+
+    /**
+     * Quick attendance start: Auto-create or resume session
+     * Prevents duplicate sessions for the same schedule and day
+     */
+    public function quickAttendanceStart(Request $request)
+    {
+        try {
+            $request->validate([
+                'schedule_id' => 'required|integer|exists:schedules,id',
+            ]);
+
+            $userId = Auth::id();
+            $scheduleId = $request->input('schedule_id');
+            $schedule = Schedule::with('course', 'classroom')->find($scheduleId);
+
+            if (!$schedule) {
+                return response()->json(['success' => false, 'message' => 'Schedule not found'], 404);
+            }
+
+            // Verify this schedule belongs to the current instructor
+            if ($schedule->course->instructor_user_id !== $userId) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            }
+
+            [$session, $message, $created] = $this->openOrResumeScheduleSession($schedule);
+
+            if (!$session || !$session->id) {
+                return response()->json(['success' => false, 'message' => 'Failed to create attendance session'], 500);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'session_id' => $session->id,
+                'redirect_url' => route('faculty.attendance.session', $session->id),
+                'created' => $created,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('quickAttendanceStart error: ' . $e->getMessage(), [
+                'schedule_id' => $request->input('schedule_id'),
+                'user_id' => Auth::id(),
+            ]);
+            return response()->json(['success' => false, 'message' => 'Server error: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Start attendance session when faculty taps card (card reader webhook).
+     * Expects: card_number, optional schedule_id
+     */
+    public function startFromCard(Request $request)
+    {
+        $request->validate([
+            'card_number' => 'required|string',
+            'schedule_id' => 'sometimes|integer|exists:schedules,id',
+        ]);
+
+        // optional secret header validation
+        $hookSecret = env('CARD_HOOK_SECRET');
+        if ($hookSecret) {
+            $provided = $request->header('X-CARD-HOOK-SECRET');
+            if (! hash_equals($hookSecret, (string) $provided)) {
+                return response()->json(['message' => 'Invalid hook secret'], 403);
+            }
+        }
+        $card = \App\Models\AccessCard::where('card_number', $request->input('card_number'))->first();
+        if (! $card || ! $card->user) {
+            return response()->json(['message' => 'Access card not recognized'], 404);
+        }
+
+        $user = $card->user;
+        // ensure user is faculty
+        if ($user->role !== 'faculty') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $schedule = null;
+        if ($request->filled('schedule_id')) {
+            $schedule = Schedule::find($request->input('schedule_id'));
+        }
+
+        if ($schedule && $schedule->course?->instructor_user_id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        if ($schedule) {
+            [$session, $message] = $this->openOrResumeScheduleSession($schedule, 'Started by card: ' . $card->card_number);
+
+            return response()->json([
+                'message' => $message,
+                'session_id' => $session->id,
+                'token' => $session->token,
+                'checkin_url' => route('attendance.checkin', $session->token),
+                'expires_at' => $session->expires_at,
+            ], 201);
+        }
+
+        $token = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::random(8));
+        $session = AttendanceSession::create([
+            'schedule_id' => $schedule?->id,
+            'room' => $schedule?->classroom?->name ?? $card->classroom?->name ?? null,
+            'date' => now()->format('Y-m-d'),
+            'started_at' => now()->format('H:i:s'),
+            'status' => 'open',
+            'remarks' => 'Started by card: ' . $card->card_number,
+            'created_by' => $user->id,
+            'faculty_user_id' => $user->id,
+            'token' => $token,
+            'expires_at' => now()->addMinutes(60),
+        ]);
+
+        return response()->json([
+            'message' => 'Session started',
+            'session_id' => $session->id,
+            'token' => $session->token,
+            'checkin_url' => route('attendance.checkin', $session->token),
+            'expires_at' => $session->expires_at,
+        ], 201);
+    }
+
+    private function openOrResumeScheduleSession(Schedule $schedule, ?string $remarks = null): array
+    {
+        try {
+            $today = now()->toDateString();
+            $userId = Auth::id();
+
+            return DB::transaction(function () use ($schedule, $today, $userId, $remarks): array {
+                $existingSession = AttendanceSession::query()
+                    ->where('schedule_id', $schedule->id)
+                    ->whereDate('date', $today)
+                    ->where('created_by', $userId)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($existingSession) {
+                    if ($existingSession->status === 'closed') {
+                        $existingSession->update([
+                            'status' => 'open',
+                            'token' => Str::upper(Str::random(8)),
+                            'expires_at' => now()->addMinutes(60),
+                        ]);
+                    }
+
+                    $this->ensureSessionRoster($existingSession, $schedule);
+
+                    return [$existingSession, 'Attendance session resumed successfully.', false];
+                }
+
+                $session = AttendanceSession::create([
+                    'schedule_id' => $schedule->id,
+                    'course_id' => Schema::hasColumn('attendance_sessions', 'course_id') ? $schedule->course_id : null,
+                    'classroom_id' => $schedule->classroom_id,
+                    'room' => $schedule->classroom?->name ?? null,
+                    'session_date' => $today,
+                    'date' => $today,
+                    'started_at' => now()->format('H:i:s'),
+                    'status' => 'open',
+                    'remarks' => $remarks,
+                    'created_by' => $userId,
+                    'faculty_user_id' => $userId,
+                    'token' => Str::upper(Str::random(8)),
+                    'expires_at' => now()->addMinutes(60),
+                ]);
+
+                $this->ensureSessionRoster($session, $schedule);
+
+                return [$session, 'Attendance session started successfully.', true];
+            });
+        } catch (\Exception $e) {
+            Log::error('openOrResumeScheduleSession failed: ' . $e->getMessage(), [
+                'schedule_id' => $schedule->id,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
+        }
+    }
+
+    private function ensureSessionRoster(AttendanceSession $session, Schedule $schedule): void
+    {
+        $courseId = $schedule->course_id ?? $session->course_id ?? null;
+
+        if (! $courseId) {
+            return;
+        }
+
+        $enrollments = \App\Models\Enrollment::query()
+            ->where('course_id', $courseId)
+            ->where('status', 'enrolled')
+            ->with('student')
+            ->get();
+
+        foreach ($enrollments as $enrollment) {
+            $student = $enrollment->student;
+            if (! $student) {
+                continue;
+            }
+
+            AttendanceRecord::firstOrCreate(
+                [
+                    'attendance_session_id' => $session->id,
+                    'student_id' => $student->id,
+                ],
+                [
+                    'student_name' => $student->name,
+                    'student_id_number' => $student->student_id ?? null,
+                    'status' => 'absent',
+                    'present' => false,
+                ]
+            );
+        }
+    }
+
+    public function searchStudents(Request $request)
+    {
+        $email = $request->query('email');
+        if (!$email || strlen($email) < 2) {
+            return response()->json(['success' => false, 'students' => []]);
+        }
+
+        try {
+            // Search for users with matching email (typically students)
+            $students = \App\Models\User::query()
+                ->where('email', 'ilike', '%' . $email . '%')
+                ->where(function ($q) {
+                    // Include users with role 'student' or no specific restriction
+                    $q->where('role', 'student')->orWhereNull('role');
+                })
+                ->select('id', 'name', 'email', 'student_id')
+                ->limit(10)
+                ->get()
+                ->map(function ($user) {
+                    return [
+                        'id' => $user->student_id ?? $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                    ];
+                })
+                ->values();
+
+            return response()->json(['success' => true, 'students' => $students]);
+        } catch (\Exception $e) {
+            Log::error('searchStudents error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'students' => [], 'error' => $e->getMessage()], 500);
+        }
     }
 }

@@ -68,7 +68,6 @@ class AuthController extends Controller
             'lastName' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['nullable', 'string', 'in:admin,faculty'],
             'terms' => ['accepted'],
         ]);
 
@@ -77,7 +76,7 @@ class AuthController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'must_change_password' => false,
-            'role' => $validated['role'] ?? 'faculty',
+            'role' => 'student',
         ]);
 
         Auth::login($user);
@@ -193,11 +192,15 @@ class AuthController extends Controller
         $normalizedRole = str_replace([' ', '-'], '_', $normalizedRole);
 
         if ($normalizedRole === '') {
-            return 'faculty.dashboard';
+            return 'student.home';
         }
 
         if (in_array($normalizedRole, ['admin', 'super_admin'], true)) {
             return 'admin.schedule';
+        }
+
+        if ($normalizedRole === 'student') {
+            return 'student.home';
         }
 
         return 'faculty.dashboard';

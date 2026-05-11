@@ -108,9 +108,6 @@ body { font-family:var(--fb); background:var(--bg); color:var(--text); min-heigh
 .topbar-search input{border:none;outline:none;background:transparent;font-size:.88rem;font-family:var(--fb);color:var(--text);width:100%}
 .topbar-search input::placeholder{color:var(--text-4)}
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:16px}
-.notif-btn{position:relative;background:none;border:1.5px solid var(--border);cursor:pointer;color:var(--text-2);font-size:1rem;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background .18s}
-.notif-btn:hover{background:var(--bg)}
-.notif-badge{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--red);border-radius:50%;border:1.5px solid #fff}
 .topbar-profile{position:relative;display:flex;align-items:center;gap:10px;cursor:pointer}
 .topbar-profile-name{font-size:.88rem;font-weight:700;color:var(--text);line-height:1.2}
 .topbar-profile-role{font-size:.75rem;color:var(--text-3)}
@@ -356,10 +353,6 @@ body { font-family:var(--fb); background:var(--bg); color:var(--text); min-heigh
       <input type="text" placeholder="Search for classrooms, faculty, or subjects...">
     </div>
     <div class="topbar-right">
-      <button class="notif-btn" title="Notifications">
-        <i class="fas fa-bell"></i>
-        <span class="notif-badge"></span>
-      </button>
       <div class="topbar-profile">
         <div>
           <div class="topbar-profile-name"><?= htmlspecialchars($facultyName) ?></div>
@@ -1409,6 +1402,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }, 15000);
 });
 </script>
+
 @include('partials.loading-feedback')
 </body>
 </html>

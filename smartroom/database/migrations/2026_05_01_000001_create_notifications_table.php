@@ -8,15 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('notifications', function (Blueprint $table): void {
-            $table->id();
-            $table->string('type')->nullable();
-            $table->string('title');
-            $table->text('body')->nullable();
-            $table->json('data')->nullable();
-            $table->timestamp('read_at')->nullable();
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('notifications')) {
+            Schema::create('notifications', function (Blueprint $table): void {
+                $table->id();
+                $table->string('type')->nullable();
+                $table->string('title');
+                $table->text('body')->nullable();
+                $table->json('data')->nullable();
+                $table->timestamp('read_at')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     public function down(): void

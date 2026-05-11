@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\MapInteractionController;
 use App\Http\Controllers\Api\ReservationController;
 use App\Http\Controllers\Api\RoomAvailabilityController;
 use App\Http\Controllers\Api\ScheduleController;
+use App\Http\Controllers\Api\EnrollmentController;
+use App\Http\Controllers\AttendanceController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -16,6 +18,11 @@ Route::prefix('v1')->group(function (): void {
     Route::apiResource('schedules', ScheduleController::class);
     Route::apiResource('access-cards', AccessCardController::class);
     Route::apiResource('access-logs', AccessLogController::class);
+    
+    // Enrollment endpoints
+    Route::post('enrollments', [EnrollmentController::class, 'store']);
+    Route::post('enrollments/bulk', [EnrollmentController::class, 'bulkStore']);
+    Route::delete('enrollments/{enrollment}', [EnrollmentController::class, 'destroy']);
 
     Route::get('room-availability/check', [RoomAvailabilityController::class, 'check']);
     Route::get('room-statuses', [RoomAvailabilityController::class, 'statuses']);
@@ -24,9 +31,9 @@ Route::prefix('v1')->group(function (): void {
     Route::get('map/rooms/{classroom}/fixed-schedules', [MapInteractionController::class, 'fixedSchedulesByRoom']);
     Route::get('map/rooms/{classroom}/status', [MapInteractionController::class, 'roomStatus']);
     Route::middleware('auth:sanctum')->group(function (): void {
-        Route::get('notifications', [App\Http\Controllers\Api\NotificationController::class, 'index']);
-        Route::patch('notifications/{id}/read', [App\Http\Controllers\Api\NotificationController::class, 'markRead']);
-        Route::patch('notifications/read-all', [App\Http\Controllers\Api\NotificationController::class, 'markAllRead']);
         Route::apiResource('reservations', ReservationController::class)->only(['store', 'update', 'destroy']);
     });
 });
+
+// Attendance search endpoint (outside v1 prefix)
+Route::middleware('auth:sanctum')->get('/students/search', [AttendanceController::class, 'searchStudents']);

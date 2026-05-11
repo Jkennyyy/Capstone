@@ -401,7 +401,6 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
       <input type="text" placeholder="Search for classrooms, faculty, or subjects...">
     </div>
     <div class="topbar-right">
-      <button class="notif-btn"><i class="fas fa-bell"></i><span class="notif-badge"></span></button>
       <div class="topbar-profile">
         <div class="topbar-profile-info">
           <div class="topbar-profile-name"><?= htmlspecialchars($facultyName) ?></div>

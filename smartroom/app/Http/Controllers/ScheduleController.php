@@ -16,6 +16,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 use Illuminate\Validation\ValidationException;
@@ -59,17 +60,41 @@ class ScheduleController extends Controller
         ]);
     }
 
-    public function facultyStore(Request $request): RedirectResponse
+    public function facultyStore(Request $request, RoomAvailabilityService $availabilityService): RedirectResponse
     {
         $user = $request->user();
 
         $validated = $request->validate([
             'classroom_id' => ['required', 'integer', 'exists:classrooms,id'],
             'course_id' => ['required', 'integer'],
-            'start_at' => ['required', 'date'],
-            'end_at' => ['required', 'date', 'after:start_at'],
+            'semester_start' => ['required', 'date'],
+            'semester_end' => ['required', 'date', 'after_or_equal:semester_start'],
+            'day1' => ['required', 'integer', 'between:1,5', 'different:day2'],
+            'day1_start' => ['required', 'date_format:H:i'],
+            'day1_end' => ['required', 'date_format:H:i'],
+            'day2' => ['required', 'integer', 'between:1,5'],
+            'day2_start' => ['required', 'date_format:H:i'],
+            'day2_end' => ['required', 'date_format:H:i'],
             'enrolled' => ['nullable', 'integer', 'min:0'],
         ]);
+
+        $timeToMinutes = function (string $value): int {
+            [$hour, $minute] = array_map('intval', explode(':', $value));
+
+            return ($hour * 60) + $minute;
+        };
+
+        if ($timeToMinutes($validated['day1_end']) <= $timeToMinutes($validated['day1_start'])) {
+            throw ValidationException::withMessages([
+                'day1_end' => ['Day 1 end time must be after the start time.'],
+            ]);
+        }
+
+        if ($timeToMinutes($validated['day2_end']) <= $timeToMinutes($validated['day2_start'])) {
+            throw ValidationException::withMessages([
+                'day2_end' => ['Day 2 end time must be after the start time.'],
+            ]);
+        }
 
         $course = Course::query()
             ->where('instructor_user_id', $user->id)
@@ -84,13 +109,88 @@ class ScheduleController extends Controller
                 ->withErrors(['course_id' => 'You can only add schedules for your own subjects.']);
         }
 
-        $validated['day_of_week'] = (int) Carbon::parse($validated['start_at'])->dayOfWeek;
-        $validated['status'] = 'scheduled';
-        $validated['enrolled'] = $validated['enrolled'] ?? 0;
+        $semesterStart = Carbon::parse($validated['semester_start'])->startOfDay();
+        $semesterEnd = Carbon::parse($validated['semester_end'])->endOfDay();
 
-        Schedule::create($validated);
+        $buildOccurrences = function (int $isoDay, string $startTime, string $endTime) use ($semesterStart, $semesterEnd): array {
+            $start = $semesterStart->copy();
+            $delta = ($isoDay - $start->dayOfWeekIso + 7) % 7;
+            $firstDate = $start->copy()->addDays($delta);
 
-        return redirect()->route('faculty.schedule')->with('status', 'Schedule added successfully.');
+            $occurrences = [];
+            $cursor = $firstDate->copy();
+
+            while ($cursor->lte($semesterEnd)) {
+                $startAt = Carbon::parse($cursor->toDateString().' '.$startTime);
+                $endAt = Carbon::parse($cursor->toDateString().' '.$endTime);
+                $occurrences[] = [
+                    'start_at' => $startAt,
+                    'end_at' => $endAt,
+                    'day_of_week' => (int) $startAt->dayOfWeek,
+                ];
+                $cursor->addWeek();
+            }
+
+            return $occurrences;
+        };
+
+        $occurrences = array_merge(
+            $buildOccurrences((int) $validated['day1'], $validated['day1_start'], $validated['day1_end']),
+            $buildOccurrences((int) $validated['day2'], $validated['day2_start'], $validated['day2_end'])
+        );
+
+        if (empty($occurrences)) {
+            return back()
+                ->withInput()
+                ->withErrors(['semester_start' => 'No schedule dates were generated for the selected semester range.']);
+        }
+
+        usort($occurrences, function (array $a, array $b): int {
+            return $a['start_at'] <=> $b['start_at'];
+        });
+
+        DB::transaction(function () use ($occurrences, $validated, $availabilityService): void {
+            $seriesId = (string) Str::uuid();
+            foreach ($occurrences as $occurrence) {
+                $conflict = $availabilityService->checkOfficialScheduleConflict(
+                    (int) $validated['classroom_id'],
+                    $occurrence['start_at'],
+                    $occurrence['end_at'],
+                    null,
+                    true
+                );
+
+                if ($conflict['has_conflict']) {
+                    throw ValidationException::withMessages([
+                        'classroom_id' => [
+                            'Official schedule conflict on '.$occurrence['start_at']->format('M d, Y g:i A').'.',
+                        ],
+                    ]);
+                }
+            }
+
+            $now = now();
+            $rows = [];
+
+            foreach ($occurrences as $occurrence) {
+                $rows[] = [
+                    'classroom_id' => $validated['classroom_id'],
+                    'course_id' => $validated['course_id'],
+                    'series_id' => $seriesId,
+                    'start_at' => $occurrence['start_at'],
+                    'end_at' => $occurrence['end_at'],
+                    'status' => 'scheduled',
+                    'day_of_week' => $occurrence['day_of_week'],
+                    'enrolled' => $validated['enrolled'] ?? 0,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+
+            Schedule::insert($rows);
+        });
+
+        return redirect()->route('faculty.schedule')->with('status', 'Schedule added for the whole semester.');
     }
 
     public function facultyCancel(Request $request, Schedule $schedule): RedirectResponse
@@ -122,16 +222,75 @@ class ScheduleController extends Controller
         return redirect()->route('faculty.schedule')->with('status', 'Class cancelled successfully.');
     }
 
+    public function exportFacultyIcs(Request $request): StreamedResponse
+    {
+        $user = $request->user();
+
+        $schedules = Schedule::query()
+            ->with(['classroom', 'course'])
+            ->whereHas('course', function ($query) use ($user): void {
+                $query->where('instructor_user_id', $user->id);
+            })
+            ->whereHas('course.instructor', function ($query): void {
+                $this->applyItDepartmentScope($query);
+            })
+            ->orderBy('start_at')
+            ->get();
+
+        $filename = 'faculty-schedule-'.now()->format('Ymd-His').'.ics';
+
+        return response()->streamDownload(function () use ($schedules, $user): void {
+            $lines = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//SmartRoom//Schedule//EN',
+                'CALSCALE:GREGORIAN',
+                'METHOD:PUBLISH',
+            ];
+
+            $timestamp = now()->utc()->format('Ymd\THis\Z');
+
+            foreach ($schedules as $schedule) {
+                if (! $schedule->start_at || ! $schedule->end_at) {
+                    continue;
+                }
+
+                $startUtc = $schedule->start_at->copy()->utc()->format('Ymd\THis\Z');
+                $endUtc = $schedule->end_at->copy()->utc()->format('Ymd\THis\Z');
+                $courseCode = (string) ($schedule->course?->code ?? 'COURSE');
+                $courseTitle = (string) ($schedule->course?->title ?? 'Class');
+                $room = (string) ($schedule->classroom?->name ?? 'Room');
+                $building = (string) ($schedule->classroom?->building ?? '');
+                $location = trim($room.($building !== '' ? ', '.$building : ''));
+                $summary = $courseCode.' - '.$courseTitle;
+                $uid = 'schedule-'.$schedule->id.'@smartroom';
+
+                $lines[] = 'BEGIN:VEVENT';
+                $lines[] = 'UID:'.$uid;
+                $lines[] = 'DTSTAMP:'.$timestamp;
+                $lines[] = 'DTSTART:'.$startUtc;
+                $lines[] = 'DTEND:'.$endUtc;
+                $lines[] = 'SUMMARY:'.addcslashes($summary, ',;\\');
+                $lines[] = 'LOCATION:'.addcslashes($location, ',;\\');
+                $lines[] = 'DESCRIPTION:Instructor - '.addcslashes((string) $user->name, ',;\\');
+                $lines[] = 'END:VEVENT';
+            }
+
+            $lines[] = 'END:VCALENDAR';
+
+            echo implode("\r\n", $lines);
+        }, $filename, [
+            'Content-Type' => 'text/calendar; charset=UTF-8',
+        ]);
+    }
+
     public function index(Request $request): View
     {
         $filter = $request->query('filter', 'all');
         $view = $request->query('view', 'week');
 
         $query = Schedule::query()
-            ->with(['classroom', 'course.instructor'])
-            ->whereHas('course.instructor', function ($scope): void {
-                $this->applyItDepartmentScope($scope);
-            });
+            ->with(['classroom', 'course.instructor']);
 
         if ($filter !== 'all') {
             $query->where('status', $filter);
@@ -139,19 +298,14 @@ class ScheduleController extends Controller
 
         $schedules = $query->orderBy('start_at')->get();
         $classrooms = Classroom::query()->orderBy('building')->orderBy('name')->get();
+        // Include all courses for admin selection (allow first-year / college subjects like CC101)
         $courses = Course::query()
             ->with('instructor')
-            ->whereHas('instructor', function ($scope): void {
-                $this->applyItDepartmentScope($scope);
-            })
             ->orderBy('code')
             ->get();
 
         $facultyUsers = User::query()
             ->whereRaw("LOWER(COALESCE(role, '')) = ?", ['faculty'])
-            ->where(function ($scope): void {
-                $this->applyItDepartmentScope($scope);
-            })
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
 
@@ -163,6 +317,38 @@ class ScheduleController extends Controller
             'filter' => $filter,
             'view' => $view,
         ]);
+    }
+
+    public function subjectsByYearLevel(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'year_level' => ['required', 'integer', 'between:1,4'],
+            'instructor_id' => ['nullable', 'integer', 'exists:users,id'],
+        ]);
+
+        $query = Course::query()
+            ->with('instructor')
+            ->whereHas('instructor', function ($scope): void {
+                $this->applyItDepartmentScope($scope);
+            })
+            ->orderBy('code');
+
+        if (! empty($validated['instructor_id'])) {
+            $query->where('instructor_user_id', $validated['instructor_id']);
+        }
+
+        $courses = $query->get()->filter(function (Course $course) use ($validated): bool {
+            return $course->yearLevel() === (int) $validated['year_level'];
+        })->map(function (Course $course) {
+            return [
+                'id' => $course->id,
+                'code' => $course->code,
+                'title' => $course->title,
+                'instructor_user_id' => $course->instructor_user_id,
+            ];
+        })->values();
+
+        return response()->json(['courses' => $courses]);
     }
 
     public function exportCsv(Request $request): StreamedResponse
@@ -189,6 +375,7 @@ class ScheduleController extends Controller
                 'Schedule ID',
                 'Course Code',
                 'Course Title',
+                'Block Section',
                 'Instructor',
                 'Classroom',
                 'Building',
@@ -204,6 +391,7 @@ class ScheduleController extends Controller
                         $schedule->id,
                         $schedule->course?->code ?? '',
                         $schedule->course?->title ?? '',
+                            $schedule->block_section ?? '',
                         $schedule->course?->instructor?->name ?? '',
                         $schedule->classroom?->name ?? '',
                         $schedule->classroom?->building ?? '',
@@ -341,6 +529,123 @@ class ScheduleController extends Controller
     public function store(StoreScheduleRequest $request, RoomAvailabilityService $availabilityService): RedirectResponse|JsonResponse
     {
         $payload = $request->validated();
+        unset($payload['year_level']);
+
+        if (! empty($payload['instructor_user_id']) && isset($payload['course_id'])) {
+            $course = Course::find((int) $payload['course_id']);
+            if ($course && empty($course->instructor_user_id)) {
+                $course->instructor_user_id = (int) $payload['instructor_user_id'];
+                $course->save();
+            }
+        }
+
+        if (isset($payload['semester_start'])) {
+            $semesterStart = Carbon::parse((string) $payload['semester_start'])->startOfDay();
+            $semesterEnd = Carbon::parse((string) $payload['semester_end'])->endOfDay();
+
+            $buildOccurrences = function (int $isoDay, string $startTime, string $endTime) use ($semesterStart, $semesterEnd): array {
+                $start = $semesterStart->copy();
+                $delta = ($isoDay - $start->dayOfWeekIso + 7) % 7;
+                $firstDate = $start->copy()->addDays($delta);
+
+                $occurrences = [];
+                $cursor = $firstDate->copy();
+
+                while ($cursor->lte($semesterEnd)) {
+                    $startAt = Carbon::parse($cursor->toDateString().' '.$startTime);
+                    $endAt = Carbon::parse($cursor->toDateString().' '.$endTime);
+                    $occurrences[] = [
+                        'start_at' => $startAt,
+                        'end_at' => $endAt,
+                        'day_of_week' => (int) $startAt->dayOfWeek,
+                    ];
+                    $cursor->addWeek();
+                }
+
+                return $occurrences;
+            };
+
+            $occurrences = array_merge(
+                $buildOccurrences((int) $payload['day1'], (string) $payload['day1_start'], (string) $payload['day1_end']),
+                $buildOccurrences((int) $payload['day2'], (string) $payload['day2_start'], (string) $payload['day2_end'])
+            );
+
+            if (empty($occurrences)) {
+                throw ValidationException::withMessages([
+                    'semester_start' => ['No schedule dates were generated for the selected semester range.'],
+                ]);
+            }
+
+            usort($occurrences, function (array $a, array $b): int {
+                return $a['start_at'] <=> $b['start_at'];
+            });
+
+            DB::transaction(function () use ($occurrences, $payload, $availabilityService): void {
+                $seriesId = (string) Str::uuid();
+                foreach ($occurrences as $occurrence) {
+                    $scheduleConflict = $availabilityService->checkOfficialScheduleConflict(
+                        (int) $payload['classroom_id'],
+                        $occurrence['start_at'],
+                        $occurrence['end_at'],
+                        null,
+                        true
+                    );
+
+                    if ($scheduleConflict['has_conflict']) {
+                        throw ValidationException::withMessages([
+                            'classroom_id' => ['Official schedule conflict on '.$occurrence['start_at']->format('M d, Y g:i A').'. Room is already occupied.'],
+                        ]);
+                    }
+
+                    $reservationConflict = $availabilityService->checkReservationConflict(
+                        (int) $payload['classroom_id'],
+                        $occurrence['start_at'],
+                        $occurrence['end_at'],
+                        null,
+                        true
+                    );
+
+                    if ($reservationConflict['has_conflict']) {
+                        throw ValidationException::withMessages([
+                            'classroom_id' => ['Reservation conflict on '.$occurrence['start_at']->format('M d, Y g:i A').'. Room is already reserved.'],
+                        ]);
+                    }
+                }
+
+                $now = now();
+                $rows = [];
+
+                foreach ($occurrences as $occurrence) {
+                    $rows[] = [
+                        'classroom_id' => $payload['classroom_id'],
+                        'course_id' => $payload['course_id'],
+                        'block_section' => $payload['block_section'] ?? null,
+                        'series_id' => $seriesId,
+                        'start_at' => $occurrence['start_at'],
+                        'end_at' => $occurrence['end_at'],
+                        'status' => $payload['status'] ?? 'scheduled',
+                        'day_of_week' => $occurrence['day_of_week'],
+                        'enrolled' => $payload['enrolled'] ?? 0,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                }
+
+                Schedule::insert($rows);
+            });
+
+            $createdCount = count($occurrences);
+            $message = 'Recurring schedules created successfully ('.$createdCount.' sessions).';
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $message,
+                    'meta' => ['created_count' => $createdCount],
+                ], 201);
+            }
+
+            return redirect()->route('admin.schedule')->with('status', $message);
+        }
 
         $startAt = Carbon::parse((string) $payload['start_at']);
         $endAt = Carbon::parse((string) $payload['end_at']);
@@ -348,8 +653,10 @@ class ScheduleController extends Controller
             ? Carbon::parse((string) $payload['repeat_until'])->endOfDay()
             : null;
 
+        $seriesId = (string) Str::uuid();
         $basePayload = $payload;
         unset($basePayload['repeat_until']);
+        $basePayload['series_id'] = $seriesId;
 
         $createdSchedules = DB::transaction(function () use ($basePayload, $startAt, $endAt, $repeatUntil, $availabilityService) {
             $created = collect();
@@ -426,6 +733,71 @@ class ScheduleController extends Controller
         $this->ensureItScheduleScope($schedule);
 
         $payload = $request->validated();
+        $applyToSeries = $request->boolean('apply_to_series');
+        $seriesId = $schedule->series_id;
+
+        if ($applyToSeries && $seriesId) {
+            $updatePayload = array_intersect_key($payload, array_flip([
+                'classroom_id',
+                'course_id',
+                'status',
+                'enrolled',
+                'block_section',
+            ]));
+
+            DB::transaction(function () use ($seriesId, $updatePayload, $availabilityService): void {
+                $seriesSchedules = Schedule::query()->where('series_id', $seriesId)->get();
+
+                foreach ($seriesSchedules as $seriesSchedule) {
+                    $targetClassroomId = (int) ($updatePayload['classroom_id'] ?? $seriesSchedule->classroom_id);
+                    $startAt = $seriesSchedule->start_at;
+                    $endAt = $seriesSchedule->end_at;
+
+                    if ($startAt && $endAt) {
+                        $conflict = $availabilityService->checkOfficialScheduleConflict(
+                            $targetClassroomId,
+                            $startAt,
+                            $endAt,
+                            (int) $seriesSchedule->id,
+                            true
+                        );
+
+                        if ($conflict['has_conflict']) {
+                            throw ValidationException::withMessages([
+                                'classroom_id' => ['Official schedule conflict on '.$startAt->format('M d, Y h:i A').'. Room is already occupied.'],
+                            ]);
+                        }
+
+                        $reservationConflict = $availabilityService->checkReservationConflict(
+                            $targetClassroomId,
+                            $startAt,
+                            $endAt,
+                            null,
+                            true
+                        );
+
+                        if ($reservationConflict['has_conflict']) {
+                            throw ValidationException::withMessages([
+                                'classroom_id' => ['Reservation conflict on '.$startAt->format('M d, Y h:i A').'. Room is already reserved.'],
+                            ]);
+                        }
+                    }
+                }
+
+                foreach ($seriesSchedules as $seriesSchedule) {
+                    $seriesSchedule->update($updatePayload);
+                }
+            });
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Series updated successfully.',
+                    'meta' => ['series_id' => $seriesId],
+                ]);
+            }
+
+            return redirect()->route('admin.schedule')->with('status', 'Series updated successfully.');
+        }
         $repeatUntil = isset($payload['repeat_until'])
             ? Carbon::parse((string) $payload['repeat_until'])->endOfDay()
             : null;
@@ -510,6 +882,8 @@ class ScheduleController extends Controller
                         'course_id',
                         'status',
                         'enrolled',
+                        'block_section',
+                        'series_id',
                     ]), [
                         'start_at' => $occurrenceStart->copy(),
                         'end_at' => $occurrenceEnd->copy(),
@@ -806,6 +1180,9 @@ class ScheduleController extends Controller
 
             $enrolled = $this->extractNullableInt($rawRow['enrolled'] ?? null) ?? 0;
 
+            $blockSection = trim((string) ($rawRow['block_section'] ?? $rawRow['block'] ?? $rawRow['section'] ?? ''));
+
+
             if ($rowErrors === [] && $classroom && $startAt && $endAt) {
                 $scheduleConflict = $availabilityService->checkOfficialScheduleConflict(
                     (int) $classroom->id,
@@ -835,6 +1212,7 @@ class ScheduleController extends Controller
             $payload = [
                 'classroom_id' => $classroom?->id,
                 'course_id' => $course?->id,
+                'block_section' => $blockSection !== '' ? mb_substr($blockSection, 0, 64) : null,
                 'start_at' => $startAt?->toDateTimeString(),
                 'end_at' => $endAt?->toDateTimeString(),
                 'status' => $status,

@@ -12,6 +12,8 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\AiRecommendationController;
+use App\Http\Controllers\FacultyScheduleAssistantController;
+use App\Http\Controllers\StudentController;
 
 Route::get('/', function () {
     return view('frontend.landing');
@@ -40,6 +42,17 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/password/change', [AuthController::class, 'changePassword'])->name('password.change.submit');
 });
 
+Route::middleware(['auth', 'password.changed', 'role:student'])->group(function (): void {
+    Route::get('/student/home', [StudentController::class, 'home'])->name('student.home');
+    Route::get('/student/checkingRoom', [StudentController::class, 'checkingRoom'])->name('student.checkingRoom');
+    Route::get('/student/schedule', [StudentController::class, 'schedule'])->name('student.schedule');
+    Route::get('/student/student-schedule', [StudentController::class, 'studentSchedule'])->name('student.studentSchedule');
+    Route::get('/student/attendance', [StudentController::class, 'attendance'])->name('student.attendance');
+    Route::get('/student/profile', [StudentController::class, 'profile'])->name('student.profile');
+    Route::post('/attendance/checkin/{token}', [AttendanceController::class, 'studentCheckin'])->name('attendance.checkin');
+    Route::get('/attendance/checkin/{token}', [AttendanceController::class, 'showCheckin'])->name('attendance.checkin.show');
+});
+
 Route::middleware(['auth', 'password.changed', 'role:faculty'])->group(function (): void {
     Route::get('/faculty_dashboard', [FacultyController::class, 'dashboard'])->name('faculty.dashboard');
 
@@ -47,6 +60,7 @@ Route::middleware(['auth', 'password.changed', 'role:faculty'])->group(function 
     Route::get('/rooms/export/csv', [FacultyController::class, 'exportRoomsCsv'])->name('faculty.rooms.export.csv');
 
     Route::get('/faculty-schedule', [ScheduleController::class, 'facultyIndex'])->name('faculty.schedule');
+    Route::get('/faculty-schedule/export/ics', [ScheduleController::class, 'exportFacultyIcs'])->name('faculty.schedule.export.ics');
     Route::post('/faculty-schedule', [ScheduleController::class, 'facultyStore'])->name('faculty.schedule.store');
     Route::patch('/faculty-schedule/{schedule}/cancel', [ScheduleController::class, 'facultyCancel'])->name('faculty.schedule.cancel');
 
@@ -60,6 +74,12 @@ Route::middleware(['auth', 'password.changed', 'role:faculty'])->group(function 
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('faculty.attendance');
     Route::get('/attendance/dashboard', [AttendanceController::class, 'dashboard'])->name('faculty.attendance.dashboard');
     Route::post('/attendance', [AttendanceController::class, 'store'])->name('faculty.attendance.store');
+    // Quick attendance: Get instructor's courses and auto-start sessions
+    Route::get('/attendance/quick/courses', [AttendanceController::class, 'getInstructorCourses'])->name('faculty.attendance.quick.courses');
+    Route::post('/attendance/quick/start', [AttendanceController::class, 'quickAttendanceStart'])->name('faculty.attendance.quick.start');
+    // Card reader webhook to start session
+    Route::post('/attendance/start-hook', [AttendanceController::class, 'startFromCard'])->name('faculty.attendance.start-hook');
+    Route::get('/attendance/{id}/qr', [AttendanceController::class, 'showQr'])->name('faculty.attendance.qr');
     Route::get('/attendance/{id}', [AttendanceController::class, 'showSession'])->name('faculty.attendance.session');
     Route::get('/attendance/{id}/export', [AttendanceController::class, 'export'])->name('faculty.attendance.export');
 
@@ -71,6 +91,9 @@ Route::middleware(['auth', 'password.changed', 'role:faculty'])->group(function 
 
     Route::get('/reports', [FacultyController::class, 'reports'])->name('faculty.reports');
     Route::get('/reports/export/csv', [FacultyController::class, 'exportReportsCsv'])->name('faculty.reports.export.csv');
+
+    Route::post('/api/faculty/schedule-assistant', [FacultyScheduleAssistantController::class, 'ask'])
+        ->name('faculty.schedule.assistant.ask');
 
     Route::prefix('api/v1')->group(function (): void {
         Route::get('/room-availability/check', [RoomAvailabilityController::class, 'check']);
@@ -98,6 +121,7 @@ Route::middleware(['auth', 'password.changed', 'role:admin'])->group(function ()
 
     Route::get('/admin/schedule', [ScheduleController::class, 'index'])->name('admin.schedule');
     Route::get('/admin/schedule/export/csv', [ScheduleController::class, 'exportCsv'])->name('admin.schedule.export.csv');
+    Route::get('/admin/schedule/subjects', [ScheduleController::class, 'subjectsByYearLevel'])->name('admin.schedule.subjects');
     Route::delete('/admin/schedule/bulk-delete', [ScheduleController::class, 'bulkDestroy'])->name('admin.schedule.bulk-destroy');
     Route::get('/admin/schedule/{id}', [ScheduleController::class, 'show'])->name('admin.schedule.show');
     Route::post('/admin/schedule', [ScheduleController::class, 'store'])->name('admin.schedule.store');
@@ -108,6 +132,7 @@ Route::middleware(['auth', 'password.changed', 'role:admin'])->group(function ()
 
     Route::post('/admin/courses', [AdminDataController::class, 'storeCourse'])->name('admin.courses.store');
     Route::match(['put', 'patch'], '/admin/courses/{course}', [AdminDataController::class, 'updateCourse'])->name('admin.courses.update');
+    Route::patch('/admin/courses/{course}/unassign', [AdminDataController::class, 'unassignCourse'])->name('admin.courses.unassign');
     Route::delete('/admin/courses/{course}', [AdminDataController::class, 'destroyCourse'])->name('admin.courses.destroy');
 
     Route::post('/admin/access-cards', [AdminDataController::class, 'storeAccessCard'])->name('admin.access-cards.store');
@@ -141,5 +166,7 @@ Route::middleware(['auth', 'password.changed', 'role:admin'])->group(function ()
     Route::get('/admin/users/{user}/edit', [AdminController::class, 'editUser'])->name('admin.users.edit');
     Route::match(['put', 'patch'], '/admin/users/{user}', [AdminDataController::class, 'updateUser'])->name('admin.users.update');
     Route::delete('/admin/users/{user}', [AdminDataController::class, 'destroyUser'])->name('admin.users.destroy');
+    Route::delete('/admin/users/{user}/reassign', [AdminDataController::class, 'destroyUserWithReassign'])->name('admin.users.destroy.reassign');
+
 });
 

@@ -148,7 +148,6 @@
     transition: all 0.18s; position: relative;
   }
   .topbar-icon-btn:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
-  .notif-dot { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; border-radius: 50%; background: var(--red); border: 2px solid var(--white); }
   .topbar-avatar {
     width: 38px; height: 38px; border-radius: 10px; object-fit: cover;
     border: 2px solid var(--border); cursor: pointer; transition: border-color 0.18s;
@@ -330,10 +329,6 @@
         <i class="fas fa-calendar"></i>
         <span>{{ \Carbon\Carbon::now()->format('M j, Y') }}</span>
       </div>
-      <button class="topbar-icon-btn">
-        <i class="fas fa-bell"></i>
-        <span class="notif-dot"></span>
-      </button>
       <img src="https://randomuser.me/api/portraits/women/44.jpg" class="topbar-avatar" alt="Admin">
     </div>
   </div>

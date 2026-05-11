@@ -15,6 +15,7 @@ use App\Models\Course;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
@@ -115,6 +116,18 @@ class AdminDataController extends Controller
         return redirect()->back()->with('status', 'Course deleted successfully.');
     }
 
+    public function unassignCourse(Request $request, Course $course): RedirectResponse|JsonResponse
+    {
+        $course->instructor_user_id = null;
+        $course->save();
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Course unassigned successfully.']);
+        }
+
+        return redirect()->back()->with('status', 'Course unassigned successfully.');
+    }
+
     public function storeAccessCard(StoreAccessCardRequest $request): RedirectResponse|JsonResponse
     {
         $card = AccessCard::create($request->validated());
@@ -208,5 +221,51 @@ class AdminDataController extends Controller
         }
 
         return redirect()->back()->with('status', 'User deleted successfully.');
+    }
+
+    public function destroyUserWithReassign(Request $request, User $user): RedirectResponse|JsonResponse
+    {
+        $validated = $request->validate([
+            'replacement_user_id' => ['required', 'integer', 'exists:users,id'],
+        ]);
+
+        if (strtolower((string) ($user->role ?? '')) !== 'faculty') {
+            $message = 'Only faculty accounts can be deleted from the schedule screen.';
+            return $request->expectsJson()
+                ? response()->json(['message' => $message], 422)
+                : redirect()->back()->withErrors(['user' => $message]);
+        }
+
+        $replacement = User::query()->find($validated['replacement_user_id']);
+
+        if (! $replacement || $replacement->id === $user->id || strtolower((string) ($replacement->role ?? '')) !== 'faculty') {
+            $message = 'Select a valid replacement faculty account.';
+            return $request->expectsJson()
+                ? response()->json(['message' => $message], 422)
+                : redirect()->back()->withErrors(['replacement_user_id' => $message]);
+        }
+
+        $result = DB::transaction(function () use ($user, $replacement): array {
+            $affectedCourses = Course::query()
+                ->where('instructor_user_id', $user->id)
+                ->update(['instructor_user_id' => $replacement->id]);
+
+            $user->delete();
+
+            return [
+                'reassigned_courses' => $affectedCourses,
+            ];
+        });
+
+        $message = 'Faculty deleted and schedules reassigned successfully.';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $message,
+                'data' => $result,
+            ]);
+        }
+
+        return redirect()->back()->with('status', $message);
     }
 }

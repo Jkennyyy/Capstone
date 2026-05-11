@@ -3,6 +3,49 @@ $facultyName     = $facultyName     ?? request()->user()?->name       ?? 'Facult
 $facultyDept     = $facultyDept     ?? request()->user()?->department  ?? 'Faculty';
 $facultyEmail    = $facultyEmail    ?? request()->user()?->email       ?? '';
 $facultyInitials = $facultyInitials ?? strtoupper(substr((string) $facultyName, 0, 1));
+
+$attendanceCards = collect($courses ?? [])->map(function ($course) {
+  $schedules = collect($course->schedules ?? [])->sortBy('start_at')->values();
+  if ($schedules->isEmpty()) {
+    return null;
+  }
+
+  $now = now();
+  $ongoing = $schedules->first(function ($schedule) use ($now) {
+    return $schedule->start_at
+      && $schedule->start_at->lte($now)
+      && ($schedule->end_at === null || $schedule->end_at->gte($now));
+  });
+  $upcoming = $schedules->first(function ($schedule) use ($now) {
+    return $schedule->start_at && $schedule->start_at->gte($now);
+  });
+  $primary = $ongoing ?? $upcoming ?? $schedules->last();
+
+  if (! $primary) {
+    return null;
+  }
+
+  $status = $ongoing ? 'ongoing' : ($upcoming ? 'upcoming' : 'finished');
+  $courseCode = (string) ($course->code ?? 'N/A');
+  $courseTitle = (string) ($course->title ?? 'Untitled Subject');
+  $roomName = (string) ($primary->classroom?->name ?? 'Room N/A');
+  $building = (string) ($primary->classroom?->building ?? '');
+  $section = (string) ($primary->block_section ?? '—');
+
+  return [
+    'schedule_id' => (int) $primary->id,
+    'course_code' => $courseCode,
+    'subject' => $courseTitle,
+    'section' => $section,
+    'room' => trim($roomName . ($building !== '' ? ', ' . $building : '')),
+    'time' => $primary->start_at
+      ? $primary->start_at->format('g:i A') . ($primary->end_at ? ' - ' . $primary->end_at->format('g:i A') : '')
+      : 'TBA',
+    'status' => $status,
+    'status_label' => ucfirst($status),
+    'search' => strtolower(trim($courseCode . ' ' . $courseTitle . ' ' . $section . ' ' . $roomName . ' ' . $building)),
+  ];
+})->filter()->values();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -227,6 +270,9 @@ $facultyInitials = $facultyInitials ?? strtoupper(substr((string) $facultyName, 
     .table-count { font-size:.77rem; color:var(--text-3); font-weight:500; }
     .table-count strong { color:var(--text-2); }
 
+    .attendance-feedback { margin: 14px 0 0; padding: 11px 14px; border-radius: 12px; border: 1px solid var(--border); background: linear-gradient(90deg, rgba(37,99,235,.06), #fff); color: var(--text-2); font-size: .82rem; }
+    .attendance-feedback i { color: var(--blue-text); }
+
     /* Empty state */
     .empty-state { padding:64px 24px; text-align:center; }
     .empty-icon-wrap { width:72px; height:72px; border-radius:20px; background:var(--bg); border:1.5px solid var(--border); display:flex; align-items:center; justify-content:center; margin:0 auto 18px; }
@@ -362,22 +408,22 @@ $facultyInitials = $facultyInitials ?? strtoupper(substr((string) $facultyName, 
         <i class="fas fa-calendar-days"></i>
         <span id="live-date">{{ now()->format('M j, Y') }}</span>
       </div>
-      <button class="new-btn" id="new-session-btn">
-        <span class="new-btn-icon"><i class="fas fa-plus"></i></span>
-        New Session
-      </button>
+      <a href="{{ url('/faculty_dashboard') }}" class="new-btn" style="text-decoration:none">
+        <span class="new-btn-icon"><i class="fas fa-layer-group"></i></span>
+        My Classes
+      </a>
     </div>
   </div>
 
   <!-- CONTENT -->
-  <div class="content">
+  <div class="content" data-quick-start-url="{{ route('faculty.attendance.quick.start') }}" data-csrf-token="{{ csrf_token() }}">
 
     <!-- Page Header -->
     <div class="page-header">
       <div>
         <div class="page-eyebrow">Faculty Portal</div>
         <div class="page-title">Attendance Management</div>
-        <div class="page-subtitle">Track sessions, monitor participation, and export records.</div>
+        <div class="page-subtitle">Launch class attendance quickly, monitor participation, and export records.</div>
       </div>
     </div>
 
@@ -430,6 +476,94 @@ $facultyInitials = $facultyInitials ?? strtoupper(substr((string) $facultyName, 
 
     </div>
 
+    <!-- Assigned Classes Table -->
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="toolbar-left">
+          <div class="toolbar-icon"><i class="fas fa-layer-group"></i></div>
+          <div>
+            <div class="toolbar-title">Assigned Classes</div>
+            <div class="toolbar-sub">Click any class to open or resume today’s attendance session.</div>
+          </div>
+        </div>
+        <div class="toolbar-right">
+          <div class="search-box">
+            <i class="fas fa-magnifying-glass"></i>
+            <input type="text" placeholder="Search subjects…" id="class-search">
+          </div>
+          <div class="filter-tabs" id="classes-filter-tabs">
+            <button class="ftab active" type="button" onclick="filterClasses('all',this)">All</button>
+            <button class="ftab" type="button" onclick="filterClasses('ongoing',this)">
+              <i class="fas fa-circle" style="font-size:.42rem;color:var(--green-text)"></i> Ongoing
+            </button>
+            <button class="ftab" type="button" onclick="filterClasses('upcoming',this)">Upcoming</button>
+            <button class="ftab" type="button" onclick="filterClasses('finished',this)">Finished</button>
+          </div>
+        </div>
+      </div>
+
+      @if($attendanceCards && $attendanceCards->count() > 0)
+        <table>
+          <thead>
+            <tr>
+              <th>Subject</th>
+              <th>Section</th>
+              <th>Room</th>
+              <th>Schedule Time</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="classes-tbody">
+            @foreach($attendanceCards as $class)
+              <tr data-status="{{ $class['status'] }}" data-search="{{ $class['search'] }}">
+                <td>
+                  <div class="course-wrap">
+                    <div class="course-dot"></div>
+                    <div>
+                      <div class="course-code">{{ $class['course_code'] }}</div>
+                      <div class="course-sub">{{ $class['subject'] }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ $class['section'] }}</td>
+                <td>
+                  <span class="room-tag"><i class="fas fa-location-dot"></i>{{ $class['room'] }}</span>
+                </td>
+                <td>{{ $class['time'] }}</td>
+                <td>
+                  @if($class['status'] === 'ongoing')
+                    <span class="status-pill status-open"><span class="status-dot"></span>Ongoing</span>
+                  @elseif($class['status'] === 'upcoming')
+                    <span class="status-pill" style="background:var(--amber-bg);color:var(--amber-text);border:1px solid var(--amber-border)"><span class="status-dot"></span>Upcoming</span>
+                  @else
+                    <span class="status-pill status-closed"><span class="status-dot"></span>Finished</span>
+                  @endif
+                </td>
+                <td>
+                  <div class="actions">
+                    <button type="button" class="action-btn view js-open-attendance" data-schedule-id="{{ $class['schedule_id'] }}">
+                      <i class="fas fa-bolt"></i> Check Attendance
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            @endforeach
+          </tbody>
+        </table>
+
+        <div class="table-footer">
+          <div class="table-count">Showing <strong id="classes-visible-count">{{ $attendanceCards->count() }}</strong> of <strong>{{ $attendanceCards->count() }}</strong> classes</div>
+        </div>
+      @else
+        <div class="empty-state">
+          <div class="empty-icon-wrap"><i class="fas fa-layer-group"></i></div>
+          <div class="empty-title">No assigned classes found</div>
+          <div class="empty-sub">Only subjects assigned to your account will appear here.</div>
+        </div>
+      @endif
+    </div>
+
     <!-- Sessions Table -->
     <div class="table-card">
       <div class="table-toolbar">
@@ -445,7 +579,7 @@ $facultyInitials = $facultyInitials ?? strtoupper(substr((string) $facultyName, 
             <i class="fas fa-magnifying-glass"></i>
             <input type="text" placeholder="Search sessions…" id="session-search">
           </div>
-          <div class="filter-tabs">
+          <div class="filter-tabs" id="sessions-filter-tabs">
             <button class="ftab active" onclick="filterSessions('all',this)">All</button>
             <button class="ftab" onclick="filterSessions('open',this)">
               <i class="fas fa-circle" style="font-size:.42rem;color:var(--green-text)"></i> Open
@@ -517,7 +651,7 @@ $facultyInitials = $facultyInitials ?? strtoupper(substr((string) $facultyName, 
                     </a>
                     @if(($s->status ?? '') === 'open')
                       <div class="action-divider"></div>
-                      <button class="action-btn danger" onclick="closeSession({{ $s->id }},this)">
+                      <button type="button" class="action-btn danger js-close-session" data-session-id="{{ $s->id }}">
                         <i class="fas fa-xmark"></i> Close
                       </button>
                     @endif
@@ -544,83 +678,160 @@ $facultyInitials = $facultyInitials ?? strtoupper(substr((string) $facultyName, 
   </div><!-- /content -->
 </div><!-- /main -->
 
-<!-- ═══════════════════════════════════════════
-     MODAL
-═══════════════════════════════════════════ -->
-<div class="modal-bg" id="new-session-modal">
-  <div class="modal">
-    <div class="modal-head">
-      <div class="modal-head-left">
-        <div class="modal-head-icon"><i class="fas fa-clipboard-plus"></i></div>
-        <div>
-          <div class="modal-title">Open Attendance Session</div>
-          <div class="modal-subtitle">Students can log in once the session is opened</div>
-        </div>
-      </div>
-      <button class="modal-close" onclick="toggleModal(false)"><i class="fas fa-times"></i></button>
-    </div>
-
-    <form method="POST" action="{{ route('faculty.attendance.store') }}">
-      @csrf
-      <div class="modal-body">
-
-        <div class="form-group">
-          <label class="form-label"><i class="fas fa-book"></i> Schedule / Course</label>
-          <div class="form-select-wrap">
-            <select name="schedule_id" required class="form-input">
-              <option value="">Choose a schedule…</option>
-              @foreach($courses as $course)
-                @foreach($course->schedules as $sch)
-                  <option value="{{ $sch->id }}">
-                    {{ $course->code ?? $course->title }} — {{ optional($sch->classroom)->name ?? 'Room' }}
-                    ({{ $sch->time_range ?? ($sch->start_time . ' - ' . $sch->end_time) }})
-                  </option>
-                @endforeach
-              @endforeach
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label"><i class="fas fa-calendar-days"></i> Session Date</label>
-            <input type="date" name="session_date" required value="{{ now()->toDateString() }}" class="form-input">
-          </div>
-          <div class="form-group">
-            <label class="form-label"><i class="fas fa-location-dot"></i> Room <span class="form-muted">(optional)</span></label>
-            <input type="text" name="room" placeholder="e.g. Lab 201" class="form-input">
-            <div class="form-hint"><i class="fas fa-circle-info"></i> Overrides the schedule default</div>
-          </div>
-        </div>
-
-        <div class="modal-sep"></div>
-
-        <div class="form-group">
-          <label class="form-label"><i class="fas fa-pen-to-square"></i> Remarks <span class="form-muted">(optional)</span></label>
-          <textarea name="remarks" rows="3" placeholder="Any notes for this session…" class="form-input" style="resize:vertical;line-height:1.55"></textarea>
-        </div>
-
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn-cancel" onclick="toggleModal(false)">Cancel</button>
-        <button type="submit" class="btn-primary">
-          <i class="fas fa-circle-dot"></i> Open Session
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
-
 <script>
-  // Modal
-  document.getElementById('new-session-btn')?.addEventListener('click', () => toggleModal(true));
-  function toggleModal(show) {
-    const m = document.getElementById('new-session-modal');
-    m.style.display = show ? 'flex' : 'none';
-    document.body.style.overflow = show ? 'hidden' : '';
+  const classSearch = document.getElementById('class-search');
+  const classRows = Array.from(document.querySelectorAll('#classes-tbody tr'));
+  const classTabs = Array.from(document.querySelectorAll('#classes-filter-tabs .ftab'));
+  const classVisibleCount = document.getElementById('classes-visible-count');
+  const contentRoot = document.querySelector('.content');
+  const quickStartUrl = contentRoot?.dataset.quickStartUrl || '/attendance/quick/start';
+  const csrf = contentRoot?.dataset.csrfToken || '';
+  let classFilter = 'all';
+
+  function updateClassVisibleCount() {
+    if (!classVisibleCount) return;
+    const visible = classRows.filter(row => row.style.display !== 'none').length;
+    classVisibleCount.textContent = visible;
   }
-  document.getElementById('new-session-modal')?.addEventListener('click', e => { if (e.target === e.currentTarget) toggleModal(false); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') toggleModal(false); });
+
+  function filterClasses(status, btn) {
+    classFilter = status || 'all';
+    classTabs.forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    const query = (classSearch?.value || '').trim().toLowerCase();
+
+    classRows.forEach(row => {
+      const statusMatch = classFilter === 'all' || row.dataset.status === classFilter;
+      const searchMatch = !query || (row.dataset.search || '').includes(query);
+      row.style.display = statusMatch && searchMatch ? '' : 'none';
+    });
+
+    updateClassVisibleCount();
+  }
+
+  function setAttendanceFeedback(message, loading = true) {
+    const feedback = document.getElementById('attendance-feedback');
+    const feedbackText = document.getElementById('attendance-feedback-text');
+    if (!feedback || !feedbackText) return;
+
+    feedback.classList.add('is-visible');
+    feedback.innerHTML = loading
+      ? '<i class="fas fa-spinner fa-spin"></i><span>' + message + '</span>'
+      : '<i class="fas fa-circle-check"></i><span>' + message + '</span>';
+
+    if (!loading) {
+      window.clearTimeout(setAttendanceFeedback._timer);
+      setAttendanceFeedback._timer = window.setTimeout(() => {
+        feedback.classList.remove('is-visible');
+      }, 2200);
+    }
+  }
+
+  function openAttendanceModal() {
+    const modal = document.getElementById('attendance-modal');
+    const loader = document.getElementById('attendance-modal-loader');
+    const error = document.getElementById('attendance-modal-error');
+    if (!modal) return;
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+    if (loader) loader.style.display = 'flex';
+    if (error) error.style.display = 'none';
+  }
+
+  function closeAttendanceModal() {
+    const modal = document.getElementById('attendance-modal');
+    const frame = document.getElementById('attendance-modal-frame');
+    if (!modal) return;
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+    if (frame) frame.src = 'about:blank';
+  }
+
+  function showAttendanceModalError(message) {
+    const loader = document.getElementById('attendance-modal-loader');
+    const error = document.getElementById('attendance-modal-error');
+    const errorText = document.getElementById('attendance-modal-error-text');
+    if (loader) loader.style.display = 'none';
+    if (error) error.style.display = 'flex';
+    if (errorText) errorText.textContent = message || 'Unable to load attendance session.';
+  }
+
+  function loadAttendanceSessionInModal(url) {
+    const frame = document.getElementById('attendance-modal-frame');
+    const loader = document.getElementById('attendance-modal-loader');
+    if (!frame || !url) return;
+
+    frame.onload = function () {
+      if (loader) loader.style.display = 'none';
+    };
+
+    frame.src = url;
+  }
+
+  function openQuickAttendance(scheduleId, trigger) {
+    if (!scheduleId || !trigger) {
+      console.warn('Missing scheduleId or trigger', { scheduleId, trigger });
+      return;
+    }
+
+    console.log('Opening attendance for schedule:', scheduleId);
+    console.log('Quick start URL:', quickStartUrl);
+    console.log('CSRF token present:', !!csrf);
+
+    const buttons = document.querySelectorAll('.action-btn, .attendance-check-btn');
+    buttons.forEach(btn => btn.disabled = true);
+  openAttendanceModal();
+  setAttendanceFeedback('Opening attendance...', true);
+
+    fetch(quickStartUrl, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrf,
+      },
+      body: JSON.stringify({ schedule_id: scheduleId }),
+    })
+      .then(async function (response) {
+        console.log('Response status:', response.status);
+        const text = await response.text();
+        console.log('Response text:', text);
+        
+        let payload;
+        try {
+          payload = JSON.parse(text);
+        } catch (e) {
+          console.error('Failed to parse JSON response:', e);
+          throw new Error('Invalid server response: ' + text.substring(0, 200));
+        }
+
+        console.log('Response payload:', payload);
+
+        if (!response.ok || payload.success === false) {
+          throw new Error(payload.message || ('Server error: ' + response.status));
+        }
+
+        const modalUrl = payload.redirect_url + (payload.redirect_url.includes('?') ? '&' : '?') + 'modal=1';
+        console.log('Opening in modal:', modalUrl);
+        loadAttendanceSessionInModal(modalUrl);
+        setAttendanceFeedback(payload.message || 'Attendance session started successfully.', false);
+      })
+      .catch(function (error) {
+        console.error('Error opening attendance:', error);
+        setAttendanceFeedback(error.message || 'Unable to open attendance.', false);
+        showAttendanceModalError(error.message || 'Unable to open attendance session.');
+      })
+      .finally(function () {
+        buttons.forEach(btn => btn.disabled = false);
+      });
+  }
+
+  document.querySelectorAll('.js-open-attendance').forEach(button => {
+    button.addEventListener('click', function () {
+      openQuickAttendance(this.dataset.scheduleId, this);
+    });
+  });
 
   // Filter tabs
   function filterSessions(status, btn) {
@@ -635,6 +846,14 @@ $facultyInitials = $facultyInitials ?? strtoupper(substr((string) $facultyName, 
     const vc = document.getElementById('visible-count');
     if (vc) vc.textContent = n;
   }
+
+  if (classSearch) {
+    classSearch.addEventListener('input', function () {
+      filterClasses(classFilter);
+    });
+  }
+
+  filterClasses('all');
 
   // Search
   document.getElementById('session-search')?.addEventListener('input', function () {
@@ -681,10 +900,152 @@ $facultyInitials = $facultyInitials ?? strtoupper(substr((string) $facultyName, 
     });
   }
 
+  document.querySelectorAll('.js-close-session').forEach(button => {
+    button.addEventListener('click', function () {
+      closeSession(this.dataset.sessionId, this);
+    });
+  });
+
   // Live date
   const el = document.getElementById('live-date');
   if (el) el.textContent = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+
+  document.getElementById('attendance-modal-close')?.addEventListener('click', closeAttendanceModal);
+  document.getElementById('attendance-modal')?.addEventListener('click', function (e) {
+    if (e.target === this) closeAttendanceModal();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeAttendanceModal();
+  });
 </script>
+
+<div id="attendance-modal" class="attendance-modal">
+  <div class="attendance-modal-card">
+    <div class="attendance-modal-head">
+      <div>
+        <div class="attendance-modal-title">Attendance Session</div>
+        <div class="attendance-modal-sub">Mark students as Present, Absent, or Excused, and add students as needed.</div>
+      </div>
+      <button id="attendance-modal-close" class="attendance-modal-close" type="button" aria-label="Close">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="attendance-modal-body">
+      <div id="attendance-modal-loader" class="attendance-modal-loader">
+        <i class="fas fa-spinner fa-spin"></i>
+        <span>Loading attendance session...</span>
+      </div>
+
+      <div id="attendance-modal-error" class="attendance-modal-error" style="display:none;">
+        <i class="fas fa-triangle-exclamation"></i>
+        <span id="attendance-modal-error-text">Unable to load attendance session.</span>
+      </div>
+
+      <iframe id="attendance-modal-frame" class="attendance-modal-frame" src="about:blank" title="Attendance Session"></iframe>
+    </div>
+  </div>
+</div>
+
+<style>
+.attendance-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2400;
+  background: rgba(11,22,64,.52);
+  backdrop-filter: blur(5px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+}
+
+.attendance-modal.is-open { display: flex; }
+
+.attendance-modal-card {
+  width: min(1400px, 100%);
+  height: min(92vh, 980px);
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 18px 56px rgba(15,23,41,.22);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.attendance-modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, #fff, #f9fbff);
+}
+
+.attendance-modal-title {
+  font-family: var(--font-head);
+  font-size: .98rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.attendance-modal-sub {
+  margin-top: 2px;
+  font-size: .78rem;
+  color: var(--text-3);
+}
+
+.attendance-modal-close {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--text-3);
+  cursor: pointer;
+}
+
+.attendance-modal-close:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.attendance-modal-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: #fff;
+}
+
+.attendance-modal-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #fff;
+}
+
+.attendance-modal-loader,
+.attendance-modal-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--text-3);
+  font-size: .9rem;
+  background: #fff;
+  z-index: 2;
+}
+
+.attendance-modal-error {
+  color: var(--red-text);
+  flex-direction: column;
+  text-align: center;
+}
+</style>
 
 </body>
 </html>

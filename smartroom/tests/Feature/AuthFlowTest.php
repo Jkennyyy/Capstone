@@ -21,7 +21,7 @@ it('can sign up a new user', function () {
         'terms' => 'on',
     ]);
 
-    $response->assertRedirect(route('faculty.dashboard'));
+    $response->assertRedirect(route('student.home'));
 
     assertDatabaseHas('users', [
         'email' => 'jane@example.com',

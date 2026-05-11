@@ -110,6 +110,15 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
 .user-widget-info { flex: 1; min-width: 0; }
 .user-widget-name { font-size: 0.83rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .user-widget-role { font-size: 0.73rem; color: rgba(255,255,255,0.4); }
+.ic-avatar--initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
 .sidebar-logout-btn {
   display: flex; align-items: center; gap: 10px; padding: 9px 12px;
   color: rgba(255,255,255,0.4); font-size: 0.84rem; font-weight: 500;
@@ -506,7 +515,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
           @endphp
           <div class="instructor-card">
             <div class="ic-header">
-              <div class="ic-avatar" style="display:flex;align-items:center;justify-content:center;background:#e2e8f0;color:#475569;font-size:0.8rem;font-weight:700;">{{ $initials !== '' ? $initials : 'U' }}</div>
+              <div class="ic-avatar ic-avatar--initials">{{ $initials !== '' ? $initials : 'U' }}</div>
               <div>
                 <div class="ic-name">{{ $card['name'] }}</div>
                 <div class="ic-dept">{{ $card['department'] }}</div>

@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             SmartRoomSeeder::class,
+            \Database\Seeders\NotificationSeeder::class,
         ]);
     }
 }

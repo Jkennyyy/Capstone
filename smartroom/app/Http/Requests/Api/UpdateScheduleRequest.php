@@ -34,6 +34,8 @@ class UpdateScheduleRequest extends FormRequest
             'status' => ['sometimes', 'string', 'in:scheduled,ongoing,completed,cancelled'],
             'day_of_week' => ['nullable', 'integer', 'between:0,6'],
             'enrolled' => ['sometimes', 'integer', 'min:0'],
+            'block_section' => ['sometimes', 'nullable', 'string', 'max:64'],
+            'apply_to_series' => ['sometimes', 'boolean'],
         ];
     }
 

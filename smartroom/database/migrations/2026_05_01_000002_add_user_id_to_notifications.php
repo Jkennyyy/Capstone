@@ -8,17 +8,21 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('notifications', function (Blueprint $table): void {
-            $table->unsignedBigInteger('user_id')->nullable()->after('data');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-        });
+        if (! Schema::hasColumn('notifications', 'user_id')) {
+            Schema::table('notifications', function (Blueprint $table): void {
+                $table->unsignedBigInteger('user_id')->nullable()->after('data');
+                $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('notifications', function (Blueprint $table): void {
-            $table->dropForeign(['user_id']);
-            $table->dropColumn('user_id');
-        });
+        if (Schema::hasColumn('notifications', 'user_id')) {
+            Schema::table('notifications', function (Blueprint $table): void {
+                $table->dropForeign(['user_id']);
+                $table->dropColumn('user_id');
+            });
+        }
     }
 };

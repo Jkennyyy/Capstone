@@ -237,18 +237,6 @@ body {
 .topbar-search input::placeholder { color: var(--text-4); }
 
 .topbar-right { display: flex; align-items: center; gap: 20px; }
-.notif-btn {
-  position: relative; background: none; border: none;
-  cursor: pointer; color: var(--text-2); font-size: 1.2rem;
-  padding: 6px; border-radius: 8px; transition: background 0.2s;
-}
-.notif-btn:hover { background: var(--bg); }
-.notif-badge {
-  position: absolute; top: 4px; right: 4px;
-  width: 8px; height: 8px; background: var(--red);
-  border-radius: 50%; border: 1.5px solid var(--white);
-}
-
 .topbar-profile { position: relative; display: flex; align-items: center; gap: 12px; cursor: pointer; }
 .topbar-profile-info { text-align: right; }
 .topbar-profile-name { font-size: 0.88rem; font-weight: 700; color: var(--text); line-height: 1.2; }
@@ -638,7 +626,7 @@ body {
 .rec-meta{display:flex;gap:10px;color:var(--text-3);font-size:0.85rem;margin:6px 0}
 .rec-reason{font-size:0.85rem;color:var(--blue-text);font-weight:600;margin-top:4px;display:flex;align-items:center;gap:8px}
 .rec-features{display:flex;gap:6px;margin-top:6px}
-.rec-feat-tag{font-size:0.72rem;padding:4px 8px;border-radius:8px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-2}
+.rec-feat-tag{font-size:0.72rem;padding:4px 8px;border-radius:8px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-2)}
 .rec-score{display:flex;flex-direction:column;align-items:center;gap:6px;margin-left:8px}
 .rec-score-ring{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid var(--border);}
 .rec-score-ring.high{border-color:#60a5fa;background:var(--blue-bg)}
@@ -646,6 +634,166 @@ body {
 .rec-score-val{font-size:1rem;font-weight:800;color:var(--blue-text)}
 .rec-score-label{font-size:0.64rem;color:var(--text-3);font-weight:800}
 .rec-arrow{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--bg);color:var(--text-3)}
+
+/* ── Schedule Assistant Chat ─────────────────────────────────── */
+.assistant-panel {
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.assistant-head {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.assistant-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-head);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.assistant-title-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--blue-bg);
+  color: var(--blue-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.assistant-sub {
+  font-size: 0.78rem;
+  color: var(--text-3);
+}
+.assistant-chat {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 360px;
+  overflow: auto;
+  background: linear-gradient(180deg, #fbfcff 0%, #f8faff 100%);
+}
+.assistant-msg {
+  max-width: 78%;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  box-shadow: var(--shadow-xs);
+}
+.assistant-msg.user {
+  margin-left: auto;
+  background: var(--navy);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.assistant-msg.bot {
+  margin-right: auto;
+  background: #fff;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-bottom-left-radius: 4px;
+}
+.assistant-items {
+  margin-top: 8px;
+  display: grid;
+  gap: 7px;
+}
+.assistant-item {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 9px;
+  background: var(--bg);
+}
+.assistant-item-top {
+  font-size: 0.78rem;
+  color: var(--text);
+  font-weight: 700;
+}
+.assistant-item-meta {
+  font-size: 0.73rem;
+  color: var(--text-2);
+  margin-top: 3px;
+}
+.assistant-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  background: #fff;
+}
+.assistant-chip {
+  border: 1px solid var(--blue-border);
+  background: var(--blue-bg);
+  color: var(--blue-text);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.assistant-form {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--border);
+  background: #fff;
+}
+.assistant-input {
+  flex: 1;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.84rem;
+  outline: none;
+}
+.assistant-input:focus {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+.assistant-send {
+  border: 0;
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: var(--navy);
+  color: #fff;
+  cursor: pointer;
+}
+.assistant-send[disabled] {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+.assistant-loading {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.assistant-loading span {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--text-4);
+  animation: dotPulse 1s infinite ease-in-out;
+}
+.assistant-loading span:nth-child(2) { animation-delay: 0.15s; }
+.assistant-loading span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes dotPulse {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+  40% { transform: translateY(-2px); opacity: 1; }
+}
 
 </style>
 @include('partials.pro-motion')
@@ -736,10 +884,6 @@ body {
       <input type="text" placeholder="Search for classrooms, faculty, or subjects...">
     </div>
     <div class="topbar-right">
-      <button class="notif-btn" title="Notifications">
-        <i class="fas fa-bell"></i>
-        <span class="notif-badge"></span>
-      </button>
       <div class="topbar-profile">
         <div class="topbar-profile-info">
           <div class="topbar-profile-name"><?= htmlspecialchars($facultyName) ?></div>
@@ -877,6 +1021,45 @@ body {
       </div>
 
     </div><!-- /bottom-grid -->
+
+    <div class="assistant-panel">
+      <div class="assistant-head">
+        <div>
+          <div class="assistant-title">
+            <span class="assistant-title-badge"><i class="fas fa-comment-dots"></i></span>
+            Smart Schedule Assistant
+          </div>
+          <div class="assistant-sub">Ask in plain English: today, tomorrow, next class, weekday schedule, first class.</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <label style="font-size:.82rem;color:var(--text-3);display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="assistantUseLlm" style="width:16px;height:16px;" />
+            <span style="font-weight:600">Use Groq AI</span>
+          </label>
+        </div>
+      </div>
+      <div class="assistant-chat" id="scheduleAssistantChat">
+        <div class="assistant-msg bot">Hi <?= htmlspecialchars($facultyInitials) ?>, I can answer schedule questions instantly.</div>
+      </div>
+      <div class="assistant-quick" id="scheduleAssistantQuick">
+        <button class="assistant-chip" type="button">What is my schedule today?</button>
+        <button class="assistant-chip" type="button">Where is my next class?</button>
+        <button class="assistant-chip" type="button">Do I have classes tomorrow?</button>
+        <button class="assistant-chip" type="button">Show my Wednesday schedule.</button>
+        <button class="assistant-chip" type="button">When is my first class?</button>
+      </div>
+      <form class="assistant-form" id="scheduleAssistantForm">
+        <input
+          id="scheduleAssistantInput"
+          class="assistant-input"
+          type="text"
+          maxlength="500"
+          placeholder="Type your question about schedule..."
+          autocomplete="off"
+        >
+        <button class="assistant-send" id="scheduleAssistantSend" type="submit">Ask</button>
+      </form>
+    </div>
   </div><!-- /content -->
 </div><!-- /main -->
 <script>
@@ -902,6 +1085,142 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   document.addEventListener('click', closeAllProfileDropdowns);
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const chat = document.getElementById('scheduleAssistantChat');
+  const form = document.getElementById('scheduleAssistantForm');
+  const input = document.getElementById('scheduleAssistantInput');
+  const sendBtn = document.getElementById('scheduleAssistantSend');
+  const quick = document.getElementById('scheduleAssistantQuick');
+  const endpoint = "{{ route('faculty.schedule.assistant.ask') }}";
+  const csrf = "{{ csrf_token() }}";
+  const llmAvailable = @json((bool) env('GROQ_API_KEY'));
+  const llmCheckbox = document.getElementById('assistantUseLlm');
+
+  if (llmCheckbox) {
+    llmCheckbox.checked = false;
+    if (!llmAvailable) {
+      llmCheckbox.disabled = true;
+      llmCheckbox.parentElement.insertAdjacentHTML('beforeend', '<span style="font-size:.72rem;color:var(--text-4);margin-left:6px">Groq not configured</span>');
+    }
+  }
+
+  if (!chat || !form || !input || !sendBtn || !quick) return;
+
+  function appendUser(text) {
+    const msg = document.createElement('div');
+    msg.className = 'assistant-msg user';
+    msg.textContent = text;
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function appendBot(text, items) {
+    const msg = document.createElement('div');
+    msg.className = 'assistant-msg bot';
+
+    const textNode = document.createElement('div');
+    textNode.textContent = text;
+    msg.appendChild(textNode);
+
+    if (Array.isArray(items) && items.length) {
+      const list = document.createElement('div');
+      list.className = 'assistant-items';
+      items.forEach(function (item) {
+        const row = document.createElement('div');
+        row.className = 'assistant-item';
+
+        const top = document.createElement('div');
+        top.className = 'assistant-item-top';
+        top.textContent = `${item.subject || 'Class'} (${item.code || 'N/A'})`;
+
+        const meta = document.createElement('div');
+        meta.className = 'assistant-item-meta';
+        meta.textContent = `${item.date || '-'} · ${item.time || '-'} · ${item.location || 'Room N/A'}`;
+
+        row.appendChild(top);
+        row.appendChild(meta);
+        list.appendChild(row);
+      });
+      msg.appendChild(list);
+    }
+
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function appendError() {
+    appendBot('I could not process that right now. Please try again in a moment.', []);
+  }
+
+  function appendLoading() {
+    const msg = document.createElement('div');
+    msg.className = 'assistant-msg bot';
+    msg.id = 'assistantLoading';
+    msg.innerHTML = '<span class="assistant-loading"><span></span><span></span><span></span></span>';
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function removeLoading() {
+    const loading = document.getElementById('assistantLoading');
+    if (loading) loading.remove();
+  }
+
+  async function askAssistant(message) {
+    appendUser(message);
+    appendLoading();
+    sendBtn.disabled = true;
+
+    const useLlm = llmCheckbox && llmCheckbox.checked;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrf,
+        },
+        body: JSON.stringify({ message: message, use_llm: useLlm }),
+      });
+
+      const payload = await response.json();
+      removeLoading();
+
+      if (!response.ok || !payload || payload.success !== true) {
+        appendError();
+        return;
+      }
+
+      appendBot(payload.answer || 'No response available.', payload.items || []);
+    } catch (e) {
+      removeLoading();
+      appendError();
+    } finally {
+      sendBtn.disabled = false;
+      input.focus();
+    }
+  }
+
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    const message = (input.value || '').trim();
+    if (!message) return;
+    input.value = '';
+    askAssistant(message);
+  });
+
+  quick.addEventListener('click', function (event) {
+    const btn = event.target.closest('.assistant-chip');
+    if (!btn) return;
+    const question = (btn.textContent || '').trim();
+    if (!question) return;
+    askAssistant(question);
+  });
 });
 </script>
 

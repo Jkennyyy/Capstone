@@ -12,8 +12,8 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use App\Models\Notification;
 
 class ScheduleController extends Controller
 {
@@ -54,6 +54,10 @@ class ScheduleController extends Controller
     {
         $payload = $request->validated();
 
+        if (! isset($payload['series_id'])) {
+            $payload['series_id'] = (string) Str::uuid();
+        }
+
         if (isset($payload['start_at'])) {
             $payload['day_of_week'] = Carbon::parse($payload['start_at'])->dayOfWeek;
         }
@@ -75,24 +79,6 @@ class ScheduleController extends Controller
 
             return Schedule::create($payload);
         })->load(['classroom', 'course.instructor']);
-
-        $notif = Notification::create([
-            'type' => 'schedule',
-            'title' => 'Schedule created',
-            'body' => sprintf("%s scheduled in %s from %s to %s", $schedule->course->name ?? 'A course', $schedule->classroom->name ?? 'a room', $schedule->start_at->toDateTimeString(), $schedule->end_at->toDateTimeString()),
-            'data' => [
-                'schedule_id' => $schedule->id,
-                'classroom_id' => $schedule->classroom_id,
-                'course_id' => $schedule->course_id,
-            ],
-            'user_id' => $schedule->course?->instructor?->id ?? null,
-        ]);
-
-        try {
-            event(new \App\Events\NewNotification($notif));
-        } catch (\Throwable $e) {
-            // non-fatal
-        }
 
         return new ScheduleResource($schedule);
     }
@@ -139,26 +125,6 @@ class ScheduleController extends Controller
 
         $schedule = $schedule->fresh()->load(['classroom', 'course.instructor']);
 
-        $notif = Notification::create([
-            'type' => 'schedule',
-            'title' => 'Schedule updated',
-            'body' => sprintf("Schedule for %s in %s was updated", $schedule->course->name ?? 'a course', $schedule->classroom->name ?? 'a room'),
-            'data' => [
-                'schedule_id' => $schedule->id,
-                'changes' => [
-                    'before' => $old->toArray(),
-                    'after' => $schedule->toArray(),
-                ],
-            ],
-            'user_id' => $schedule->course?->instructor?->id ?? null,
-        ]);
-
-        try {
-            event(new \App\Events\NewNotification($notif));
-        } catch (\Throwable $e) {
-            // non-fatal
-        }
-
         return new ScheduleResource($schedule);
     }
 
@@ -168,20 +134,6 @@ class ScheduleController extends Controller
 
         $payload = ['schedule_id' => $schedule->id, 'classroom_id' => $schedule->classroom_id, 'course_id' => $schedule->course_id];
         $schedule->delete();
-
-        $notif = Notification::create([
-            'type' => 'schedule',
-            'title' => 'Schedule deleted',
-            'body' => sprintf("A schedule was removed from %s", $schedule->classroom?->name ?? 'a room'),
-            'data' => $payload,
-            'user_id' => $schedule->course?->instructor?->id ?? null,
-        ]);
-
-        try {
-            event(new \App\Events\NewNotification($notif));
-        } catch (\Throwable $e) {
-            // non-fatal
-        }
 
         return response()->json(['message' => 'Schedule deleted successfully.']);
     }

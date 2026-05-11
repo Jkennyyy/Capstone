@@ -197,9 +197,6 @@ body{font-family:var(--fb);background:var(--bg);color:var(--text);display:flex;m
 .topbar-search input:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(59,130,246,.09)}
 .topbar-search input::placeholder{color:var(--text-4)}
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:14px}
-.notif-btn{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;color:var(--text-3);transition:background .18s;position:relative}
-.notif-btn:hover{background:var(--bg)}
-.notif-dot{position:absolute;top:7px;right:7px;width:7px;height:7px;background:var(--red);border-radius:50%;border:1.5px solid #fff}
 .topbar-profile{display:flex;align-items:center;gap:10px}
 .tp-name{font-size:.88rem;font-weight:700;color:var(--text);line-height:1.25}
 .tp-role{font-size:.74rem;color:var(--text-3)}
@@ -415,10 +412,6 @@ svg.lc{width:100%;overflow:visible;display:block}
       <input type="text" placeholder="Search for classrooms, faculty, or subjects…"/>
     </div>
     <div class="topbar-right">
-      <button class="notif-btn">
-        <i class="fas fa-bell"></i>
-        <span class="notif-dot"></span>
-      </button>
       <div class="topbar-profile">
         <div>
           <div class="tp-name"><?= htmlspecialchars($user) ?></div>

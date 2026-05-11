@@ -26,11 +26,38 @@ class FacultyController extends Controller
             });
 
         $availableRooms = Classroom::query()->where('status', 'available')->count();
-        $myReservations = (clone $facultyScheduleQuery)
+        
+        // Get weekly schedules for deduplication
+        $weekSchedules = (clone $facultyScheduleQuery)
             ->whereBetween('start_at', [$now->copy()->startOfWeek(), $now->copy()->endOfWeek()])
-            ->count();
+            ->get();
+        
+        // Deduplicate weekly classes: count by course_id + day_of_week + start_time
+        $uniqueWeekClasses = [];
+        foreach ($weekSchedules as $schedule) {
+            $start = $schedule->start_at;
+            if (!$start) continue;
+            $dayOfWeek = $start->dayOfWeekIso;
+            $startTime = $start->format('H:i');
+            $courseId = (int) ($schedule->course_id ?? 0);
+            
+            $dedupKey = sprintf('%d|%d|%s', $courseId, $dayOfWeek, $startTime);
+            $uniqueWeekClasses[$dedupKey] = true;
+        }
+        $myReservations = count($uniqueWeekClasses);
+        
         $activeClasses = Course::query()->where('instructor_user_id', $user->id)->count();
-        $totalStudents = (int) (clone $facultyScheduleQuery)->sum('enrolled');
+        
+        // Deduplicate total students: count each course's enrollment only once
+        $allSchedules = (clone $facultyScheduleQuery)->get();
+        $uniqueCourses = [];
+        foreach ($allSchedules as $schedule) {
+            $courseId = (int) ($schedule->course_id ?? 0);
+            if (!isset($uniqueCourses[$courseId])) {
+                $uniqueCourses[$courseId] = (int) ($schedule->enrolled ?? 0);
+            }
+        }
+        $totalStudents = (int) array_sum($uniqueCourses);
 
         $upcomingReservations = (clone $facultyScheduleQuery)
             ->where('start_at', '>=', $now)
@@ -81,9 +108,6 @@ class FacultyController extends Controller
                 $tags = ['Smart Lock'];
                 if ($classroom->rfid_status === 'active') {
                     $tags[] = 'RFID Ready';
-                }
-                if ($classroom->temperature !== null) {
-                    $tags[] = 'Climate Sensor';
                 }
 
                 return [
@@ -154,9 +178,6 @@ class FacultyController extends Controller
             $amenities = ['Smart Lock'];
             if ($room->rfid_status === 'active') {
                 $amenities[] = 'RFID Ready';
-            }
-            if ($room->temperature !== null) {
-                $amenities[] = 'Climate Sensor';
             }
 
             return [
